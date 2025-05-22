@@ -1,0 +1,56 @@
+{
+  "name": "raghut-admin-client",
+  "version": "0.1.71",
+  "private": true,
+  "dependencies": {
+    "@mediapipe/tasks-vision": "^0.10.22-rc.20250304",
+    "@react-oauth/google": "^0.12.1",
+    "@testing-library/jest-dom": "^5.17.0",
+    "@testing-library/react": "^13.4.0",
+    "@testing-library/user-event": "^13.5.0",
+    "antd": "^5.17.0",
+    "axios": "^1.6.2",
+    "clsx": "^2.1.1",
+    "dayjs": "^1.11.13",
+    "lucide-react": "^0.469.0",
+    "react": "^18.2.0",
+    "react-dom": "^18.2.0",
+    "react-helmet-async": "^2.0.4",
+    "react-router": "^7.4.1",
+    "react-router-dom": "^6.19.0",
+    "react-scripts": "5.0.1",
+    "react-type-animation": "^3.2.0",
+    "web-vitals": "^2.1.4"
+  },
+  "scripts": {
+    "analyze": "source-map-explorer 'build/static/js/*.js'",
+    "start": "react-scripts start",
+    "build": "react-scripts build",
+    "test": "react-scripts test",
+    "eject": "react-scripts eject",
+    "deploy": "aws s3 sync ./build s3://www.raghut.com --delete",
+    "invalidate": "aws cloudfront create-invalidation --distribution-id ES3F5VFE3RTPL --paths / /index.html /error.html /manifest.json /favicon.ico",
+    "deploy:full": "npm run build && npm run deploy && npm run invalidate"
+  },
+  "eslintConfig": {
+    "extends": [
+      "react-app",
+      "react-app/jest"
+    ]
+  },
+  "browserslist": {
+    "production": [
+      ">0.2%",
+      "not dead",
+      "not op_mini all"
+    ],
+    "development": [
+      "last 1 chrome version",
+      "last 1 firefox version",
+      "last 1 safari version"
+    ]
+  },
+  "devDependencies": {
+    "tailwindcss": "^3.3.5"
+  }
+}
