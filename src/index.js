@@ -16,14 +16,6 @@ const theme = {
   },
 };
 
-if (process.env.NODE_ENV === 'production') {
-  console.log = () => { };
-  console.warn = () => { };
-  console.error = (...args) => {
-    if (args[0]?.includes('Unhandled')) console.error(...args); // keep fatal
-  };
-}
-
 root.render(
   // <React.StrictMode>
   <HelmetProvider>
