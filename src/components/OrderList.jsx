@@ -2,7 +2,7 @@ import clsx from "clsx";
 import { useCallback, useEffect, useState } from "react";
 
 const OrderList = ({ wsMessages }) => {
-  const [activeTab, setActiveTab] = useState("new");
+  const [activeTab, setActiveTab] = useState("ordering");
   const [orders, setOrders] = useState([]);
   const [highlightedOrders, setHighlightedOrders] = useState(new Set());
 
@@ -13,7 +13,17 @@ const OrderList = ({ wsMessages }) => {
       const res = await fetch(`${API_URL}/orders`);
       const data = await res.json();
       if (data.success) {
-        const sorted = data.orders.sort((a, b) => new Date(b.timestamp) - new Date(a.timestamp));
+        const sessions = data.sessions;
+        const flatOrders = sessions.flatMap(session =>
+          session.orders.map((order, i) => ({
+            ...order,
+            _id: `${session.tableSessionId}-${i}`,
+            tableNumber: session.tableNumber,
+            status: session.status,
+            tableSessionId: session.tableSessionId
+          }))
+        );
+        const sorted = flatOrders.sort((a, b) => new Date(b.timestamp) - new Date(a.timestamp));
         setOrders(sorted);
       }
     } catch (err) {
@@ -28,46 +38,43 @@ const OrderList = ({ wsMessages }) => {
   useEffect(() => {
     wsMessages.forEach((data) => {
       if (data.type === "new_order") {
-        console.log("🆕 New order received:", data.orderId, data.order);
-        const newOrder = { ...data.order, _id: data.orderId };
+        const newOrder = {
+          ...data.order,
+          _id: `${data.order.tableSessionId}-${Date.now()}`,
+          status: "ordering"
+        };
 
-        setOrders((prev) => {
-          const exists = prev.some((o) => o._id === newOrder._id);
-          if (exists) {
-            console.warn("⚠️ Duplicate order skipped:", newOrder._id);
-            return prev;
-          }
-          return [newOrder, ...prev];
-        });
+        setOrders((prev) => [newOrder, ...prev]);
 
         setHighlightedOrders((prev) => {
           const next = new Set(prev);
-          next.add(data.orderId);
+          next.add(newOrder._id);
           return next;
         });
 
-      } else if (data.type === "order_status_updated") {
-        console.log(`🔄 Order status updated: ${data.orderId} → ${data.status}`);
+      } else if (data.type === "session_status_updated") {
         setOrders((prev) =>
-          prev.map((o) => (o._id === data.orderId ? { ...o, status: data.status } : o))
+          prev.map((o) => (o.tableSessionId === data.tableSessionId ? { ...o, status: data.status } : o))
         );
       }
     });
   }, [wsMessages]);
 
-  const handleOrderStatus = async (orderId, status) => {
+  const handleOrderStatus = async (sessionId, status) => {
     try {
-      const res = await fetch(`${API_URL}/order/${orderId}/status`, {
+      const res = await fetch(`${API_URL}/session/${sessionId}/status`, {
         method: "PATCH",
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify({ status }),
       });
 
       if (res.ok) {
-        setOrders((prev) => prev.map((o) => (o._id === orderId ? { ...o, status } : o)));
+        setOrders((prev) => prev.map((o) => (o.tableSessionId === sessionId ? { ...o, status } : o)));
         setHighlightedOrders((prev) => {
           const updated = new Set(prev);
-          updated.delete(orderId);
+          prev.forEach(id => {
+            if (id.startsWith(sessionId)) updated.delete(id);
+          });
           return updated;
         });
       }
@@ -82,7 +89,7 @@ const OrderList = ({ wsMessages }) => {
     <div>
       {/* Tabs */}
       <div className="flex mb-2">
-        {["new", "served"].map((status) => (
+        {["ordering", "complete"].map((status) => (
           <button key={status} onClick={() => setActiveTab(status)} className={clsx("px-2 py-1.5 text-sm rounded-lg")}>
             <p className={`px-1 mb-0.5 ${activeTab === status ? "font-semibold" : "text-gray-500"}`}>
               {status.charAt(0).toUpperCase() + status.slice(1)}
@@ -110,7 +117,7 @@ const OrderList = ({ wsMessages }) => {
               <div
                 className={clsx(
                   "text-xs flex items-center justify-center px-2 text-white rounded-lg",
-                  order.status === "new" ? "bg-red-500 " : "bg-gray-300"
+                  order.status === "ordering" ? "bg-red-500 " : "bg-gray-300"
                 )}
               >
                 {order.status}- {timeAgo(order.timestamp)}
@@ -139,10 +146,10 @@ const OrderList = ({ wsMessages }) => {
             <p className="text-xs text-gray-400">
               ({order._id}, #{idx + 1})
             </p>
-            {order.status === "new" && (
+            {order.status === "ordering" && (
               <div className="flex space-x-2 mt-2">
                 <button
-                  onClick={() => handleOrderStatus(order._id, "served")}
+                  onClick={() => handleOrderStatus(order.tableSessionId, "complete")}
                   className="px-4 py-2 rounded-lg bg-blue-600 text-white"
                 >
                   주문 입력 완료

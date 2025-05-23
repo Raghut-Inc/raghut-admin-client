@@ -38,32 +38,38 @@ export default function AdminDevices({ wsMessages }) {
         });
     }, [devices]);
 
-    useEffect(() => {
-        wsMessages.forEach((msg) => {
-            if (msg.type === "device_update") {
-                setDevices(prevDevices => {
-                    return prevDevices.map(device =>
-                        device.mac === msg.mac
-                            ? { ...device, ...msg.update }
-                            : device
-                    );
-                });
-            } else if (msg.type === "RESET_SESSION") {
-                setDevices(prevDevices => {
-                    return prevDevices.map(device =>
-                        device.mac === msg.mac
-                            ? { ...device, status: "idle", currentOrder: [], tableSessionId: null }
-                            : device
-                    );
-                });
-                setSessionOrders(prev => {
-                    const copy = { ...prev };
-                    delete copy[msg.mac];
-                    return copy;
-                });
-            }
-        });
-    }, [wsMessages]);
+useEffect(() => {
+    wsMessages.forEach((msg) => {
+        if (!msg.mac) return; // ignore messages with no MAC
+
+        if (msg.type === "device_update") {
+            setDevices(prevDevices =>
+                prevDevices.map(device =>
+                    device.mac === msg.mac
+                        ? { ...device, ...msg.update }
+                        : device
+                )
+            );
+        }
+
+        if (msg.type === "RESET_SESSION") {
+            setDevices(prevDevices =>
+                prevDevices.map(device =>
+                    device.mac === msg.mac
+                        ? { ...device, status: "idle", currentOrder: [], tableSessionId: null }
+                        : device
+                )
+            );
+
+            setSessionOrders(prev => {
+                const copy = { ...prev };
+                delete copy[msg.mac];
+                return copy;
+            });
+        }
+    });
+}, [wsMessages]);
+
 
     const handleResetSession = async (mac) => {
         try {
