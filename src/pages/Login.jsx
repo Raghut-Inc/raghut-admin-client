@@ -20,7 +20,7 @@ export default function Login({ setUser }) {
 
             if (res.data.success) {
                 setUser(res.data.user);
-                navigate("/admin/orders");
+                navigate("/admin/devices");
             } else {
                 setError("Invalid login");
             }
