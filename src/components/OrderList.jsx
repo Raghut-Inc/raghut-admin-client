@@ -1,9 +1,8 @@
 import clsx from "clsx";
 import { useCallback, useEffect, useState } from "react";
 
-const OrderList = ({ wsRef }) => {
+const OrderList = ({ wsMessages }) => {
   const [activeTab, setActiveTab] = useState("new");
-
   const [orders, setOrders] = useState([]);
   const [highlightedOrders, setHighlightedOrders] = useState(new Set());
 
@@ -27,42 +26,34 @@ const OrderList = ({ wsRef }) => {
   }, [fetchOrders]);
 
   useEffect(() => {
-    const ws = wsRef.current;
-    if (!ws) {
-      console.warn("⚠️ WebSocket ref is not available.");
-      return;
-    }
+    wsMessages.forEach((data) => {
+      if (data.type === "new_order") {
+        console.log("🆕 New order received:", data.orderId, data.order);
+        const newOrder = { ...data.order, _id: data.orderId };
 
-    const handleMessage = (event) => {
-      try {
-        const data = JSON.parse(event.data);
-        console.log("📩 WebSocket message received:", data);
+        setOrders((prev) => {
+          const exists = prev.some((o) => o._id === newOrder._id);
+          if (exists) {
+            console.warn("⚠️ Duplicate order skipped:", newOrder._id);
+            return prev;
+          }
+          return [newOrder, ...prev];
+        });
 
-        if (data.type === "new_order") {
-          console.log("🆕 New order received:", data.orderId, data.order);
-          const newOrder = { ...data.order, _id: data.orderId };
-          setOrders((prev) => [newOrder, ...prev]);
-          setHighlightedOrders((prev) => new Set(prev).add(data.orderId));
-        } else if (data.type === "order_status_updated") {
-          console.log(`🔄 Order status updated: ${data.orderId} → ${data.status}`);
-          setOrders((prev) => prev.map((o) => (o._id === data.orderId ? { ...o, status: data.status } : o)));
-        } else {
-          console.log("ℹ️ Unhandled WebSocket message type:", data.type);
-        }
-      } catch (err) {
-        console.error("❌ Failed to parse WS message:", err);
-        console.debug("📦 Raw message:", event.data);
+        setHighlightedOrders((prev) => {
+          const next = new Set(prev);
+          next.add(data.orderId);
+          return next;
+        });
+
+      } else if (data.type === "order_status_updated") {
+        console.log(`🔄 Order status updated: ${data.orderId} → ${data.status}`);
+        setOrders((prev) =>
+          prev.map((o) => (o._id === data.orderId ? { ...o, status: data.status } : o))
+        );
       }
-    };
-
-    ws.addEventListener("message", handleMessage);
-    console.log("✅ WebSocket listener added in OrderList");
-
-    return () => {
-      ws.removeEventListener("message", handleMessage);
-      console.log("🧹 WebSocket listener removed from OrderList");
-    };
-  }, [wsRef]);
+    });
+  }, [wsMessages]);
 
   const handleOrderStatus = async (orderId, status) => {
     try {

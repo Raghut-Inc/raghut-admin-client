@@ -16,6 +16,8 @@ function App() {
   const [user, setUser] = useState(null);
   const [isLoading, setLoading] = useState(true);
 
+  const [wsMessages, setWsMessages] = useState([]); // 🆕 store all received messages
+
   // 👤 Auth session
   const fetchAuthenticatedUser = useCallback(async () => {
     setLoading(true);
@@ -47,22 +49,30 @@ function App() {
     const connectWS = async () => {
       await fetch(`${API_URL}/health`).catch(() => { });
 
-      const isAgentRoute = location.pathname.startsWith('/agent');
-      const mac = localStorage.getItem("deviceMac") || "unknown";
-
-      const wsURL = isAgentRoute
-        ? `${WS_URL}?mac=${encodeURIComponent(mac)}`
-        : WS_URL;
-
-      const ws = new WebSocket(wsURL);
+      const ws = new WebSocket(WS_URL);
       wsRef.current = ws;
 
-      ws.onopen = () => isMounted && console.log("✅ WebSocket connected");
+      ws.onopen = () => {
+        if (!isMounted) return;
+        console.log("✅ WebSocket connected");
+      };
+
+      ws.onmessage = (event) => {
+        try {
+          const msg = JSON.parse(event.data);
+          console.log("🌐 WS message received in App:", msg);
+          setWsMessages((prev) => [...prev, msg]);
+        } catch (err) {
+          console.error("❌ Failed to parse WS message", err);
+        }
+      };
+
       ws.onclose = () => {
         if (!isMounted) return;
         console.warn("⚪ WebSocket closed, retrying in 3s...");
         reconnectTimeout = setTimeout(connectWS, reconnectDelay);
       };
+
       ws.onerror = (err) => {
         console.error("❌ WebSocket error", err);
         ws.close();
@@ -77,18 +87,6 @@ function App() {
       wsRef.current?.close();
     };
   }, [API_URL, WS_URL, location]);
-
-  // 👁 Hide cursor for agent in production
-  useEffect(() => {
-    const isProd = process.env.NODE_ENV === 'production';
-    const isAgentRoute = location.pathname.startsWith('/agent');
-
-    if (isProd && isAgentRoute) {
-      document.body.classList.add('cursor-none');
-    } else {
-      document.body.classList.remove('cursor-none');
-    }
-  }, [location]);
 
   if (isLoading) {
     return <div className="h-screen w-full flex items-center justify-center text-gray-500">Loading...</div>;
@@ -111,7 +109,13 @@ function App() {
         <Route path="/login" element={<Login user={user} setUser={setUser} />} />
         <Route
           path="/admin/*"
-          element={user ? <Admin user={user} setUser={setUser} wsRef={wsRef} /> : <Navigate to="/" replace />}
+          element={
+            user ? (
+              <Admin user={user} setUser={setUser} wsMessages={wsMessages} />
+            ) : (
+              <Navigate to="/" replace />
+            )
+          }
         />
       </Routes>
     </div>

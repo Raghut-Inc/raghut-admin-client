@@ -1,6 +1,6 @@
 import { useEffect, useState } from 'react';
 
-export default function AdminDevices({ wsRef }) {
+export default function AdminDevices({ wsMessages }) {
     const [devices, setDevices] = useState([]);
     const [resetStatus, setResetStatus] = useState({});
     const [sessionOrders, setSessionOrders] = useState({});
@@ -39,45 +39,31 @@ export default function AdminDevices({ wsRef }) {
     }, [devices]);
 
     useEffect(() => {
-        const ws = wsRef?.current;
-        if (!ws) return;
-
-        const handleMessage = (event) => {
-            try {
-                const msg = JSON.parse(event.data);
-                if (msg.type === "device_update") {
-                    setDevices(prevDevices => {
-                        return prevDevices.map(device =>
-                            device.mac === msg.mac
-                                ? { ...device, ...msg.update }
-                                : device
-                        );
-                    });
-                } else if (msg.type === "RESET_SESSION") {
-                    setDevices(prevDevices => {
-                        return prevDevices.map(device =>
-                            device.mac === msg.mac
-                                ? { ...device, status: "idle", currentOrder: [], tableSessionId: null }
-                                : device
-                        );
-                    });
-                    // 🆕 Clear session orders too
-                    setSessionOrders(prev => {
-                        const copy = { ...prev };
-                        delete copy[msg.mac];
-                        return copy;
-                    });
-                }
-            } catch (err) {
-                console.error("❌ Failed to parse WS message:", err);
+        wsMessages.forEach((msg) => {
+            if (msg.type === "device_update") {
+                setDevices(prevDevices => {
+                    return prevDevices.map(device =>
+                        device.mac === msg.mac
+                            ? { ...device, ...msg.update }
+                            : device
+                    );
+                });
+            } else if (msg.type === "RESET_SESSION") {
+                setDevices(prevDevices => {
+                    return prevDevices.map(device =>
+                        device.mac === msg.mac
+                            ? { ...device, status: "idle", currentOrder: [], tableSessionId: null }
+                            : device
+                    );
+                });
+                setSessionOrders(prev => {
+                    const copy = { ...prev };
+                    delete copy[msg.mac];
+                    return copy;
+                });
             }
-        };
-
-        ws.addEventListener("message", handleMessage);
-        return () => {
-            ws.removeEventListener("message", handleMessage);
-        };
-    }, [wsRef]);
+        });
+    }, [wsMessages]);
 
     const handleResetSession = async (mac) => {
         try {
@@ -184,7 +170,6 @@ export default function AdminDevices({ wsRef }) {
                     </div>
                 ))}
             </div>
-
         </div>
     );
 }
