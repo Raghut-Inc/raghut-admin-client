@@ -24,11 +24,12 @@ export default function AdminDevices({ wsMessages }) {
     useEffect(() => {
         devices.forEach((device) => {
             if (device.mac && device.tableSessionId) {
-                fetch(`${process.env.REACT_APP_API_URL}/device-orders?mac=${device.mac}&tableSessionId=${device.tableSessionId}`)
+                fetch(`${process.env.REACT_APP_API_URL}/orders?tableSessionId=${device.tableSessionId}`)
                     .then((res) => res.json())
                     .then((data) => {
-                        if (data.success) {
-                            setSessionOrders((prev) => ({ ...prev, [device.mac]: data.orders }));
+                        if (data.success && data.sessions.length > 0) {
+                            const orders = data.sessions[0].orders || [];
+                            setSessionOrders((prev) => ({ ...prev, [device.mac]: orders }));
                         }
                     })
                     .catch((err) => {
@@ -38,38 +39,37 @@ export default function AdminDevices({ wsMessages }) {
         });
     }, [devices]);
 
-useEffect(() => {
-    wsMessages.forEach((msg) => {
-        if (!msg.mac) return; // ignore messages with no MAC
+    useEffect(() => {
+        wsMessages.forEach((msg) => {
+            if (!msg.mac) return;
+            if (msg.type === "device_update") {
+                setDevices(prevDevices =>
+                    prevDevices.map(device =>
+                        device.mac === msg.mac
+                            ? { ...device, ...msg.update }
+                            : device
+                    )
+                );
+            }
 
-        if (msg.type === "device_update") {
-            setDevices(prevDevices =>
-                prevDevices.map(device =>
-                    device.mac === msg.mac
-                        ? { ...device, ...msg.update }
-                        : device
-                )
-            );
-        }
+            if (msg.type === "reset_notice") {
+                console.log("RESET CALLED", msg)
+                setDevices(prevDevices =>
+                    prevDevices.map(device =>
+                        device.mac === msg.mac
+                            ? { ...device, status: "idle", currentOrder: [], tableSessionId: null }
+                            : device
+                    )
+                );
 
-        if (msg.type === "RESET_SESSION") {
-            setDevices(prevDevices =>
-                prevDevices.map(device =>
-                    device.mac === msg.mac
-                        ? { ...device, status: "idle", currentOrder: [], tableSessionId: null }
-                        : device
-                )
-            );
-
-            setSessionOrders(prev => {
-                const copy = { ...prev };
-                delete copy[msg.mac];
-                return copy;
-            });
-        }
-    });
-}, [wsMessages]);
-
+                setSessionOrders(prev => {
+                    const copy = { ...prev };
+                    delete copy[msg.mac];
+                    return copy;
+                });
+            }
+        });
+    }, [wsMessages]);
 
     const handleResetSession = async (mac) => {
         try {
@@ -81,6 +81,22 @@ useEffect(() => {
 
             if (res.ok) {
                 setResetStatus(prev => ({ ...prev, [mac]: '✅ 초기화 완료됨' }));
+
+                // ⏱ Re-fetch devices
+                const deviceRes = await fetch(`${process.env.REACT_APP_API_URL}/devices`);
+                const deviceData = await deviceRes.json();
+                if (deviceData.devices) {
+                    setDevices(deviceData.devices);
+                }
+
+                // ⏱ Clear session orders for that device
+                setSessionOrders(prev => {
+                    const copy = { ...prev };
+                    delete copy[mac];
+                    return copy;
+                });
+
+                // ⏱ Clear reset status message
                 setTimeout(() => {
                     setResetStatus(prev => {
                         const copy = { ...prev };
@@ -116,19 +132,6 @@ useEffect(() => {
         return statusMap[device.status] || <span className="text-gray-400 font-semibold">Unknown</span>;
     };
 
-    function mergeItems(orders) {
-        const map = new Map();
-        orders.flatMap(o => o.items).forEach((item) => {
-            const key = `${item.name}-${item.spiciness || ""}-${item.brand || ""}`;
-            if (!map.has(key)) {
-                map.set(key, { ...item }); // clone item
-            } else {
-                map.get(key).quantity += item.quantity;
-            }
-        });
-        return Array.from(map.values());
-    }
-
     return (
         <div className="">
             <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-3">
@@ -142,22 +145,56 @@ useEffect(() => {
                             <div className='text-xs'>{getStatusLabel(device)}</div>
                         </div>
 
-                        <div className="text-sm text-gray-500">
-                            Last Seen: {formatTimeAgo(device.lastSeen)}
-                        </div>
-                        <div className='bg-gray-100 rounded-lg p-3 text-gray-600'>
+                        <div className='bg-gray-100 rounded-lg p-3 text-gray-600 space-y-2'>
                             {Array.isArray(sessionOrders[device.mac]) && sessionOrders[device.mac].length > 0 ? (
-                                mergeItems(sessionOrders[device.mac]).map((item, i) => (
-                                    <div key={i}>• {item.spiciness !== "기본" && item.spiciness && `[${item.spiciness}] `}
-                                        {item.name}
-                                        {item.brand ? ` - ${item.brand}` : ""} x{item.quantity}</div>
-                                ))
+                                sessionOrders[device.mac].map((order, orderIdx) =>
+                                    order.items.map((item, itemIdx) => {
+                                        const posEntered = item.posEntered;
+                                        const handleTogglePos = async () => {
+                                            try {
+                                                const res = await fetch(`${process.env.REACT_APP_API_URL}/orders/${device.tableSessionId}/${orderIdx}/${itemIdx}/pos`, {
+                                                    method: "PATCH",
+                                                    headers: { "Content-Type": "application/json" },
+                                                    body: JSON.stringify({ posEntered: !posEntered }),
+                                                });
+
+                                                if (res.ok) {
+                                                    setSessionOrders(prev => {
+                                                        const updated = [...prev[device.mac]];
+                                                        updated[orderIdx].items[itemIdx].posEntered = !posEntered;
+                                                        return { ...prev, [device.mac]: updated };
+                                                    });
+                                                } else {
+                                                    throw new Error("Failed to toggle POS status");
+                                                }
+                                            } catch (err) {
+                                                console.error("❌ Failed to update posEntered:", err);
+                                            }
+                                        };
+
+                                        return (
+                                            <div key={`${orderIdx}-${itemIdx}`} className="text-sm flex justify-between items-center">
+                                                <div>
+                                                    • {item.spiciness !== "기본" && item.spiciness && `[${item.spiciness}] `}
+                                                    {item.name}{item.brand ? ` - ${item.brand}` : ""} x{item.quantity}
+                                                    <span className="text-gray-400 text-xs ml-2">({formatTimeAgo(order.timestamp)})</span>
+                                                </div>
+                                                <button
+                                                    onClick={handleTogglePos}
+                                                    className={`ml-2 px-2 py-1 rounded text-xs ${posEntered ? "bg-green-500 text-white" : "bg-gray-300 text-gray-700"}`}
+                                                >
+                                                    {posEntered ? "POS 입력됨" : "미입력"}
+                                                </button>
+                                            </div>
+                                        );
+                                    })
+                                )
                             ) : (
                                 <span className="text-gray-400 italic">None</span>
                             )}
                         </div>
                         <div className="pt-2 flex w-full justify-between items-center">
-                            <div className="text-xs text-gray-500">{device.mac} / {device.tableSessionId &&
+                            <div className="text-sm text-gray-500">{device.mac} / s{device.tableSessionId &&
                                 `${device.tableSessionId.slice(0, 2)}${device.tableSessionId.slice(-2)}`}
                             </div>
                             {device.connected ? (
@@ -187,5 +224,7 @@ function formatTimeAgo(isoString) {
     const minutes = Math.floor(seconds / 60);
     if (minutes < 60) return `${minutes}m ago`;
     const hours = Math.floor(minutes / 60);
-    return `${hours}h ago`;
+    if (hours < 24) return `${hours}h ago`;
+    const days = Math.floor(hours / 24);
+    return `${days}d ago`;
 }

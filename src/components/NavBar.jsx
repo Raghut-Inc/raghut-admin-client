@@ -39,7 +39,6 @@ const NavBar = ({ user, setUser }) => {
 
         {user && (
           <div className="flex space-x-2">
-            <MenuButton id="orders" title="Orders" />
             <MenuButton id="devices" title="Devices" />
             <MenuButton id="frames" title="Frames" />
           </div>

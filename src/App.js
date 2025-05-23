@@ -49,7 +49,7 @@ function App() {
     const connectWS = async () => {
       await fetch(`${API_URL}/health`).catch(() => { });
 
-      const ws = new WebSocket(WS_URL);
+      const ws = new WebSocket(`${WS_URL}`);
       wsRef.current = ws;
 
       ws.onopen = () => {
