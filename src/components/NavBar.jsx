@@ -41,6 +41,7 @@ const NavBar = ({ user, setUser }) => {
           <div className="flex space-x-2">
             <MenuButton id="devices" title="Devices" />
             <MenuButton id="frames" title="Frames" />
+            <MenuButton id="register" title="Register" />
           </div>
         )}
 
