@@ -82,21 +82,18 @@ export default function AdminDevices({ wsMessages }) {
             if (res.ok) {
                 setResetStatus(prev => ({ ...prev, [mac]: '✅ 초기화 완료됨' }));
 
-                // ⏱ Re-fetch devices
                 const deviceRes = await fetch(`${process.env.REACT_APP_API_URL}/devices`);
                 const deviceData = await deviceRes.json();
                 if (deviceData.devices) {
                     setDevices(deviceData.devices);
                 }
 
-                // ⏱ Clear session orders for that device
                 setSessionOrders(prev => {
                     const copy = { ...prev };
                     delete copy[mac];
                     return copy;
                 });
 
-                // ⏱ Clear reset status message
                 setTimeout(() => {
                     setResetStatus(prev => {
                         const copy = { ...prev };
@@ -132,14 +129,28 @@ export default function AdminDevices({ wsMessages }) {
         return statusMap[device.status] || <span className="text-gray-400 font-semibold">Unknown</span>;
     };
 
+    // 👉 Grouping real vs demo
+    const realDevices = devices.filter(d => !d.mac.startsWith("external-demo"));
+    const demoDevices = devices.filter(d => d.mac.startsWith("external-demo"));
+
     return (
-        <div className="">
+        <div className="space-y-10">
+            {/* ✅ Real Devices */}
+            <DeviceGroup title="📡 실사용 디바이스" devices={realDevices} sessionOrders={sessionOrders} resetStatus={resetStatus} handleResetSession={handleResetSession} getStatusLabel={getStatusLabel} setSessionOrders={setSessionOrders} />
+
+            {/* 🧪 Demo Devices */}
+            <DeviceGroup title="🧪 데모 디바이스" devices={demoDevices} sessionOrders={sessionOrders} resetStatus={resetStatus} handleResetSession={handleResetSession} getStatusLabel={getStatusLabel} setSessionOrders={setSessionOrders} />
+        </div>
+    );
+}
+
+function DeviceGroup({ title, devices, sessionOrders, resetStatus, handleResetSession, getStatusLabel, setSessionOrders }) {
+    return (
+        <div>
+            <h2 className="text-xl font-bold mb-2">{title} ({devices.length})</h2>
             <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-3">
                 {devices.map((device, idx) => (
-                    <div
-                        key={idx}
-                        className="border rounded-lg p-3 shadow hover:shadow-md bg-white space-y-2"
-                    >
+                    <div key={idx} className="border rounded-lg p-3 shadow hover:shadow-md bg-white space-y-2">
                         <div className='flex justify-between w-full'>
                             <div className="text-xl font-semibold">🪑 Table {device.tableNumber ?? '-'}</div>
                             <div className='text-xs'>{getStatusLabel(device)}</div>
@@ -193,6 +204,7 @@ export default function AdminDevices({ wsMessages }) {
                                 <span className="text-gray-400 italic">None</span>
                             )}
                         </div>
+
                         <div className="pt-2 flex w-full justify-between items-center">
                             <div className="text-sm text-gray-500">{device.mac} / s{device.tableSessionId &&
                                 `${device.tableSessionId.slice(0, 2)}${device.tableSessionId.slice(-2)}`}
