@@ -129,6 +129,35 @@ export default function AdminDevices({ wsMessages }) {
         return statusMap[device.status] || <span className="text-gray-400 font-semibold">Unknown</span>;
     };
 
+    const handleCleanupDemoDevices = async () => {
+        const confirmed = window.confirm("⚠️ 정말로 모든 데모 디바이스와 세션을 삭제하시겠습니까?");
+        if (!confirmed) return;
+
+        try {
+            const res = await fetch(`${process.env.REACT_APP_API_URL}/admin/cleanup-demo-devices`, {
+                method: "DELETE",
+            });
+
+            const result = await res.json();
+            if (result.success) {
+                alert(`✅ 삭제 완료: ${result.deletedDevices}개 디바이스, ${result.deletedSessions}개 세션`);
+                setDevices(prev => prev.filter(d => !d.mac.startsWith("external-demo")));
+                setSessionOrders(prev => {
+                    const filtered = { ...prev };
+                    Object.keys(filtered).forEach(mac => {
+                        if (mac.startsWith("external-demo")) delete filtered[mac];
+                    });
+                    return filtered;
+                });
+            } else {
+                throw new Error("Server responded with error");
+            }
+        } catch (err) {
+            console.error("❌ Failed to cleanup demo devices:", err);
+            alert("❌ 삭제 실패. 서버 로그를 확인하세요.");
+        }
+    };
+
     // 👉 Grouping real vs demo
     const realDevices = devices.filter(d => !d.mac.startsWith("external-demo"));
     const demoDevices = devices.filter(d => d.mac.startsWith("external-demo"));
@@ -139,15 +168,21 @@ export default function AdminDevices({ wsMessages }) {
             <DeviceGroup title="📡 실사용 디바이스" devices={realDevices} sessionOrders={sessionOrders} resetStatus={resetStatus} handleResetSession={handleResetSession} getStatusLabel={getStatusLabel} setSessionOrders={setSessionOrders} />
 
             {/* 🧪 Demo Devices */}
-            <DeviceGroup title="🧪 데모 디바이스" devices={demoDevices} sessionOrders={sessionOrders} resetStatus={resetStatus} handleResetSession={handleResetSession} getStatusLabel={getStatusLabel} setSessionOrders={setSessionOrders} />
+            <DeviceGroup title="🧪 데모 디바이스" devices={demoDevices} sessionOrders={sessionOrders} resetStatus={resetStatus} handleCleanupDemoDevices={handleCleanupDemoDevices} handleResetSession={handleResetSession} getStatusLabel={getStatusLabel} setSessionOrders={setSessionOrders} />
         </div>
     );
 }
 
-function DeviceGroup({ title, devices, sessionOrders, resetStatus, handleResetSession, getStatusLabel, setSessionOrders }) {
+function DeviceGroup({ title, devices, sessionOrders, resetStatus, handleResetSession, getStatusLabel, setSessionOrders, handleCleanupDemoDevices }) {
     return (
         <div>
-            <h2 className="text-xl font-bold mb-2">{title} ({devices.length})</h2>
+            <div className='flex space-x-3 items-center'>
+                <h2 className="text-xl font-bold mb-2">{title} ({devices.length})</h2>
+
+                {handleCleanupDemoDevices && (
+                    <button className='bg-red-500 text-white px-3 py-1 text-sm' onClick={handleCleanupDemoDevices}>CLEAR</button>
+                )}
+            </div>
             <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-3">
                 {devices.map((device, idx) => (
                     <div key={idx} className="border rounded-lg p-3 shadow hover:shadow-md bg-white space-y-2">
