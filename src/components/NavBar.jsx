@@ -39,6 +39,7 @@ const NavBar = ({ user, setUser }) => {
 
         {user && (
           <div className="flex space-x-2">
+            <MenuButton id="chalcack" title="찰칵" />
             <MenuButton id="devices" title="Devices" />
             <MenuButton id="frames" title="Frames" />
             <MenuButton id="register" title="Register" />
