@@ -66,8 +66,15 @@ const Chalcack = () => {
                                             ))}
                                         </ul>
                                         <p className="mt-2 text-green-700 text-sm">
-                                            ✅ 정답: {item.correctAnswer.answerOption} — {item.correctAnswer.answerText}
+                                            ✅ 정답:{' '}
+                                            {item.correctAnswers?.map((ans, idx) => (
+                                                <span key={idx}>
+                                                    {ans.answerOption} — {ans.answerText}
+                                                    {idx < item.correctAnswers.length - 1 && ', '}
+                                                </span>
+                                            ))}
                                         </p>
+
 
                                         <button
                                             className="mt-2 text-sm text-blue-500 underline"
