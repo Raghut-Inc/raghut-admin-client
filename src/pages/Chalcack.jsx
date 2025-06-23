@@ -41,7 +41,7 @@ const Chalcack = () => {
             <h1 className="text-2xl font-bold">🧾 Chalcack 문제 기록</h1>
             {questions.map((q, qIndex) => (
                 <div key={qIndex} className="border border-gray-300 rounded-xl overflow-hidden shadow-sm bg-white">
-                    <div className="flex flex-col">
+                    <div className="flex flex-col md:flex-row">
                         <a href={q.imageUrl} target="_blank" rel="noopener noreferrer">
                             <img
                                 src={q.imageUrl}
@@ -60,7 +60,8 @@ const Chalcack = () => {
                                         <ul className="mt-2 pl-4 list-disc text-sm">
                                             {item.answers.map((a, j) => (
                                                 <li key={j}>
-                                                    {a.answerOption}. {a.answerText} — <span className="text-gray-500">{a.answerInKorean}</span>
+                                                    {a.answerOption}. {a.answerText}{' '}
+                                                    <span className="text-gray-500">({a.answerInKorean})</span>
                                                 </li>
                                             ))}
                                         </ul>
@@ -76,23 +77,51 @@ const Chalcack = () => {
                                         </button>
 
                                         {isOpen && (
-                                            <>
-                                                <p className="text-sm text-gray-500">{item.questionInKorean}</p>
+                                            <div className="mt-3 space-y-2 text-sm text-gray-700">
+                                                <p className="text-sm text-gray-500">🈶 {item.questionInKorean}</p>
 
-                                                <p className="mt-2 text-sm text-gray-700 whitespace-pre-wrap">{item.explanation}</p>
-                                                {item.vocabTips?.length > 0 && (
-                                                    <div className="mt-2 text-sm">
-                                                        <p className="font-semibold text-blue-600">📚 단어 정리</p>
-                                                        <ul className="pl-4 list-disc">
-                                                            {item.vocabTips.map((v, k) => (
-                                                                <li key={k}>
-                                                                    <strong>{v.word}</strong>: {v.meaning} — <span className="text-gray-500">{v.note}</span>
+                                                <div className="bg-white border rounded-md p-3 space-y-1">
+                                                    <p><strong>📌 문법 포인트:</strong> {item.explanation.grammarPoint}</p>
+                                                    <p><strong>📖 문장 해석:</strong> {item.explanation.sentenceInterpretation}</p>
+                                                    <p><strong>🧠 문맥상 적절성:</strong> {item.explanation.contextFit}</p>
+                                                    <p><strong>🧩 표현/자연스러움:</strong> {item.explanation.collocationOrUsage}</p>
+                                                    <p><strong>✅ 기억할 점:</strong> {item.explanation.takeaway}</p>
+                                                </div>
+
+                                                {item.wrongChoices?.length > 0 && (
+                                                    <div className="bg-red-50 border border-red-200 rounded-md p-3 mt-3">
+                                                        <p className="font-semibold text-red-500 mb-2">❌ 틀린 선택지 설명</p>
+                                                        <ul className="space-y-2">
+                                                            {item.wrongChoices.map((wc, idx) => (
+                                                                <li key={idx}>
+                                                                    <p><strong>{wc.answerOption}</strong> - {wc.reason}</p>
+                                                                    <p className="text-xs text-gray-500 ml-2">🔎 제거 전략: {wc.eliminationStrategy}</p>
                                                                 </li>
                                                             ))}
                                                         </ul>
                                                     </div>
                                                 )}
-                                            </>
+
+                                                {item.vocabTips?.length > 0 && (
+                                                    <div className="mt-4 text-sm">
+                                                        <p className="font-semibold text-blue-600">📚 단어 정리</p>
+                                                        <ul className="pl-4 list-disc mt-1 space-y-1">
+                                                            {item.vocabTips.map((v, k) => (
+                                                                <li key={k}>
+                                                                    <strong>{v.word}</strong>: {v.meaning}{' '}
+                                                                    <span className="text-gray-500">({v.note})</span>
+                                                                </li>
+                                                            ))}
+                                                        </ul>
+                                                    </div>
+                                                )}
+
+                                                {q.extractedContent && (
+                                                    <div className="mt-2 text-xs text-gray-400">
+                                                        🧾 OCR 원문: {q.extractedContent}
+                                                    </div>
+                                                )}
+                                            </div>
                                         )}
                                     </div>
                                 );
