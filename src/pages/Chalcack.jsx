@@ -54,6 +54,7 @@ const Chalcack = () => {
                             {q.gptAnalyzed.map((item, i) => {
                                 const key = `${qIndex}-${i}`;
                                 const isOpen = expanded[key];
+                                console.log(item.correctAnswers)
                                 return (
                                     <div key={i} className="bg-gray-50 p-3 rounded border-l-4 border-blue-400">
                                         <p className="font-semibold">{item.questionText}</p>
@@ -68,10 +69,10 @@ const Chalcack = () => {
                                         <p className="mt-2 text-green-700 text-sm">
                                             ✅ 정답:{' '}
                                             {item.correctAnswers?.map((ans, idx) => (
-                                                <span key={idx}>
+                                                <p key={idx}>
                                                     {ans.answerOption} — {ans.answerText}
                                                     {idx < item.correctAnswers.length - 1 && ', '}
-                                                </span>
+                                                </p>
                                             ))}
                                         </p>
 
