@@ -50,7 +50,7 @@ const Chalcack = () => {
                             />
                         </a>
                         <div className="flex-1 p-4 space-y-4">
-                            <p className="text-sm text-gray-500">🕒 {new Date(q.createdAt).toLocaleString()}</p>
+                            <p className="text-sm text-gray-500">🕒 {new Date(q.createdAt).toLocaleString()} , requestId: {q.requestId}</p>
                             {q.gptAnalyzed.map((item, i) => {
                                 const key = `${qIndex}-${i}`;
                                 const isOpen = expanded[key];
