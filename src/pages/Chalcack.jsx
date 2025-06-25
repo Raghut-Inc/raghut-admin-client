@@ -13,7 +13,10 @@ const Chalcack = () => {
                 const res = await fetch(`${process.env.REACT_APP_API_URL}/solved-questions`);
                 const data = await res.json();
                 if (data.success) {
-                    setQuestions(data.questions);
+                    // Get the last 25 questions if there are more than 25
+                    const first25Questions = data.questions.slice(0, 25);
+                    setQuestions(first25Questions);
+                    console.log(first25Questions)
                 } else {
                     console.error('Failed to load questions');
                 }
@@ -26,6 +29,7 @@ const Chalcack = () => {
 
         loadQuestions();
     }, []);
+
 
     const toggleExpand = (key) => {
         setExpanded((prev) => ({
@@ -50,11 +54,10 @@ const Chalcack = () => {
                             />
                         </a>
                         <div className="flex-1 p-4 space-y-4">
-                            <p className="text-sm text-gray-500">🕒 {new Date(q.createdAt).toLocaleString()} , requestId: {q.requestId}</p>
+                            <p className="text-sm text-gray-500">🕒 {new Date(q.createdAt).toLocaleString()} ,userId: {q.userId}, requestId: {q.requestId}</p>
                             {q.gptAnalyzed.map((item, i) => {
                                 const key = `${qIndex}-${i}`;
                                 const isOpen = expanded[key];
-                                console.log(item.correctAnswers)
                                 return (
                                     <div key={i} className="bg-gray-50 p-3 rounded border-l-4 border-blue-400">
                                         <p className="font-semibold">{item.questionText}</p>
@@ -66,7 +69,7 @@ const Chalcack = () => {
                                                 </li>
                                             ))}
                                         </ul>
-                                        <p className="mt-2 text-green-700 text-sm">
+                                        <div className="mt-2 text-green-700 text-sm">
                                             ✅ 정답:{' '}
                                             {item.correctAnswers?.map((ans, idx) => (
                                                 <p key={idx}>
@@ -74,7 +77,7 @@ const Chalcack = () => {
                                                     {idx < item.correctAnswers.length - 1 && ', '}
                                                 </p>
                                             ))}
-                                        </p>
+                                        </div>
 
 
                                         <button
