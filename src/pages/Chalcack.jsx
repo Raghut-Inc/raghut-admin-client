@@ -81,7 +81,11 @@ const Chalcack = () => {
                                 {q.metadata?.userAgent && (
                                     <div className="flex gap-2">
                                         <span className="min-w-[60px]">🧾 U/A:</span>
-                                        <span>{q.metadata.userAgent.slice(0, 100)}</span>
+                                        <span>
+                                            {q.metadata.userAgent.includes('CFNetwork') && q.metadata.userAgent.includes('Darwin')
+                                                ? ' Apple iOS App'
+                                                : q.metadata.userAgent.slice(0, 100)}
+                                        </span>
                                     </div>
                                 )}
                                 {q.metadata?.userInfo && (
