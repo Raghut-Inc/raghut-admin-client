@@ -41,20 +41,53 @@ const Chalcack = () => {
     if (loading) return <div className="p-10 text-center">📡 불러오는 중...</div>;
 
     return (
-        <div className="max-w-5xl mx-auto p-6 space-y-8">
+        <div className="max-w-5xl mx-auto py-4 space-y-6 font-sans">
             <h1 className="text-2xl font-bold">🧾 Chalcack 문제 기록</h1>
             {questions.map((q, qIndex) => (
                 <div key={qIndex} className="border border-gray-300 rounded-xl overflow-hidden shadow-sm bg-white">
                     <div className="flex flex-col md:flex-row">
-                        <a href={q.imageUrl} target="_blank" rel="noopener noreferrer">
-                            <img
-                                src={q.imageUrl}
-                                alt="Captured"
-                                className="w-full md:w-64 object-contain border-b md:border-b-0 md:border-r cursor-pointer"
-                            />
-                        </a>
-                        <div className="flex-1 p-4 space-y-4">
-                            <p className="text-sm text-gray-500">🕒 {new Date(q.createdAt).toLocaleString()} ,userId: {q.userId}, requestId: {q.requestId}</p>
+                        <div className='flex flex-col w-full md:w-64 bg-gray-200'>
+                            <a href={q.imageUrl} target="_blank" rel="noopener noreferrer">
+                                <img
+                                    src={q.imageUrl}
+                                    alt="Captured"
+                                    className="w-full max-h-64 object-contain object-center cursor-pointer"
+                                />
+                            </a>
+                            <div className="bg-gray-700 p-2 text-xs text-white space-y-1">
+                                <div className="flex gap-2">
+                                    <span className="min-w-[60px]">🕒 Time:</span>
+                                    <span>{new Date(q.createdAt).toLocaleString()}</span>
+                                </div>
+                                <div className="flex gap-2">
+                                    <span className="min-w-[60px]">🧑‍💻 UID:</span>
+                                    <span>{q.userId || 'N/A'}</span>
+                                </div>
+                                <div className="flex gap-2">
+                                    <span className="min-w-[60px]">🆔 RID:</span>
+                                    <span>{q.requestId}</span>
+                                </div>
+                                {q.metadata?.ip && (
+                                    <div className="flex gap-2">
+                                        <span className="min-w-[60px]">📍 IP:</span>
+                                        <span>{q.metadata.ip}</span>
+                                    </div>
+                                )}
+                                {q.metadata?.userAgent && (
+                                    <div className="flex gap-2">
+                                        <span className="min-w-[60px]">🧾 U/A:</span>
+                                        <span>{q.metadata.userAgent.slice(0, 100)}</span>
+                                    </div>
+                                )}
+                                {q.metadata?.userInfo && (
+                                    <div className="flex gap-2">
+                                        <span className="min-w-[60px]">👤 Info:</span>
+                                        <span>{q.metadata.userInfo}</span>
+                                    </div>
+                                )}
+                            </div>
+                        </div>
+                        <div className="flex-1 space-y-3">
                             {q.gptAnalyzed.map((item, i) => {
                                 const key = `${qIndex}-${i}`;
                                 const isOpen = expanded[key];

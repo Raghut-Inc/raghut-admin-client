@@ -100,7 +100,7 @@ function App() {
           path="/"
           element={
             user ? (
-              <Navigate to="/admin/devices" replace />
+              <Navigate to="/admin/chalcack" replace />
             ) : (
               <Landing user={user} setUser={setUser} />
             )
