@@ -65,22 +65,13 @@ const Chalcack = () => {
                                     <span>{new Date(q.createdAt).toLocaleString()}</span>
                                 </div>
                                 <div className="flex gap-2">
-                                    <span className="min-w-[60px]">🧑‍💻 UID:</span>
-                                    <span>{q.userId || 'N/A'}</span>
-                                </div>
-                                <div className="flex gap-2">
-                                    <span className="min-w-[60px]">🆔 RID:</span>
+                                    <span className="min-w-[60px]">🆔 rqID:</span>
                                     <span>{q.requestId}</span>
                                 </div>
-                                {q.metadata?.ip && (
-                                    <div className="flex gap-2">
-                                        <span className="min-w-[60px]">📍 IP:</span>
-                                        <span>{q.metadata.ip}</span>
-                                    </div>
-                                )}
+                                <div className='h-px w-full border-t border-gray-500' />
                                 {q.metadata?.userAgent && (
                                     <div className="flex gap-2">
-                                        <span className="min-w-[60px]">🧾 U/A:</span>
+                                        <span className="min-w-[60px]">🧾 기종:</span>
                                         <span>
                                             {q.metadata.userAgent.includes('CFNetwork') && q.metadata.userAgent.includes('Darwin')
                                                 ? ' Apple iOS App'
@@ -90,10 +81,14 @@ const Chalcack = () => {
                                 )}
                                 {q.metadata?.userInfo && (
                                     <div className="flex gap-2">
-                                        <span className="min-w-[60px]">👤 Info:</span>
-                                        <span>{q.metadata.userInfo}</span>
+                                        <span className="min-w-[60px]">👤 정보:</span>
+                                        <span>{q.metadata.userInfo === "Unauthenticated user" ? "비회원" : q.metadata.userInfo} ({q.metadata.ip})</span>
                                     </div>
                                 )}
+                                <div className="flex gap-2">
+                                    <span className="min-w-[60px]">🧑‍💻 UID:</span>
+                                    <span>{q.userId || '해당없음'}</span>
+                                </div>
                             </div>
                         </div>
                         <div className="flex-1 space-y-3">
