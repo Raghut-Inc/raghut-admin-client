@@ -41,19 +41,24 @@ const Chalcack = () => {
     if (loading) return <div className="p-10 text-center">📡 불러오는 중...</div>;
 
     return (
-        <div className="max-w-5xl mx-auto py-4 space-y-6 font-sans">
-            <h1 className="text-2xl font-bold">🧾 Chalcack 문제 기록</h1>
+        <div className="max-w-5xl mx-auto py-4 space-y-4 font-sans">
+            <h1 className="text-xl font-medium">🧾 찰칵 문제 기록</h1>
             {questions.map((q, qIndex) => (
                 <div key={qIndex} className="border border-gray-300 rounded-xl overflow-hidden shadow-sm bg-white">
                     <div className="flex flex-col md:flex-row">
                         <div className='flex flex-col w-full md:w-64 bg-gray-200'>
-                            <a href={q.imageUrl} target="_blank" rel="noopener noreferrer">
-                                <img
-                                    src={q.imageUrl}
-                                    alt="Captured"
-                                    className="w-full max-h-64 object-contain object-center cursor-pointer"
-                                />
-                            </a>
+                            <div className="relative">
+                                <a href={q.imageUrl} target="_blank" rel="noopener noreferrer">
+                                    <img
+                                        src={q.imageUrl}
+                                        alt="Captured"
+                                        className="w-full max-h-64 object-contain object-center cursor-pointer"
+                                    />
+                                </a>
+                                <div className={`${q.gptAnalyzed?.[0]?.questionText.includes("문제가 감지되지 않았습니다") ? "bg-red-500" : "bg-indigo-500"} absolute top-2 left-2 text-white text-xs font-medium px-3 py-1.5 rounded-lg`}>
+                                    {q.gptAnalyzed?.[0]?.questionText.includes("문제가 감지되지 않았습니다") ? "문제 인식 안됨" : `${q.gptAnalyzed?.length || 0} 문제 인식됨`}
+                                </div>
+                            </div>
                             <div className="bg-gray-700 p-2 text-xs text-white space-y-1">
                                 <div className="flex gap-2">
                                     <span className="min-w-[60px]">🕒 Time:</span>
@@ -95,23 +100,20 @@ const Chalcack = () => {
                                     <div key={i} className="bg-gray-50 p-3 rounded border-l-4 border-blue-400">
                                         <p className="font-semibold">{item.questionText}</p>
                                         <ul className="mt-2 pl-4 list-disc text-sm">
-                                            {item.answers.map((a, j) => (
-                                                <li key={j}>
-                                                    {a.answerOption}. {a.answerText}{' '}
-                                                    <span className="text-gray-500">({a.answerInKorean})</span>
-                                                </li>
-                                            ))}
+                                            {item.answers.map((a, j) => {
+                                                const isCorrect = item.correctAnswers?.some(
+                                                    (correct) => correct.answerOption === a.answerOption
+                                                );
+                                                return (
+                                                    <li
+                                                        key={j}
+                                                        className={isCorrect ? 'font-bold text-green-600' : 'text-gray-500'}
+                                                    >
+                                                        {a.answerOption}. {a.answerText}{' '}({a.answerInKorean})
+                                                    </li>
+                                                );
+                                            })}
                                         </ul>
-                                        <div className="mt-2 text-green-700 text-sm">
-                                            ✅ 정답:{' '}
-                                            {item.correctAnswers?.map((ans, idx) => (
-                                                <p key={idx}>
-                                                    {ans.answerOption} — {ans.answerText}
-                                                    {idx < item.correctAnswers.length - 1 && ', '}
-                                                </p>
-                                            ))}
-                                        </div>
-
 
                                         <button
                                             className="mt-2 text-sm text-blue-500 underline"
