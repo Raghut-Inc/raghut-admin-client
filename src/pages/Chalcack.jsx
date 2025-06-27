@@ -55,8 +55,8 @@ const Chalcack = () => {
                                         className="w-full max-h-64 object-contain object-center cursor-pointer"
                                     />
                                 </a>
-                                <div className={`${q.gptAnalyzed?.[0]?.questionText.includes("문제가 감지되지 않았습니다") ? "bg-red-500" : "bg-indigo-500"} absolute top-2 left-2 text-white text-xs font-medium px-3 py-1.5 rounded-lg`}>
-                                    {q.gptAnalyzed?.[0]?.questionText.includes("문제가 감지되지 않았습니다") ? "문제 인식 안됨" : `${q.gptAnalyzed?.length || 0} 문제 인식됨`}
+                                <div className={`${(q.gptAnalyzed?.[0]?.questionText.includes("문제가 감지되지 않았습니다") || q.gptAnalyzed?.length === 0) ? "bg-red-500" : "bg-indigo-500"} absolute top-2 left-2 text-white text-xs font-medium px-3 py-1.5 rounded-lg`}>
+                                    {(q.gptAnalyzed?.[0]?.questionText.includes("문제가 감지되지 않았습니다") || q.gptAnalyzed?.length === 0) ? "문제 인식 안됨" : `${q.gptAnalyzed?.length || 0} 문제 인식됨`}
                                 </div>
                             </div>
                             <div className="bg-gray-700 p-2 text-xs text-white space-y-1">
