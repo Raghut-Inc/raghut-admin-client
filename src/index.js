@@ -10,12 +10,6 @@ import { BrowserRouter } from "react-router";
 
 const root = ReactDOM.createRoot(document.getElementById("root"));
 
-const theme = {
-  token: {
-    fontFamily: 'KyoboHand, sans-serif',
-  },
-};
-
 root.render(
   // <React.StrictMode>
   <HelmetProvider>
@@ -26,7 +20,7 @@ root.render(
           v7_relativeSplatPath: true
         }}
       >
-        <ConfigProvider theme={theme}>
+        <ConfigProvider>
           <App />
         </ConfigProvider>
       </BrowserRouter>

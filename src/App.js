@@ -93,14 +93,14 @@ function App() {
   }
 
   return (
-    <div className="font-kyobohand">
+    <div className="">
       <ScrollToTop />
       <Routes>
         <Route
           path="/"
           element={
             user ? (
-              <Navigate to="/admin/chalcack" replace />
+              <Navigate to="/admin/uploads" replace />
             ) : (
               <Landing user={user} setUser={setUser} />
             )

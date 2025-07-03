@@ -47,7 +47,7 @@ const UserSettingsButton = ({ user, setUser }) => {
             alt="Profile"
           />
         ) : (
-          <div className="h-8 w-8 bg-white rounded-lg border bg-gradient-to-br from-fuchsia-400 to-fuchsia-300 font-medium text-white flex items-center justify-center">
+          <div className="h-8 w-8 bg-white rounded-full bg-gradient-to-br from-fuchsia-400 to-fuchsia-300 font-medium text-white flex items-center justify-center">
             {user.displayName?.slice(0, 1) || user.email.slice(0, 1)}
           </div>
         )}

@@ -1,5 +1,4 @@
 import { Link, useLocation } from "react-router";
-import { TypeAnimation } from "react-type-animation";
 import UserSettingsButton from "./UserSettingsButton";
 import clsx from "clsx";
 
@@ -13,7 +12,7 @@ const NavBar = ({ user, setUser }) => {
     return (
       <Link to={path}>
         <button
-          className={clsx("px-3 py-1.5 rounded-lg text-sm", isActive ? "underline font-semibold" : "bg-white")}
+          className={clsx("px-3 py-1.5 rounded-lg text-base", isActive ? "font-semibold text-indigo-600" : "text-gray-500")}
         >
           {title}
         </button>
@@ -25,29 +24,20 @@ const NavBar = ({ user, setUser }) => {
     <nav className="w-full flex-shrink-0 md:flex justify-center z-30 py-3 px-3 md:px-4 bg-white">
       <div className="flex w-full h-full justify-between space-x-2">
         <div className="flex space-x-6 items-center">
-          <Link to="/" className="flex-shrink-0 font-bold">
-            <div className="w-24">
-              <TypeAnimation
-                sequence={["Raghut", 5000, "raghut", 5000, "rag", 1000]}
-                repeat={Infinity}
-                speed={20}
-                style={{ fontSize: "1.3rem" }}
-              />
-            </div>
+          <Link to="/" className="flex-shrink-0 font-semibold">
+            <div className="w-24 text-xl">ADMIN</div>
           </Link>
         </div>
 
-        {user && (
-          <div className="flex space-x-2">
-            <MenuButton id="chalcack" title="찰칵" />
-            <MenuButton id="devices" title="Devices" />
-            <MenuButton id="register" title="Register" />
-          </div>
-        )}
-
         <div className="flex flex-shrink-0 space-x-6 items-center">
           {user ? (
-            <UserSettingsButton user={user} setUser={setUser} />
+            <div className="flex space-x-3">
+              <MenuButton id="uploads" title="업로드" />
+              <MenuButton id="user" title="유저" />
+              {/* <MenuButton id="devices" title="Devices" />
+            <MenuButton id="register" title="Register" /> */}
+              <UserSettingsButton user={user} setUser={setUser} />
+            </div>
           ) : (
             <Link to="/login">
               <button className="bg-indigo-600 text-white px-4 py-2 rounded-lg hover:bg-indigo-700 transition-colors flex-shrink-0">
