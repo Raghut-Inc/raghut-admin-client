@@ -35,7 +35,7 @@ const UploadsListItem = ({ q, qIndex }) => {
     return (
         <li
             key={q._id || qIndex}
-            className="flex items-center gap-3 p-2 hover:bg-gray-100 cursor-pointer border-b border-gray-300"
+            className="flex items-center gap-3 p-2 bg-white hover:bg-gray-100 cursor-pointer border-gray-300"
         >
 
             <a href={q.imageUrl} target="_blank" rel="noopener noreferrer" className="flex-shrink-0">
