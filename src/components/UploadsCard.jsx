@@ -50,10 +50,13 @@ const UploadsCard = ({ q, qIndex }) => {
                                 alt="Captured"
                                 className="w-full max-h-64 object-contain object-center cursor-pointer"
                             />
-                            <div className="absolute bottom-2 right-2 bg-black/65 text-white text-xs rounded-full px-3 py-1">
-                                <p>{q.requestId}</p>
-                            </div>
                         </a>
+                        <div
+                            onClick={e => e.stopPropagation()}
+                            className="absolute bottom-2 right-2 bg-black/65 text-white text-xs rounded-full px-3 py-1"
+                        >
+                            <p>{q.requestId}</p>
+                        </div>
                     </div>
 
 
