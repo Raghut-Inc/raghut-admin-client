@@ -65,6 +65,31 @@ const Uploads = () => {
         []
     );
 
+    // Delete handler
+    const handleDelete = async (id) => {
+        if (!window.confirm('정말 이 문제를 삭제하시겠습니까?')) return;
+
+        try {
+            const res = await fetch(
+                `${process.env.REACT_APP_API_URL}/solved-questions/${id}`,
+                {
+                    method: 'DELETE',
+                }
+            );
+            const data = await res.json();
+            if (data.success) {
+                setQuestions(prev => prev.filter(q => q.requestId !== id));
+                setTotalCount((count) => count - 1);
+            } else {
+                alert('삭제에 실패했습니다.');
+                console.error('Delete failed:', data.error);
+            }
+        } catch (err) {
+            alert('삭제 중 오류가 발생했습니다.');
+            console.error('Delete error:', err);
+        }
+    };
+
     // Load first page on mount
     useEffect(() => {
         loadQuestions(1);
@@ -93,6 +118,7 @@ const Uploads = () => {
         if (page === 1) return; // already loaded on mount
         loadQuestions(page);
     }, [page, loadQuestions]);
+
 
     if (loading && page === 1) {
         return <div className='w-full h-screen flex items-center justify-center bg-gray-200 text-sm text-gray-500'>Loading...</div>;
@@ -130,13 +156,13 @@ const Uploads = () => {
                 {viewMode === 'card' ? (
                     <div className="space-y-8">
                         {questions.map((q, qIndex) => (
-                            <UploadsCard key={q._id || qIndex} q={q} qIndex={qIndex} />
+                            <UploadsCard key={q._id || qIndex} q={q} qIndex={qIndex} onDelete={handleDelete} />
                         ))}
                     </div>
                 ) : (
                     <ul className="divide-y divide-gray-300">
                         {questions.map((q, qIndex) => (
-                            <UploadsListItem key={q._id || qIndex} q={q} qIndex={qIndex} />
+                            <UploadsListItem key={q._id || qIndex} q={q} qIndex={qIndex} onDelete={handleDelete} />
                         ))}
                     </ul>
                 )}

@@ -1,6 +1,6 @@
 import { useState } from 'react';
 
-const UploadsCard = ({ q, qIndex }) => {
+const UploadsCard = ({ q, qIndex, onDelete }) => {
     const [expanded, setExpanded] = useState({}); // { "qIndex-i": true }
 
     function timeAgo(dateString) {
@@ -56,6 +56,15 @@ const UploadsCard = ({ q, qIndex }) => {
                             className="absolute bottom-2 right-2 bg-black/65 text-white text-xs rounded-full px-3 py-1"
                         >
                             <p>{q.requestId}</p>
+                        </div>
+                        <div
+                            onClick={e => {
+                                e.stopPropagation()
+                                onDelete(q.requestId)
+                            }}
+                            className="absolute top-2 right-2 bg-red-500/65 text-white text-xs rounded-full px-3 py-1"
+                        >
+                            <p>삭제</p>
                         </div>
                     </div>
 
