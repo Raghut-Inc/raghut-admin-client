@@ -2,6 +2,13 @@ import React, { useEffect, useState } from 'react';
 
 const PAGE_SIZE = 20;
 
+const subscriptionStatusColors = {
+    active: 'text-green-600 bg-green-100',
+    canceled: 'text-yellow-600 bg-yellow-100',
+    expired: 'text-red-600 bg-red-100',
+    none: 'text-gray-500 bg-gray-100',
+};
+
 const Users = () => {
     const [users, setUsers] = useState([]);
     const [page, setPage] = useState(1);
@@ -14,15 +21,17 @@ const Users = () => {
         setLoading(true);
         setError(null);
         try {
-            const res = await fetch(`${process.env.REACT_APP_API_URL}/users?page=${pageNum}&pageSize=${PAGE_SIZE}`, {
-                credentials: 'include',
-                headers: {
-                    'Content-Type': 'application/json',
-                },
-            });
+            const res = await fetch(
+                `${process.env.REACT_APP_API_URL}/users?page=${pageNum}&pageSize=${PAGE_SIZE}`,
+                {
+                    credentials: 'include',
+                    headers: {
+                        'Content-Type': 'application/json',
+                    },
+                }
+            );
             const data = await res.json();
             if (data.success) {
-                console.log(data.users)
                 setUsers(data.users);
                 setPage(data.page);
                 setTotalPages(data.totalPages);
@@ -36,6 +45,10 @@ const Users = () => {
             setLoading(false);
         }
     };
+
+    useEffect(() => {
+        fetchUsers(page);
+    }, [page]);
 
     function timeAgo(dateString) {
         const now = new Date();
@@ -61,78 +74,170 @@ const Users = () => {
         return `${years}년 전`;
     }
 
-    useEffect(() => {
-        fetchUsers(page);
-    }, [page]);
+    const copyToClipboard = (text) => {
+        navigator.clipboard.writeText(text).catch(() => {
+            alert('복사에 실패했습니다. 직접 복사해 주세요.');
+        });
+    };
 
     if (loading) {
-        return <div className="max-w-4xl font-sans bg-gray-200 p-4">Loading users...</div>;
+        return (
+            <div className="max-w-6xl font-sans bg-gray-200 p-4 rounded shadow">
+                Loading users...
+            </div>
+        );
     }
 
     if (error) {
-        return <div className="max-w-4xl font-sans bg-gray-200 p-4 text-red-600">{error}</div>;
+        return (
+            <div className="max-w-6xl font-sans bg-gray-200 p-4 text-red-600 rounded shadow">
+                {error}
+            </div>
+        );
     }
 
     return (
-        <div className="max-w-4xl font-sans bg-gray-200 rounded-md shadow-sm">
-            <div className="flex h-12 items-center w-full justify-between px-2">
-                <p className="font-medium text-sm text-indigo-600">유저: {totalCount.toLocaleString()}</p>
-            </div>
+        <div className="max-w-6xl font-sans bg-gray-200 rounded-md shadow p-4">
+            <header className="flex items-center justify-between mb-4">
+                <h2 className="text-indigo-600 font-semibold text-lg">
+                    유저 총 {totalCount.toLocaleString()}명
+                </h2>
+                <div className="text-sm text-gray-600">
+                    페이지 {page} / {totalPages}
+                </div>
+            </header>
 
-            <ul className="bg-white rounded-md shadow-sm">
-                {users.map((user) => (
-                    <li key={user._id} className="py-3 px-4 flex items-center gap-4 border-gray-100 last:border-none">
-                        {/* Profile image */}
-                        <div className="flex-shrink-0">
-                            {user.profileImageUrl ? (
-                                <a href={user.profileImageUrl} target="_blank" rel="noopener noreferrer" >
-                                    <img
-                                        src={user.profileImageUrl}
-                                        alt={`${user.name}'s profile`}
-                                        className="w-10 h-10 rounded-full object-cover border border-gray-300"
-                                    />
-                                </a>
-                            ) : (
-                                <div className="w-10 h-10 rounded-full bg-gray-300 flex items-center justify-center text-gray-500 font-semibold text-sm select-none">
-                                    {user.name?.[0]?.toUpperCase() || '?'}
-                                </div>
-                            )}
-                        </div>
+            <ul className="bg-white rounded-md shadow divide-y divide-gray-200">
+                {users.map((user) => {
+                    const createdAtDate = new Date(user.createdAt);
+                    const subscriptionExpires = user.subscriptionExpiresAt
+                        ? new Date(user.subscriptionExpiresAt).toLocaleDateString()
+                        : '-';
 
-                        {/* User details */}
-                        <div className="flex-grow min-w-0">
-                            <div className="flex justify-between items-center text-xs">
-                                <p className="font-semibold truncate">{user.name || 'Unnamed User'}</p>
-                                <p className="text-xs text-gray-400 space-x-1 whitespace-nowrap">
-                                    <span style={{ fontSize: 10 }}>
-                                        ({new Date(user.createdAt).toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' })})
-                                    </span>
-                                    <span>{timeAgo(user.createdAt)}</span>
-                                </p>
+                    return (
+                        <li
+                            key={user._id}
+                            className="py-4 px-6 flex flex-col sm:flex-row sm:items-center sm:space-x-6"
+                            title={`ID: ${user._id}`}
+                        >
+                            {/* Profile */}
+                            <div className="flex-shrink-0 mb-3 sm:mb-0">
+                                {user.profileImageUrl ? (
+                                    <a
+                                        href={user.profileImageUrl}
+                                        target="_blank"
+                                        rel="noopener noreferrer"
+                                        className="inline-block w-14 h-14 rounded-full overflow-hidden border border-gray-300 hover:ring-2 hover:ring-indigo-400 transition"
+                                    >
+                                        <img
+                                            src={user.profileImageUrl}
+                                            alt={`${user.name}'s profile`}
+                                            className="object-cover w-full h-full"
+                                            loading="lazy"
+                                        />
+                                    </a>
+                                ) : (
+                                    <div className="w-14 h-14 rounded-full bg-gray-300 flex items-center justify-center text-gray-600 font-semibold text-xl select-none">
+                                        {user.name?.[0]?.toUpperCase() || '?'}
+                                    </div>
+                                )}
                             </div>
-                            <p className="text-xs text-gray-600 truncate">
-                                <span className="capitalize">{user.provider || 'Unknown'}</span>∙
-                                <span className="text-indigo-600 font-mono truncate" title={`Referral ID: ${user.referralId}`}>
-                                    {user.referralId} (초대코드)
-                                </span>
-                            </p>
-                            <p className="text-xs text-gray-600 truncate">
-                                <span className="">{user.email || 'No email'}</span>
-                            </p>
-                            <p className="text-xs text-gray-600 truncate">
-                                <span className="">{user._id}</span>
-                            </p>
-                        </div>
-                    </li>
-                ))}
+
+                            {/* User Info */}
+                            <div className="flex-grow min-w-0 space-y-1">
+                                <div className="flex flex-wrap items-center gap-2">
+                                    <p className="font-semibold text-sm truncate max-w-xs">{user.name || 'Unnamed User'}</p>
+
+                                    {/* Role badge */}
+                                    <span
+                                        className={`px-2 py-0.5 text-xs rounded-full font-mono ${user.role === 'admin'
+                                                ? 'bg-indigo-100 text-indigo-800'
+                                                : 'bg-gray-100 text-gray-600'
+                                            }`}
+                                        title="User Role"
+                                    >
+                                        {user.role.toUpperCase()}
+                                    </span>
+
+                                    {/* Provider */}
+                                    <span
+                                        className="text-xs text-gray-500 uppercase font-mono"
+                                        title="Login Provider"
+                                    >
+                                        {user.provider || 'UNKNOWN'}
+                                    </span>
+                                </div>
+
+                                {/* Email and Referral */}
+                                <div className="flex flex-wrap items-center gap-2 text-xs text-gray-600 max-w-full">
+                                    <span
+                                        className="truncate cursor-pointer underline decoration-dotted"
+                                        title="Click to copy email"
+                                        onClick={() => user.email && copyToClipboard(user.email)}
+                                    >
+                                        {user.email || 'No email'}
+                                    </span>
+
+                                    <span>∙</span>
+
+                                    <span
+                                        className="truncate font-mono text-indigo-700 cursor-pointer underline decoration-dotted"
+                                        title="Click to copy referralId"
+                                        onClick={() => user.referralId && copyToClipboard(user.referralId)}
+                                    >
+                                        초대코드: {user.referralId}
+                                    </span>
+                                </div>
+
+                                {/* User ID */}
+                                <div className="text-xs text-gray-400 font-mono truncate max-w-full">
+                                    ID: {user._id}
+                                </div>
+
+                                {/* Created At */}
+                                <div className="text-xs text-gray-500 flex gap-2 items-center">
+                                    <time
+                                        dateTime={user.createdAt}
+                                        title={createdAtDate.toLocaleString()}
+                                        className="whitespace-nowrap"
+                                    >
+                                        가입: {createdAtDate.toLocaleDateString()} ({timeAgo(user.createdAt)})
+                                    </time>
+                                </div>
+
+                                {/* Subscription info */}
+                                <div className="mt-1 flex flex-wrap gap-2 items-center text-xs">
+                                    <span
+                                        className={`inline-block px-2 py-0.5 rounded-full font-mono ${subscriptionStatusColors[user.subscriptionStatus] || subscriptionStatusColors.none
+                                            }`}
+                                        title="Subscription status"
+                                    >
+                                        구독: {user.subscriptionStatus || 'none'}
+                                    </span>
+
+                                    <span className="text-gray-600 font-mono">
+                                        타입: {user.subscriptionType || '-'}
+                                    </span>
+
+                                    <span className="text-gray-600 font-mono">
+                                        만료: {subscriptionExpires}
+                                    </span>
+                                </div>
+                            </div>
+                        </li>
+                    );
+                })}
             </ul>
 
             {/* Pagination */}
-            <div className="flex justify-center gap-4 mt-6">
+            <nav
+                aria-label="Pagination"
+                className="flex justify-center gap-4 mt-6"
+            >
                 <button
                     onClick={() => setPage((p) => Math.max(p - 1, 1))}
                     disabled={page === 1}
-                    className="px-3 py-1 bg-gray-200 rounded disabled:opacity-50"
+                    className="px-3 py-1 bg-gray-200 rounded disabled:opacity-50 focus:outline-none focus:ring-2 focus:ring-indigo-400"
                 >
                     Previous
                 </button>
@@ -142,11 +247,11 @@ const Users = () => {
                 <button
                     onClick={() => setPage((p) => Math.min(p + 1, totalPages))}
                     disabled={page === totalPages}
-                    className="px-3 py-1 bg-gray-200 rounded disabled:opacity-50"
+                    className="px-3 py-1 bg-gray-200 rounded disabled:opacity-50 focus:outline-none focus:ring-2 focus:ring-indigo-400"
                 >
                     Next
                 </button>
-            </div>
+            </nav>
         </div>
     );
 };
