@@ -43,6 +43,7 @@ const Uploads = () => {
                 );
                 const data = await res.json();
                 if (data.success) {
+                    console.log(data)
                     setTotalCount(data.totalCount)
                     if (pageToLoad === 1) {
                         setQuestions(data.questions);
