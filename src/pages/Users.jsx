@@ -22,6 +22,7 @@ const Users = () => {
             });
             const data = await res.json();
             if (data.success) {
+                console.log(data.users)
                 setUsers(data.users);
                 setPage(data.page);
                 setTotalPages(data.totalPages);
@@ -117,6 +118,9 @@ const Users = () => {
                             </p>
                             <p className="text-xs text-gray-600 truncate">
                                 <span className="">{user.email || 'No email'}</span>
+                            </p>
+                            <p className="text-xs text-gray-600 truncate">
+                                <span className="">{user._id}</span>
                             </p>
                         </div>
                     </li>
