@@ -69,14 +69,13 @@ const UploadsCard = ({ q, qIndex, onDelete }) => {
                     </div>
 
 
-                    <div className="bg-gray-700 text-xs text-white space-y-2 p-3">
+                    <div className="bg-gray-700 text-xs text-white space-y-1 p-3">
 
                         {/* Uploader info */}
                         {q.userId ? (
-                            <div className="bg-gray-700 rounded-md text-xs text-white space-y-2">
-                                <div className="flex flex-col truncate max-w-xs">
+                            <div className="bg-gray-700 rounded-md text-xs text-white space-y-1">
+                                <div className="flex flex-col truncate max-w-xs space-y-1">
                                     <div className="flex items-center gap-2">
-                                        <span className="font-semibold truncate">{q.userId.name || 'Unnamed User'}</span>
                                         <span
                                             className={`px-1.5 py-0.5 rounded text-xs font-mono ${q.userId.role === 'admin'
                                                 ? 'bg-indigo-300 text-indigo-900'
@@ -86,6 +85,12 @@ const UploadsCard = ({ q, qIndex, onDelete }) => {
                                         >
                                             {q.userId.role?.toUpperCase() || 'USER'}
                                         </span>
+                                        <span className="font-semibold truncate">{q.userId.name || 'Unnamed User'}</span>
+
+                                    </div>
+
+                                    <div className="text-xs text-gray-400 truncate max-w-xs font-mono">
+                                        {q.userId._id}
                                     </div>
 
                                     <div className="flex flex-wrap gap-2 text-xs text-gray-300 truncate max-w-xs">
@@ -112,7 +117,6 @@ const UploadsCard = ({ q, qIndex, onDelete }) => {
                                             초대코드: {q.userId.referralId || '-'}
                                         </span>
                                     </div>
-
                                     <div className="text-xs text-gray-400 mt-1 truncate max-w-xs font-mono">
                                         가입일:{' '}
                                         {q.userId.createdAt
@@ -121,7 +125,24 @@ const UploadsCard = ({ q, qIndex, onDelete }) => {
                                         ({timeAgo(q.userId.createdAt)})
                                     </div>
 
-                                    <div className="flex flex-wrap gap-2 mt-1 text-xs">
+                                    <div className="text-xs mt-1 text-gray-400 truncate max-w-xs font-mono">
+                                        로그인 방식: {q.userId.provider || '-'}
+                                    </div>
+                                    <div className="mt-1 text-xs text-gray-400 truncate max-w-xs font-mono">
+                                        IP: {q.metadata?.ip || '-'}
+                                    </div>
+
+                                    <div className="mt-1 text-xs text-gray-400 truncate max-w-xs font-mono">
+                                        <span className="min-w-[60px]">기종: </span>
+                                        <span>
+                                            {q.metadata.userAgent.includes('CFNetwork') &&
+                                                q.metadata.userAgent.includes('Darwin')
+                                                ? ' Apple iOS App'
+                                                : q.metadata.userAgent}
+                                        </span>
+                                    </div>
+
+                                    <div className="flex flex-wrap gap-1 text-xs border-t pt-1 border-gray-500 border-dashed">
                                         <span
                                             className={`inline-block px-2 py-0.5 rounded-full font-mono ${{
                                                 active: 'bg-green-200 text-green-800',
@@ -146,14 +167,8 @@ const UploadsCard = ({ q, qIndex, onDelete }) => {
                                                 : '-'}
                                         </span>
                                     </div>
+                                </div>
 
-                                    <div className="text-xs mt-1 text-gray-400 truncate max-w-xs font-mono">
-                                        로그인 방식: {q.userId.provider || '-'}
-                                    </div>
-                                </div>
-                                <div className="mt-1 text-xs text-gray-400 truncate max-w-xs font-mono">
-                                    IP: {q.metadata?.ip || '-'}
-                                </div>
                             </div>
                         ) : q.metadata?.userInfo ? (
                             <div className="bg-gray-700 rounded-md text-xs text-white space-y-2">
@@ -166,20 +181,6 @@ const UploadsCard = ({ q, qIndex, onDelete }) => {
                                 </span>
                             </div>
                         ) : null}
-
-                        {/* User agent info */}
-                        {q.metadata?.userAgent && (
-                            <div className="bg-gray-700 rounded-md text-xs text-white space-y-2">
-                                <span className="min-w-[60px]">기종: </span>
-                                <span>
-                                    {q.metadata.userAgent.includes('CFNetwork') &&
-                                        q.metadata.userAgent.includes('Darwin')
-                                        ? ' Apple iOS App'
-                                        : q.metadata.userAgent}
-                                </span>
-                            </div>
-                        )}
-
                     </div>
                 </div>
                 <div className="flex-1 text-xs">
