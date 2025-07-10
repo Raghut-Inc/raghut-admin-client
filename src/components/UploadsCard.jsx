@@ -179,6 +179,15 @@ const UploadsCard = ({ q, qIndex, onDelete }) => {
                                         : q.metadata.userInfo}{' '}
                                     ({q.metadata.ip})
                                 </span>
+                                <div className="mt-1 text-xs text-gray-400 truncate max-w-xs font-mono">
+                                    <span className="min-w-[60px]">기종: </span>
+                                    <span>
+                                        {q.metadata.userAgent.includes('CFNetwork') &&
+                                            q.metadata.userAgent.includes('Darwin')
+                                            ? ' Apple iOS App'
+                                            : q.metadata.userAgent}
+                                    </span>
+                                </div>
                             </div>
                         ) : null}
                     </div>
