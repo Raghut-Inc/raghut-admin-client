@@ -32,6 +32,7 @@ const Users = () => {
             );
             const data = await res.json();
             if (data.success) {
+                console.log(data)
                 setUsers(data.users);
                 setPage(data.page);
                 setTotalPages(data.totalPages);
@@ -151,8 +152,8 @@ const Users = () => {
                                     {/* Role badge */}
                                     <span
                                         className={`px-2 py-0.5 text-xs rounded-full font-mono ${user.role === 'admin'
-                                                ? 'bg-indigo-100 text-indigo-800'
-                                                : 'bg-gray-100 text-gray-600'
+                                            ? 'bg-indigo-100 text-indigo-800'
+                                            : 'bg-gray-100 text-gray-600'
                                             }`}
                                         title="User Role"
                                     >
@@ -222,6 +223,18 @@ const Users = () => {
                                     <span className="text-gray-600 font-mono">
                                         만료: {subscriptionExpires}
                                     </span>
+
+                                </div>
+                                {user.invitedByCode && (
+                                    <div className="text-xs text-gray-600 font-mono truncate max-w-full mt-1">
+                                        초대한 사람 코드: {user.invitedByCode}
+                                    </div>
+                                )}
+
+                                <div className="text-xs text-gray-600 font-mono mt-1">
+                                    초대한 사람 수: {user.invitees?.length || 0}명
+                                    {' '}
+                                    (사용 완료: {user.invitees?.filter(i => i.redeemed).length || 0}명)
                                 </div>
                             </div>
                         </li>
