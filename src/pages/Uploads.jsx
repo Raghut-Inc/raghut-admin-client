@@ -79,7 +79,7 @@ const Uploads = () => {
             );
             const data = await res.json();
             if (data.success) {
-                setQuestions(prev => prev.filter(q => q.requestId !== id));
+                setQuestions(prev => prev.filter(q => q._id !== id));
                 setTotalCount((count) => count - 1);
             } else {
                 alert('삭제에 실패했습니다.');

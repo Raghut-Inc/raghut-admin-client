@@ -55,12 +55,12 @@ const UploadsCard = ({ q, qIndex, onDelete }) => {
                             onClick={e => e.stopPropagation()}
                             className="absolute bottom-2 right-2 bg-black/65 text-white text-xs rounded-full px-3 py-1"
                         >
-                            <p>{q.requestId}</p>
+                            <p>{q._id}</p>
                         </div>
                         <div
                             onClick={e => {
                                 e.stopPropagation()
-                                onDelete(q.requestId)
+                                onDelete(q._id);
                             }}
                             className="absolute top-2 right-2 bg-red-500/65 text-white text-xs rounded-full px-3 py-1"
                         >
