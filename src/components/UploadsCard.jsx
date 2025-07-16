@@ -73,8 +73,8 @@ const UploadsCard = ({ q, qIndex, onDelete }) => {
 
                         {/* Uploader info */}
                         {q.userId ? (
-                            <div className="bg-gray-700 rounded-md text-xs text-white space-y-1">
-                                <div className="flex flex-col truncate max-w-xs space-y-1">
+                            <div className="bg-gray-700 rounded-md text-xs text-white space-y-1 w-full">
+                                <div className="flex flex-col w-full space-y-1">
                                     <div className="flex items-center gap-2">
                                         <span
                                             className={`px-1.5 py-0.5 rounded text-xs font-mono ${q.userId.role === 'admin'
@@ -85,15 +85,17 @@ const UploadsCard = ({ q, qIndex, onDelete }) => {
                                         >
                                             {q.userId.role?.toUpperCase() || 'USER'}
                                         </span>
-                                        <span className="font-semibold truncate">{q.userId.name || 'Unnamed User'}</span>
+                                        <span className="font-semibold">{q.userId.name || 'Unnamed User'}</span>
 
                                     </div>
 
-                                    <div className="text-xs text-gray-400 truncate max-w-xs font-mono">
-                                        {q.userId._id}
+                                    <div className="text-xs text-gray-400 font-mono">
+                                        uId: {q.userId._id}
                                     </div>
-
-                                    <div className="flex flex-wrap gap-2 text-xs text-gray-300 truncate max-w-xs">
+                                    <div className="text-xs text-gray-400 font-mono">
+                                        guestId: {q.guestUUID}
+                                    </div>
+                                    <div className="flex flex-wrap gap-2 text-xs text-gray-300 truncate">
                                         <span
                                             className="cursor-pointer underline decoration-dotted truncate"
                                             title="Click to copy email"
@@ -180,8 +182,10 @@ const UploadsCard = ({ q, qIndex, onDelete }) => {
                                     {q.metadata.userInfo === 'Unauthenticated user'
                                         ? '비회원'
                                         : q.metadata.userInfo}{' '}
-                                    ({q.metadata.ip})
                                 </span>
+                                <div className="text-xs text-gray-400 font-mono">
+                                    guestId: {q.guestUUID}
+                                </div>
                                 <div className="mt-1 text-xs text-gray-400 truncate max-w-xs font-mono">
                                     <span className="min-w-[60px]">기종: </span>
                                     <span>
