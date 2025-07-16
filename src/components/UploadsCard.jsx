@@ -200,7 +200,7 @@ const UploadsCard = ({ q, qIndex, onDelete }) => {
                     </div>
                 </div>
                 <div className="flex-1 text-xs">
-                    {q.gptAnalyzed.map((item, i) => {
+                    {q.gptAnalyzed?.map((item, i) => {
                         const key = `${qIndex}-${i}`;
                         const isOpen = expanded[key];
                         return (
