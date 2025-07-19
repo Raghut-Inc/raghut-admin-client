@@ -20,7 +20,7 @@ export default function Login({ setUser }) {
 
             if (res.data.success) {
                 setUser(res.data.user);
-                navigate("/admin/devices");
+                navigate("/admin/uploads?view=card");
             } else {
                 setError("Invalid login");
             }

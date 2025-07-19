@@ -33,6 +33,7 @@ const NavBar = ({ user, setUser }) => {
           {user ? (
             <div className="flex space-x-3">
               <MenuButton id="uploads" title="업로드" />
+              <MenuButton id="analytics" title="분석" />
               <MenuButton id="user" title="유저" />
               {/* <MenuButton id="devices" title="Devices" />
             <MenuButton id="register" title="Register" /> */}
