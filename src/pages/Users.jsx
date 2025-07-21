@@ -1,4 +1,4 @@
-import React, { useEffect, useState } from 'react';
+import React, { useEffect, useState, useCallback } from 'react';
 
 const PAGE_SIZE = 20;
 
@@ -11,45 +11,81 @@ const subscriptionStatusColors = {
 
 const Users = () => {
     const [users, setUsers] = useState([]);
-    const [page, setPage] = useState(1);
-    const [totalPages, setTotalPages] = useState(1);
     const [totalCount, setTotalCount] = useState(0);
-    const [loading, setLoading] = useState(false);
-    const [error, setError] = useState(null);
+    const [page, setPage] = useState(1);
+    const [loading, setLoading] = useState(true);
+    const [loadingMore, setLoadingMore] = useState(false);
+    const [hasMore, setHasMore] = useState(true);
 
-    const fetchUsers = async (pageNum) => {
-        setLoading(true);
-        setError(null);
-        try {
-            const res = await fetch(
-                `${process.env.REACT_APP_API_URL}/users?page=${pageNum}&pageSize=${PAGE_SIZE}`,
-                {
-                    credentials: 'include',
-                    headers: {
-                        'Content-Type': 'application/json',
-                    },
+    const fetchUsers = useCallback(
+        async (pageToLoad) => {
+            try {
+                if (pageToLoad === 1) {
+                    setLoading(true);
+                } else {
+                    setLoadingMore(true);
                 }
-            );
-            const data = await res.json();
-            if (data.success) {
-                console.log(data)
-                setUsers(data.users);
-                setPage(data.page);
-                setTotalPages(data.totalPages);
-                setTotalCount(data.totalCount);
-            } else {
-                setError(data.error || 'Failed to load users');
-            }
-        } catch (err) {
-            setError('Error fetching users');
-        } finally {
-            setLoading(false);
-        }
-    };
 
+                const res = await fetch(
+                    `${process.env.REACT_APP_API_URL}/users?page=${pageToLoad}&pageSize=${PAGE_SIZE}`,
+                    {
+                        credentials: 'include',
+                        headers: { 'Content-Type': 'application/json' },
+                    }
+                );
+                const data = await res.json();
+
+                if (data.success) {
+                    setTotalCount(data.totalCount);
+
+                    if (pageToLoad === 1) {
+                        setUsers(data.users);
+                    } else {
+                        setUsers((prev) => [...prev, ...data.users]);
+                    }
+
+                    // If fewer than PAGE_SIZE results, no more pages
+                    setHasMore(data.users.length === PAGE_SIZE);
+                } else {
+                    console.error('Failed to load users:', data.error);
+                }
+            } catch (err) {
+                console.error('API error:', err);
+            } finally {
+                setLoading(false);
+                setLoadingMore(false);
+            }
+        },
+        []
+    );
+
+    // Load first page on mount
     useEffect(() => {
+        fetchUsers(1);
+    }, [fetchUsers]);
+
+    // Load more users when page increments (except page 1)
+    useEffect(() => {
+        if (page === 1) return; // already loaded on mount
         fetchUsers(page);
-    }, [page]);
+    }, [page, fetchUsers]);
+
+    // Scroll handler for infinite scroll
+    useEffect(() => {
+        if (!hasMore || loadingMore) return;
+
+        const onScroll = () => {
+            if (
+                window.innerHeight + window.scrollY >=
+                document.documentElement.scrollHeight - 300
+            ) {
+                setPage((prev) => prev + 1);
+            }
+        };
+
+        window.addEventListener('scroll', onScroll);
+        return () => window.removeEventListener('scroll', onScroll);
+    }, [hasMore, loadingMore]);
 
     function timeAgo(dateString) {
         const now = new Date();
@@ -81,18 +117,10 @@ const Users = () => {
         });
     };
 
-    if (loading) {
+    if (loading && page === 1) {
         return (
-            <div className="max-w-6xl font-sans bg-gray-200 p-4 rounded shadow">
-                Loading users...
-            </div>
-        );
-    }
-
-    if (error) {
-        return (
-            <div className="max-w-6xl font-sans bg-gray-200 p-4 text-red-600 rounded shadow">
-                {error}
+            <div className="w-full h-screen flex items-center justify-center bg-gray-200 text-sm text-gray-500">
+                Loading...
             </div>
         );
     }
@@ -103,9 +131,7 @@ const Users = () => {
                 <h2 className="text-indigo-600 font-semibold text-lg">
                     유저 총 {totalCount.toLocaleString()}명
                 </h2>
-                <div className="text-sm text-gray-600">
-                    페이지 {page} / {totalPages}
-                </div>
+                <div className="text-sm text-gray-600">페이지 {page}</div>
             </header>
 
             <ul className="bg-white rounded-md shadow divide-y divide-gray-200">
@@ -147,20 +173,20 @@ const Users = () => {
                             {/* User Info */}
                             <div className="flex-grow min-w-0 space-y-1">
                                 <div className="flex flex-wrap items-center gap-2">
-                                    <p className="font-semibold text-sm truncate max-w-xs">{user.name || 'Unnamed User'}</p>
+                                    <p className="font-semibold text-sm truncate max-w-xs">
+                                        {user.name || 'Unnamed User'}
+                                    </p>
 
-                                    {/* Role badge */}
                                     <span
                                         className={`px-2 py-0.5 text-xs rounded-full font-mono ${user.role === 'admin'
-                                            ? 'bg-indigo-100 text-indigo-800'
-                                            : 'bg-gray-100 text-gray-600'
+                                                ? 'bg-indigo-100 text-indigo-800'
+                                                : 'bg-gray-100 text-gray-600'
                                             }`}
                                         title="User Role"
                                     >
                                         {user.role.toUpperCase()}
                                     </span>
 
-                                    {/* Provider */}
                                     <span
                                         className="text-xs text-gray-500 uppercase font-mono"
                                         title="Login Provider"
@@ -169,7 +195,6 @@ const Users = () => {
                                     </span>
                                 </div>
 
-                                {/* Email and Referral */}
                                 <div className="flex flex-wrap items-center gap-2 text-xs text-gray-600 max-w-full">
                                     <span
                                         className="truncate cursor-pointer underline decoration-dotted"
@@ -184,32 +209,33 @@ const Users = () => {
                                     <span
                                         className="truncate font-mono text-indigo-700 cursor-pointer underline decoration-dotted"
                                         title="Click to copy referralId"
-                                        onClick={() => user.referralId && copyToClipboard(user.referralId)}
+                                        onClick={() =>
+                                            user.referralId && copyToClipboard(user.referralId)
+                                        }
                                     >
                                         초대코드: {user.referralId}
                                     </span>
                                 </div>
 
-                                {/* User ID */}
                                 <div className="text-xs text-gray-400 font-mono truncate max-w-full">
                                     ID: {user._id}
                                 </div>
 
-                                {/* Created At */}
                                 <div className="text-xs text-gray-500 flex gap-2 items-center">
                                     <time
                                         dateTime={user.createdAt}
                                         title={createdAtDate.toLocaleString()}
                                         className="whitespace-nowrap"
                                     >
-                                        가입: {createdAtDate.toLocaleDateString()} ({timeAgo(user.createdAt)})
+                                        가입: {createdAtDate.toLocaleDateString()} (
+                                        {timeAgo(user.createdAt)})
                                     </time>
                                 </div>
 
-                                {/* Subscription info */}
                                 <div className="mt-1 flex flex-wrap gap-2 items-center text-xs">
                                     <span
-                                        className={`inline-block px-2 py-0.5 rounded-full font-mono ${subscriptionStatusColors[user.subscriptionStatus] || subscriptionStatusColors.none
+                                        className={`inline-block px-2 py-0.5 rounded-full font-mono ${subscriptionStatusColors[user.subscriptionStatus] ||
+                                            subscriptionStatusColors.none
                                             }`}
                                         title="Subscription status"
                                     >
@@ -223,8 +249,8 @@ const Users = () => {
                                     <span className="text-gray-600 font-mono">
                                         만료: {subscriptionExpires}
                                     </span>
-
                                 </div>
+
                                 {user.invitedByCode && (
                                     <div className="text-xs text-gray-600 font-mono truncate max-w-full mt-1">
                                         초대한 사람 코드: {user.invitedByCode}
@@ -232,9 +258,8 @@ const Users = () => {
                                 )}
 
                                 <div className="text-xs text-gray-600 font-mono mt-1">
-                                    초대한 사람 수: {user.invitees?.length || 0}명
-                                    {' '}
-                                    (사용 완료: {user.invitees?.filter(i => i.redeemed).length || 0}명)
+                                    초대한 사람 수: {user.invitees?.length || 0}명{' '}
+                                    (사용 완료: {user.invitees?.filter((i) => i.redeemed).length || 0}명)
                                 </div>
                             </div>
                         </li>
@@ -242,29 +267,15 @@ const Users = () => {
                 })}
             </ul>
 
-            {/* Pagination */}
-            <nav
-                aria-label="Pagination"
-                className="flex justify-center gap-4 mt-6"
-            >
-                <button
-                    onClick={() => setPage((p) => Math.max(p - 1, 1))}
-                    disabled={page === 1}
-                    className="px-3 py-1 bg-gray-200 rounded disabled:opacity-50 focus:outline-none focus:ring-2 focus:ring-indigo-400"
-                >
-                    Previous
-                </button>
-                <span className="self-center text-sm">
-                    Page {page} of {totalPages}
-                </span>
-                <button
-                    onClick={() => setPage((p) => Math.min(p + 1, totalPages))}
-                    disabled={page === totalPages}
-                    className="px-3 py-1 bg-gray-200 rounded disabled:opacity-50 focus:outline-none focus:ring-2 focus:ring-indigo-400"
-                >
-                    Next
-                </button>
-            </nav>
+            {loadingMore && (
+                <div className="text-center py-4 font-semibold text-gray-600">
+                    Loading more users...
+                </div>
+            )}
+
+            {!hasMore && (
+                <div className="text-center py-4 text-gray-500">No more users.</div>
+            )}
         </div>
     );
 };
