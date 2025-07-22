@@ -1,4 +1,4 @@
-import React, { useEffect, useState, useCallback } from 'react';
+import { useEffect, useState, useCallback } from 'react';
 
 const PAGE_SIZE = 20;
 
@@ -179,8 +179,8 @@ const Users = () => {
 
                                     <span
                                         className={`px-2 py-0.5 text-xs rounded-full font-mono ${user.role === 'admin'
-                                                ? 'bg-indigo-100 text-indigo-800'
-                                                : 'bg-gray-100 text-gray-600'
+                                            ? 'bg-indigo-100 text-indigo-800'
+                                            : 'bg-gray-100 text-gray-600'
                                             }`}
                                         title="User Role"
                                     >
