@@ -38,6 +38,7 @@ const UploadsCard = ({ q, qIndex, onDelete }) => {
         <div key={qIndex} className="max-w-xl overflow-hidden shadow-sm bg-white w-full">
             <div className={`${(q.gptAnalyzed?.[0]?.questionText.includes("문제가 감지되지 않았습니다") || q.gptAnalyzed?.length === 0) ? "bg-red-500" : "bg-indigo-500"} text-white text-xs font-medium px-3 py-1.5 flex justify-between`}>
                 <span>{(q.gptAnalyzed?.[0]?.questionText.includes("문제가 감지되지 않았습니다") || q.gptAnalyzed?.length === 0) ? "문제 인식 안됨" : `${q.gptAnalyzed?.length || 0} 문제 인식됨`}</span>
+                {q.processingTimeMs && (<span>{(q.processingTimeMs / 1000).toFixed(1)}초</span>)}
                 <span>{timeAgo(q.createdAt)} ({new Date(q.createdAt).toLocaleTimeString([], { hour: '2-digit', minute: '2-digit', hour12: true })})</span>
             </div>
             <div className='flex flex-col w-full bg-gray-800'>
