@@ -39,7 +39,7 @@ const Uploads = () => {
                 }
 
                 const res = await fetch(
-                    `${process.env.REACT_APP_API_URL}/solved-questions?page=${pageToLoad}&pageSize=${PAGE_SIZE}`,
+                    `${process.env.REACT_APP_API_URL}/solved-questions/admin-panel?page=${pageToLoad}&pageSize=${PAGE_SIZE}`,
                     {
                         credentials: 'include',
                     }
