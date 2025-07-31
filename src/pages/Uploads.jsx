@@ -1,6 +1,6 @@
 import { useEffect, useState, useCallback } from 'react';
 import { Grid, List } from 'lucide-react';
-import UploadsCard from '../components/UploadsCard';
+import UploadsCard from '../components/cards/UploadCard';
 import UploadsListItem from '../components/UploadsListItem';
 
 const PAGE_SIZE = 25;
