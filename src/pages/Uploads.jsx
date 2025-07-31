@@ -156,7 +156,7 @@ const Uploads = () => {
             </div>
 
             {/* Content */}
-            <div className="w-full max-w-4xl">
+            <div className="w-full max-w-4xl flex flex-col items-center">
                 {viewMode === 'card' ? (
                     <div className="space-y-8">
                         {questions.map((q, qIndex) => (
