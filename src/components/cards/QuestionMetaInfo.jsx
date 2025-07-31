@@ -82,8 +82,6 @@ function QuestionMetaInfo({ q, onDelete, timeAgo }) {
                                 로그인 방식: {q.userId.provider || "-"}
                             </div>
 
-                            <div className="mt-1 text-xs text-gray-400 truncate max-w-xs font-mono">IP: {q.metadata?.ip || "-"}</div>
-
                             <div className="mt-1 text-xs text-gray-400 truncate max-w-xs font-mono">
                                 <span className="min-w-[60px]">기종: </span>
                                 <span>

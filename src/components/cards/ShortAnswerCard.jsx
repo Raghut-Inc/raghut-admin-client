@@ -2,7 +2,7 @@ import { useState } from "react";
 import QuestionMetaInfo from "./QuestionMetaInfo";
 import { timeAgo } from "../../utils/timeAgo";
 
-const ShortAnswerCard = ({ q, qIndex, onDelete }) => {
+const ShortAnswerCard = ({ q, qIndex, onDelete, questionType }) => {
     const [expanded, setExpanded] = useState({}); // track expand per question item
 
     const toggleExpand = (key) => {
@@ -45,6 +45,7 @@ const ShortAnswerCard = ({ q, qIndex, onDelete }) => {
                         return (
                             <div key={i} className="bg-gray-50 p-3">
                                 <div className='relative w-full h-full'>
+                                    <p className='text-gray-500 font-medium'>{item.questionType}</p>
                                     <p className="font-semibold">{item.questionText}</p>
 
                                     {item.expectedAnswer?.map((ans, idx) => (
