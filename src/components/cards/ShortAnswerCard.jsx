@@ -45,17 +45,15 @@ const ShortAnswerCard = ({ q, qIndex, onDelete, questionType }) => {
                         return (
                             <div key={i} className="bg-gray-50 p-3">
                                 <div className='relative w-full h-full'>
-                                    <p className='text-gray-500 font-medium'>{item.questionType}</p>
-                                    <p className="font-semibold">{item.questionText}</p>
+                                    <p className='text-gray-500 font-medium'>[{item.questionType}]</p>
+                                    <p className="font-semibold">{item.questionNumber}. {item.questionText}</p>
 
                                     {item.expectedAnswer?.map((ans, idx) => (
-                                        <div key={idx} className="mb-2">
+                                        <div key={idx} className="">
                                             <p>
                                                 <strong className="text-green-600">{ans.answer}</strong> {" "}
                                                 <span className="text-gray-600">({ans.answerInKorean})</span>
                                             </p>
-                                            {ans.reason && <p className="text-xs text-gray-500">이유: {ans.reason}</p>}
-                                            {ans.sourceText && <p className="text-xs text-gray-500">출처: {ans.sourceText}</p>}
                                         </div>
                                     ))}
 
@@ -70,6 +68,13 @@ const ShortAnswerCard = ({ q, qIndex, onDelete, questionType }) => {
                                 </div>
                                 {isOpen && (
                                     <p className="mt-3 text-xs whitespace-pre-line border-t border-gray-300 pt-2">
+
+                                        {item.expectedAnswer?.map((ans, idx) => (
+                                            <div key={idx} className="mb-2">
+                                                {ans.reason && <p className="text-xs text-gray-500">이유: {ans.reason}</p>}
+                                                {ans.sourceText && <p className="text-xs text-gray-500">출처: {ans.sourceText}</p>}
+                                            </div>
+                                        ))}
                                         {item.explanation}
                                     </p>
                                 )}
