@@ -51,10 +51,10 @@ const UploadsCard = ({ q, qIndex, onDelete }) => {
                         return (
                             <div key={i} className="bg-gray-50 p-3">
                                 <div className='relative w-full h-full'>
-                                    <p className='text-gray-500 font-medium'>[{item.questionType}]</p>
-                                    <p className="font-semibold">{item.questionNumber}. {item.questionText}</p>
+                                    <p className='text-gray-500 font-medium'>[{item?.questionType}]</p>
+                                    <p className="font-semibold">{item?.questionNumber}. {item.questionText}</p>
                                     <ul className="mt-2 pl-4 list-disc">
-                                        {item.answers.map((a, j) => {
+                                        {item.answers?.map((a, j) => {
                                             const isCorrect = item.correctAnswers?.some(
                                                 (correct) => correct.answerOption === a.answerOption
                                             );
