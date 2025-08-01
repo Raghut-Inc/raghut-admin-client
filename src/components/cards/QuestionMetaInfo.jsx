@@ -37,8 +37,8 @@ function QuestionMetaInfo({ q, onDelete, timeAgo }) {
                             <div className="flex items-center gap-2">
                                 <span
                                     className={`px-1.5 py-0.5 rounded text-xs font-mono ${q.userId.role === "admin"
-                                            ? "bg-indigo-300 text-indigo-900"
-                                            : "bg-gray-600 text-gray-200"
+                                        ? "bg-indigo-300 text-indigo-900"
+                                        : "bg-gray-600 text-gray-200"
                                         }`}
                                     title="Role"
                                 >
@@ -96,11 +96,11 @@ function QuestionMetaInfo({ q, onDelete, timeAgo }) {
                             <div className="flex flex-wrap gap-1 text-xs border-t pt-1 border-gray-500 border-dashed">
                                 <span
                                     className={`inline-block px-2 py-0.5 rounded-full font-mono ${{
-                                            active: "bg-green-200 text-green-800",
-                                            canceled: "bg-yellow-200 text-yellow-800",
-                                            expired: "bg-red-200 text-red-800",
-                                            none: "bg-gray-300 text-gray-700",
-                                        }[q.userId.subscriptionStatus || "none"]
+                                        active: "bg-green-200 text-green-800",
+                                        canceled: "bg-yellow-200 text-yellow-800",
+                                        expired: "bg-red-200 text-red-800",
+                                        none: "bg-gray-300 text-gray-700",
+                                    }[q.userId.subscriptionStatus || "none"]
                                         }`}
                                     title="Subscription status"
                                 >
@@ -128,7 +128,9 @@ function QuestionMetaInfo({ q, onDelete, timeAgo }) {
                             <span>
                                 {q.metadata.userAgent.includes("CFNetwork") && q.metadata.userAgent.includes("Darwin")
                                     ? " Apple iOS App"
-                                    : q.metadata.userAgent}
+                                    : q.metadata.userAgent.includes("okhttp")
+                                        ? "🤖 Android App"
+                                        : q.metadata.userAgent}
                             </span>
                         </div>
                     </div>
