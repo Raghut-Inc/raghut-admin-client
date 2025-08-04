@@ -1,17 +1,5 @@
 import React, { useEffect, useState } from "react";
 import {
-    Container,
-    Header,
-    Segment,
-    Table,
-    Loader,
-    Message,
-    Dropdown,
-    Grid,
-    Statistic,
-} from "semantic-ui-react";
-import "semantic-ui-css/semantic.min.css";
-import {
     LineChart,
     Line,
     XAxis,
@@ -38,19 +26,24 @@ function safeId(obj, key) {
 }
 
 export default function Analytics() {
-    // Global totals and per-user/guest totals (no granularity)
+    const [userTableView, setUserTableView] = useState("monthly"); // default to monthly
+
     const [totalQuestions, setTotalQuestions] = useState(null);
-    const [questionsPerUser, setQuestionsPerUser] = useState([]);
-    const [questionsPerGuest, setQuestionsPerGuest] = useState([]);
 
-    // Independent granularity states for each time-based section
-    const [questionsOverTimeGranularity, setQuestionsOverTimeGranularity] = useState("daily");
+    // State for users: total and monthly
+    const [questionsPerUserTotal, setQuestionsPerUserTotal] = useState([]);
+    const [questionsPerUserMonthly, setQuestionsPerUserMonthly] = useState([]);
 
-    // Time series data states
+    // State for guests: total and monthly
+    const [questionsPerGuestTotal, setQuestionsPerGuestTotal] = useState([]);
+    const [questionsPerGuestMonthly, setQuestionsPerGuestMonthly] = useState([]);
+
+    const [questionsOverTimeGranularity, setQuestionsOverTimeGranularity] = useState(
+        "daily"
+    );
     const [questionsOverTime, setQuestionsOverTime] = useState([]);
 
     const [error, setError] = useState(null);
-    const [loadingTotals, setLoadingTotals] = useState(true);
 
     async function fetchJson(url) {
         const res = await fetch(url, { credentials: "include" });
@@ -58,187 +51,251 @@ export default function Analytics() {
         return res.json();
     }
 
-    // Load global totals and per-user/guest totals on mount
     useEffect(() => {
-        setLoadingTotals(true);
         setError(null);
         Promise.all([
             fetchJson(`${API_BASE}/total-questions`),
+
+            // Fetch total and monthly user stats
+            fetchJson(`${API_BASE}/questions-per-user?granularity=all`),
             fetchJson(`${API_BASE}/questions-per-user?granularity=monthly`),
+
+            // Fetch total and monthly guest stats
+            fetchJson(`${API_BASE}/questions-per-guest?granularity=all`),
             fetchJson(`${API_BASE}/questions-per-guest?granularity=monthly`),
         ])
-            .then(([totalQ, perUser, perGuest]) => {
+            .then(([totalQ, userTotal, userMonthly, guestTotal, guestMonthly]) => {
                 setTotalQuestions(totalQ.totalQuestions);
-                setQuestionsPerUser(perUser);
-                setQuestionsPerGuest(perGuest);
+
+                setQuestionsPerUserTotal(userTotal);
+                setQuestionsPerUserMonthly(userMonthly);
+                console.log(userMonthly)
+
+                setQuestionsPerGuestTotal(guestTotal);
+                setQuestionsPerGuestMonthly(guestMonthly);
             })
-            .catch((e) => setError(e.message))
-            .finally(() => setLoadingTotals(false));
+            .catch((e) => setError(e.message));
     }, []);
 
-    // Load Questions Over Time data when granularity changes
     useEffect(() => {
-        fetchJson(`${API_BASE}/questions-over-time?granularity=${questionsOverTimeGranularity}`)
+        fetchJson(
+            `${API_BASE}/questions-over-time?granularity=${questionsOverTimeGranularity}`
+        )
             .then(setQuestionsOverTime)
-            .catch((e) => setError(e.message))
+            .catch((e) => setError(e.message));
     }, [questionsOverTimeGranularity]);
 
     if (error)
         return (
-            <Container style={{ marginTop: 50 }}>
-                <Message negative>
-                    <Message.Header>Error loading analytics</Message.Header>
-                    <p>{error}</p>
-                </Message>
-            </Container>
+            <div className="max-w-4xl mx-auto mt-12 p-6 bg-red-100 border border-red-400 rounded-md text-red-700">
+                <h2 className="text-2xl font-semibold mb-2">Error loading analytics</h2>
+                <p>{error}</p>
+            </div>
         );
 
+    // Helper table render function
+    function renderUserTable(data, title) {
+        return (
+            <>
+                <h2 className="text-xl font-semibold mb-3 px-4">{title} (Top 30)</h2>
+                <div className="overflow-x-auto bg-white mb-10">
+                    <table className="w-full border-collapse text-sm">
+                        <thead className="bg-gray-100 text-gray-500 text-xs">
+                            <tr>
+                                <th className="border-b border-gray-300 px-4 py-2 text-left font-semibold">User</th>
+                                <th className="border-b border-gray-300 px-4 py-2 text-left font-semibold">Subs</th>
+                                <th className="border-b border-gray-300 px-4 py-2 text-right font-semibold">Qst.</th>
+                                <th className="border-b border-gray-300 px-4 py-2 text-right font-semibold">Rq.</th>
+                            </tr>
+                        </thead>
+                        <tbody>
+                            {data.map(
+                                ({
+                                    _id,
+                                    userName,
+                                    userEmail,
+                                    subscriptionStatus,
+                                    totalQuestions,
+                                    requestCount,
+                                }) => (
+                                    <tr
+                                        key={`${safeId(_id, "userId")}-${_id.period ?? "all"}`}
+                                        className="border-b border-gray-200 hover:bg-gray-50"
+                                    >
+                                        <td className="px-4 py-2 whitespace-nowrap w-64">
+                                            <div>
+                                                <div className="flex items-center space-x-2">
+                                                    <p>{userName || "-"}</p>
+                                                </div>
+                                                <p className="text-xs text-gray-500">{userEmail || "-"}</p>
+                                                <p className="text-xs text-gray-500">{safeId(_id, "userId")}</p>
+                                            </div>
+                                        </td>
+                                        <td className="px-4">
+                                            <span
+                                                className={`inline-block px-2 py-0.5 rounded-full font-mono text-xs ${{
+                                                    active: "bg-green-200 text-green-800",
+                                                    canceled: "bg-yellow-200 text-yellow-800",
+                                                    expired: "bg-red-200 text-red-800",
+                                                    none: "bg-gray-300 text-gray-700",
+                                                }[subscriptionStatus || "none"]
+                                                    }`}
+                                                title="Subscription status"
+                                            >
+                                                {subscriptionStatus || "none"}
+                                            </span>
+                                        </td>
+                                        <td className="px-4 py-2 text-right">{totalQuestions}</td>
+                                        <td className="px-4 py-2 text-right">{requestCount}</td>
+                                    </tr>
+                                )
+                            )}
+                        </tbody>
+                    </table>
+                </div>
+            </>
+        );
+    }
+
+    function renderGuestTable(data, title) {
+        return (
+            <>
+                <h2 className="text-xl font-semibold mb-3 px-4">{title} (Top 30)</h2>
+                <div className="overflow-x-auto bg-white mb-10">
+                    <table className="w-full border-collapse text-sm">
+                        <thead className="bg-gray-100 text-gray-500 text-xs">
+                            <tr>
+                                <th className="border-b border-gray-300 px-4 py-2 text-left font-semibold">GuestId</th>
+                                <th className="border-b border-gray-300 px-4 py-2 text-right font-semibold">Qst.</th>
+                                <th className="border-b border-gray-300 px-4 py-2 text-right font-semibold">Rq.</th>
+                            </tr>
+                        </thead>
+                        <tbody>
+                            {data.map(({ _id, totalQuestions, requestCount }, idx) => (
+                                <tr
+                                    key={`${safeId(_id, "guestUUID")}-${idx}`}
+                                    className="border-b border-gray-200 hover:bg-gray-50"
+                                >
+                                    <td className="px-4 py-2 font-mono whitespace-nowrap text-xs">
+                                        {safeId(_id, "guestUUID")}
+                                    </td>
+                                    <td className="px-4 py-2 text-right">{totalQuestions}</td>
+                                    <td className="px-4 py-2 text-right">{requestCount}</td>
+                                </tr>
+                            ))}
+                        </tbody>
+                    </table>
+                </div>
+            </>
+        );
+    }
+
+    function renderTables() {
+        if (userTableView === "total") {
+            return (
+                <>
+                    {renderUserTable(questionsPerUserTotal, "전체 회원 활동")}
+                    {renderGuestTable(questionsPerGuestTotal, "전체 비회원 활동")}
+                </>
+            );
+        } else {
+            return (
+                <>
+                    {renderUserTable(questionsPerUserMonthly, "월간 회원 활동")}
+                    {renderGuestTable(questionsPerGuestMonthly, "월간 비회원 활동")}
+                </>
+            );
+        }
+    }
+
     return (
-        <Container style={{ marginTop: 30, paddingBottom: 60 }}>
-            <Header as="h1" dividing>
-                Analytics Dashboard
-            </Header>
+        <div className="w-full font-sans bg-gray-100 flex flex-col items-center">
+            <p className="font-medium text-sm text-indigo-500 w-full mt-3 pl-4">
+                총 문제 수: {totalQuestions}
+            </p>
 
-            {/* Total and Avg */}
-            {loadingTotals ? (
-                <Loader active inline="centered" size="large" style={{ marginTop: 50 }}>
-                    Loading totals…
-                </Loader>
-            ) : (
-                <Grid stackable columns={2} doubling>
-                    <Grid.Column>
-                        <Segment textAlign="center" raised>
-                            <Statistic size="small">
-                                <Statistic.Label>Total Questions Solved</Statistic.Label>
-                                <Statistic.Value>{totalQuestions?.toLocaleString() ?? "-"}</Statistic.Value>
-                            </Statistic>
-                        </Segment>
-                    </Grid.Column>
-                </Grid>
-            )}
-
-            <Header as="h2" style={{ marginTop: 40 }}>
-                일별 문제 업로드 수 (사진 업로드 수)
-                <Dropdown
-                    options={granularityOptions}
-                    value={questionsOverTimeGranularity}
-                    onChange={(e, { value }) => setQuestionsOverTimeGranularity(value)}
-                    selection
-                    compact
-                    style={{ marginLeft: 15 }}
-                />
-            </Header>
-
-            <Segment style={{ height: 400 }}>
-                <ResponsiveContainer width="100%" height="100%">
-                    <LineChart
-                        data={questionsOverTime}
-                        margin={{ top: 10, right: 30, left: 0, bottom: 0 }}
+            <div className="max-w-4xl w-full mx-auto mt-4 mb-16 font-sans">
+                {/* Header with Dropdown */}
+                <div className="flex items-center mb-3 text-lg font-semibold mx-4">
+                    문제 / 사진 업로드 추이
+                    <select
+                        value={questionsOverTimeGranularity}
+                        onChange={(e) => setQuestionsOverTimeGranularity(e.target.value)}
+                        className="ml-4 px-3 py-1 border border-gray-300 rounded-md cursor-pointer text-base focus:outline-none focus:ring-2 focus:ring-indigo-400"
                     >
-                        <CartesianGrid strokeDasharray="3 3" />
-                        <XAxis
-                            dataKey="_id"
-                            tickFormatter={(str) => {
-                                // Format date string as MM-DD or whatever you prefer
-                                const date = new Date(str);
-                                return `${date.getMonth() + 1}-${date.getDate()}`;
-                            }}
-                        />
-                        <YAxis />
-                        <Tooltip
-                            labelFormatter={(label) => `Date: ${label}`}
-                            formatter={(value, name) => [value, name === "totalQuestions" ? "Total Questions" : name]}
-                        />
-                        <Line
-                            type="monotone"
-                            dataKey="totalQuestions"
-                            stroke="#8884d8"
-                            name="인식된 문제수"
-                            dot={false}
-                        />
-                        <Line
-                            type="monotone"
-                            dataKey="requestCount"
-                            stroke="#82ca9d"
-                            name="업로드 수"
-                            dot={false}
-                        />
-                    </LineChart>
-                </ResponsiveContainer>
-            </Segment>
-            {/* Questions Per User (All time) */}
-            <Header as="h2" style={{ marginTop: 40 }}>
-                월간 회원 활동 (Top 20)
-            </Header>
-            <Segment style={{ overflowX: "auto" }} raised>
-                <Table celled compact selectable unstackable>
-                    <Table.Header>
-                        <Table.Row>
-                            <Table.HeaderCell>User ID</Table.HeaderCell>
-                            <Table.HeaderCell>Name</Table.HeaderCell>
-                            <Table.HeaderCell>Email</Table.HeaderCell>
-                            <Table.HeaderCell>Subscription</Table.HeaderCell>
-                            <Table.HeaderCell textAlign="right">Total Questions</Table.HeaderCell>
-                            <Table.HeaderCell textAlign="right">Requests</Table.HeaderCell>
-                        </Table.Row>
-                    </Table.Header>
-                    <Table.Body>
-                        {questionsPerUser.map(
-                            ({
-                                _id,
-                                userName,
-                                userEmail,
-                                subscriptionStatus,
-                                subscriptionType,
-                                totalQuestions,
-                                requestCount,
-                            }) => (
-                                <Table.Row key={safeId(_id, "userId")}>
-                                    <Table.Cell style={{ fontFamily: "monospace" }}>
-                                        {safeId(_id, "userId")}
-                                    </Table.Cell>
-                                    <Table.Cell>{userName || "-"}</Table.Cell>
-                                    <Table.Cell>{userEmail || "-"}</Table.Cell>
-                                    <Table.Cell>
-                                        {subscriptionType
-                                            ? `${subscriptionType} (${subscriptionStatus})`
-                                            : subscriptionStatus || "-"}
-                                    </Table.Cell>
-                                    <Table.Cell textAlign="right">{totalQuestions}</Table.Cell>
-                                    <Table.Cell textAlign="right">{requestCount}</Table.Cell>
-                                </Table.Row>
-                            )
-                        )}
-                    </Table.Body>
-                </Table>
-            </Segment>
-
-            {/* Questions Per Guest (All time) */}
-            <Header as="h2" style={{ marginTop: 40 }}>
-                월간 비회원 활동 (Top 20)
-            </Header>
-            <Segment style={{ overflowX: "auto" }} raised >
-                <Table celled compact selectable unstackable>
-                    <Table.Header>
-                        <Table.Row>
-                            <Table.HeaderCell>Guest UUID</Table.HeaderCell>
-                            <Table.HeaderCell textAlign="right">Total Questions</Table.HeaderCell>
-                            <Table.HeaderCell textAlign="right">Requests</Table.HeaderCell>
-                        </Table.Row>
-                    </Table.Header>
-                    <Table.Body>
-                        {questionsPerGuest.map(({ _id, totalQuestions, requestCount }) => (
-                            <Table.Row key={safeId(_id, "guestUUID")}>
-                                <Table.Cell style={{ fontFamily: "monospace" }}>
-                                    {safeId(_id, "guestUUID")}
-                                </Table.Cell>
-                                <Table.Cell textAlign="right">{totalQuestions}</Table.Cell>
-                                <Table.Cell textAlign="right">{requestCount}</Table.Cell>
-                            </Table.Row>
+                        {granularityOptions.map(({ key, value, text }) => (
+                            <option key={key} value={value}>
+                                {text}
+                            </option>
                         ))}
-                    </Table.Body>
-                </Table>
-            </Segment>
-        </Container>
+                    </select>
+                </div>
+
+                {/* Chart */}
+                <div className="h-96 mb-10">
+                    <ResponsiveContainer width="100%" height="100%">
+                        <LineChart
+                            data={questionsOverTime}
+                            margin={{ top: 10, right: 24, left: -16, bottom: 0 }}
+                        >
+                            <CartesianGrid strokeDasharray="3 3" />
+                            <XAxis
+                                dataKey="_id"
+                                tickFormatter={(str) => {
+                                    const date = new Date(str);
+                                    return `${date.getMonth() + 1}-${date.getDate()}`;
+                                }}
+                            />
+                            <YAxis />
+                            <Tooltip
+                                labelFormatter={(label) => `Date: ${label}`}
+                                formatter={(value, name) => [
+                                    value,
+                                    name === "totalQuestions" ? "Total Questions" : name,
+                                ]}
+                            />
+                            <Line
+                                type="monotone"
+                                dataKey="totalQuestions"
+                                stroke="#8884d8"
+                                name="인식된 문제수"
+                                dot={false}
+                            />
+                            <Line
+                                type="monotone"
+                                dataKey="requestCount"
+                                stroke="#82ca9d"
+                                name="업로드 수"
+                                dot={false}
+                            />
+                        </LineChart>
+                    </ResponsiveContainer>
+                </div>
+
+                <div className="mb-4 px-4">
+                    <button
+                        onClick={() => setUserTableView("monthly")}
+                        className={`mr-2 px-4 py-1 rounded ${userTableView === "monthly"
+                            ? "bg-indigo-600 text-white"
+                            : "bg-gray-300 text-gray-700"
+                            }`}
+                    >
+                        월간 회원 활동
+                    </button>
+                    <button
+                        onClick={() => setUserTableView("total")}
+                        className={`px-4 py-1 rounded ${userTableView === "total"
+                            ? "bg-indigo-600 text-white"
+                            : "bg-gray-300 text-gray-700"
+                            }`}
+                    >
+                        전체 회원 활동
+                    </button>
+                </div>
+
+                {renderTables()}
+
+            </div>
+        </div>
     );
 }
