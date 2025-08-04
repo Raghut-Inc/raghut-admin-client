@@ -12,7 +12,7 @@ const ShortAnswerCard = ({ questionItem, isOpen, toggleExpand, expandKey }) => {
                     </div>
                 ))}
                 <button
-                    className="text-indigo-700 underline absolute bottom-0 right-0 text-xs"
+                    className="text-indigo-700 underline absolute bottom-0 right-0 text-xs bg-white"
                     onClick={() => toggleExpand(expandKey)}
                 >
                     {isOpen ? "접기 ▲" : "더보기 ▼"}
