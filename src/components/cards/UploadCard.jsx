@@ -4,7 +4,7 @@ import { timeAgo } from '../../utils/timeAgo';
 import ShortAnswerCard from './ShortAnswerCard';
 import MCQCard from './MCQCard';
 
-const UploadsCard = ({ q, qIndex, onDelete }) => {
+const UploadsCard = ({ q, qIndex, onDelete, setFilter }) => {
     const [expanded, setExpanded] = useState({}); // { "qIndex-i": true }
 
     const toggleExpand = (key) => {
@@ -26,7 +26,7 @@ const UploadsCard = ({ q, qIndex, onDelete }) => {
 
             <div className="flex flex-col w-full bg-gray-800 p-3 text-white text-xs space-y-3">
                 {/* Image preview */}
-                <QuestionMetaInfo q={q} onDelete={onDelete} timeAgo={timeAgo} />
+                <QuestionMetaInfo q={q} onDelete={onDelete} timeAgo={timeAgo} setFilter={setFilter} />
 
                 <div className="flex-1 text-xs text-black rounded overflow-hidden">
                     {q.gptAnalyzed?.map((item, i) => {

@@ -1,11 +1,28 @@
 import React from "react";
 
-function QuestionMetaInfo({ q, onDelete, timeAgo }) {
+function QuestionMetaInfo({ q, onDelete, timeAgo, setFilter }) {
+    // Handler to apply filter on userId or guestUUID
+    const handleFilterClick = (e) => {
+        e.stopPropagation(); // prevent event bubbling if inside clickable card
+
+        if (q.userId?._id) {
+            setFilter({ userId: q.userId._id });
+        } else if (q.guestUUID) {
+            setFilter({ guestUUID: q.guestUUID });
+        }
+    };
+
     return (
         <>
             {/* Image Preview */}
             {q.imageUrl && (
-                <a href={q.imageUrl} target="_blank" rel="noopener noreferrer" className="block">
+                <a
+                    href={q.imageUrl}
+                    target="_blank"
+                    rel="noopener noreferrer"
+                    className="block"
+                    onClick={(e) => e.stopPropagation()}
+                >
                     <img
                         src={q.imageUrl}
                         alt="Captured"
@@ -16,12 +33,18 @@ function QuestionMetaInfo({ q, onDelete, timeAgo }) {
 
             {/* ID and Delete */}
             <div className="flex w-full justify-between items-center mt-2">
-                <div onClick={(e) => e.stopPropagation()} className="text-white text-xs">
+                <div
+                    className="text-white text-xs cursor-pointer select-text"
+                    title="Click to filter by this user or guest"
+                >
                     <p>{q._id}</p>
                 </div>
                 <div className="flex justify-end">
                     <button
-                        onClick={() => onDelete(q._id)}
+                        onClick={(e) => {
+                            e.stopPropagation(); // prevent filtering on delete click
+                            onDelete(q._id);
+                        }}
                         className="bg-red-500 hover:bg-red-600 text-white text-xs font-semibold rounded px-3 py-1"
                     >
                         삭제
@@ -30,7 +53,11 @@ function QuestionMetaInfo({ q, onDelete, timeAgo }) {
             </div>
 
             {/* User Info */}
-            <div className="bg-gray-700 text-xs text-white space-y-1 p-3 rounded mt-3">
+            <div
+                className="bg-gray-700 hover:bg-gray-600 transition text-xs text-white space-y-1 p-3 rounded mt-3 cursor-pointer"
+                onClick={handleFilterClick}
+                title="Click here to filter by this user or guest"
+            >
                 {q.userId ? (
                     <div className="bg-gray-700 rounded-md text-xs text-white space-y-1 w-full">
                         <div className="flex flex-col w-full space-y-1">
@@ -54,7 +81,10 @@ function QuestionMetaInfo({ q, onDelete, timeAgo }) {
                                 <span
                                     className="cursor-pointer underline decoration-dotted truncate"
                                     title="Click to copy email"
-                                    onClick={() => q.userId.email && navigator.clipboard.writeText(q.userId.email)}
+                                    onClick={(e) => {
+                                        e.stopPropagation();
+                                        q.userId.email && navigator.clipboard.writeText(q.userId.email);
+                                    }}
                                 >
                                     {q.userId.email || "No email"}
                                 </span>
@@ -64,18 +94,18 @@ function QuestionMetaInfo({ q, onDelete, timeAgo }) {
                                 <span
                                     className="font-mono cursor-pointer underline decoration-dotted truncate"
                                     title="Click to copy referral ID"
-                                    onClick={() =>
-                                        q.userId.referralId && navigator.clipboard.writeText(q.userId.referralId)
-                                    }
+                                    onClick={(e) => {
+                                        e.stopPropagation();
+                                        q.userId.referralId && navigator.clipboard.writeText(q.userId.referralId);
+                                    }}
                                 >
                                     초대코드: {q.userId.referralId || "-"}
                                 </span>
                             </div>
 
                             <div className="text-xs text-gray-400 mt-1 truncate max-w-xs font-mono">
-                                가입일:{" "}
-                                {q.userId.createdAt ? new Date(q.userId.createdAt).toLocaleDateString() : "-"}{" "}
-                                ({timeAgo(q.userId.createdAt)})
+                                가입일: {q.userId.createdAt ? new Date(q.userId.createdAt).toLocaleDateString() : "-"} (
+                                {timeAgo(q.userId.createdAt)})
                             </div>
 
                             <div className="text-xs mt-1 text-gray-400 truncate max-w-xs font-mono">

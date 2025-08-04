@@ -222,11 +222,11 @@ export default function Analytics() {
                 </div>
 
                 {/* Chart */}
-                <div className="h-96 mb-10">
+                <div className="h-96 mb-10 text-xs">
                     <ResponsiveContainer width="100%" height="100%">
                         <LineChart
                             data={questionsOverTime}
-                            margin={{ top: 10, right: 24, left: -16, bottom: 0 }}
+                            margin={{ top: 10, right: 20, left: -24, bottom: 0 }}
                         >
                             <CartesianGrid strokeDasharray="3 3" />
                             <XAxis
