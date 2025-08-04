@@ -13,16 +13,13 @@ const Users = () => {
     const [users, setUsers] = useState([]);
     const [totalCount, setTotalCount] = useState(0);
     const [page, setPage] = useState(1);
-    const [loading, setLoading] = useState(true);
     const [loadingMore, setLoadingMore] = useState(false);
     const [hasMore, setHasMore] = useState(true);
 
     const fetchUsers = useCallback(
         async (pageToLoad) => {
             try {
-                if (pageToLoad === 1) {
-                    setLoading(true);
-                } else {
+                if (pageToLoad !== 1) {
                     setLoadingMore(true);
                 }
 
@@ -52,7 +49,6 @@ const Users = () => {
             } catch (err) {
                 console.error('API error:', err);
             } finally {
-                setLoading(false);
                 setLoadingMore(false);
             }
         },
@@ -117,20 +113,10 @@ const Users = () => {
         });
     };
 
-    if (loading && page === 1) {
-        return (
-            <div className="w-full h-screen flex items-center justify-center bg-gray-200 text-sm text-gray-500">
-                Loading...
-            </div>
-        );
-    }
-
     return (
         <div className="max-w-6xl font-sans bg-gray-200 rounded-md shadow p-4">
             <header className="flex items-center justify-between mb-4">
-                <h2 className="text-indigo-600 font-semibold text-lg">
-                    유저 총 {totalCount.toLocaleString()}명
-                </h2>
+                <p className='font-medium text-sm text-indigo-500'>유저 총 {totalCount.toLocaleString()}명</p>
                 <div className="text-sm text-gray-600">페이지 {page}</div>
             </header>
 

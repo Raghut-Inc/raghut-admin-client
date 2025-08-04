@@ -28,8 +28,6 @@ function safeId(obj, key) {
 export default function Analytics() {
     const [userTableView, setUserTableView] = useState("monthly"); // default to monthly
 
-    const [totalQuestions, setTotalQuestions] = useState(null);
-
     // State for users: total and monthly
     const [questionsPerUserTotal, setQuestionsPerUserTotal] = useState([]);
     const [questionsPerUserMonthly, setQuestionsPerUserMonthly] = useState([]);
@@ -54,8 +52,6 @@ export default function Analytics() {
     useEffect(() => {
         setError(null);
         Promise.all([
-            fetchJson(`${API_BASE}/total-questions`),
-
             // Fetch total and monthly user stats
             fetchJson(`${API_BASE}/questions-per-user?granularity=all`),
             fetchJson(`${API_BASE}/questions-per-user?granularity=monthly`),
@@ -64,9 +60,7 @@ export default function Analytics() {
             fetchJson(`${API_BASE}/questions-per-guest?granularity=all`),
             fetchJson(`${API_BASE}/questions-per-guest?granularity=monthly`),
         ])
-            .then(([totalQ, userTotal, userMonthly, guestTotal, guestMonthly]) => {
-                setTotalQuestions(totalQ.totalQuestions);
-
+            .then(([userTotal, userMonthly, guestTotal, guestMonthly]) => {
                 setQuestionsPerUserTotal(userTotal);
                 setQuestionsPerUserMonthly(userMonthly);
                 console.log(userMonthly)
@@ -210,10 +204,6 @@ export default function Analytics() {
 
     return (
         <div className="w-full font-sans bg-gray-100 flex flex-col items-center">
-            <p className="font-medium text-sm text-indigo-500 w-full mt-3 pl-4">
-                총 문제 수: {totalQuestions}
-            </p>
-
             <div className="max-w-4xl w-full mx-auto mt-4 mb-16 font-sans">
                 {/* Header with Dropdown */}
                 <div className="flex items-center mb-3 text-lg font-semibold mx-4">

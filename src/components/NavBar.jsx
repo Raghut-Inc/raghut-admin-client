@@ -1,6 +1,7 @@
 import { Link, useLocation } from "react-router";
 import UserSettingsButton from "./UserSettingsButton";
 import clsx from "clsx";
+import logo from "../assets/logo.png"
 
 const NavBar = ({ user, setUser }) => {
   const location = useLocation();
@@ -21,11 +22,11 @@ const NavBar = ({ user, setUser }) => {
   };
 
   return (
-    <nav className="w-full flex-shrink-0 md:flex justify-center z-30 py-3 px-3 md:px-4 bg-white">
+    <nav className="w-full flex-shrink-0 md:flex justify-center z-30 py-2 px-3 md:px-4 bg-white">
       <div className="flex w-full h-full justify-between space-x-2">
         <div className="flex space-x-6 items-center">
           <Link to="/" className="flex-shrink-0 font-semibold">
-            <div className="w-24 text-xl">ADMIN</div>
+            <img src={logo} alt="" className="w-12 h-12" />
           </Link>
         </div>
 
