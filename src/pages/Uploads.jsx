@@ -161,7 +161,7 @@ const Uploads = () => {
     return (
         <div className="w-full font-sans bg-gray-200 flex flex-col h-full items-center">
             {/* View mode toggle buttons */}
-            <div className="flex h-12 items-center w-full justify-between px-2 sticky top-0 bg-white z-20 shadow">
+            <div className="flex h-12 items-center w-full justify-between px-2 sticky top-0 bg-white z-20">
                 <div className='max-w-64'>
                     {userIdFilter && (
                         <button onClick={clearUserIdFilter} className="text-white bg-indigo-400 border px-3 py-1 rounded-full flex items-center text-xs">
