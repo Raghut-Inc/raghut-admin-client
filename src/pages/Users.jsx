@@ -114,13 +114,13 @@ const Users = () => {
     };
 
     return (
-        <div className="max-w-6xl font-sans bg-gray-200 rounded-md shadow p-4">
+        <div className="max-w-6xl font-sans bg-gray-200 p-4">
             <header className="flex items-center justify-between mb-4">
                 <p className='font-medium text-sm text-indigo-500'>유저 총 {totalCount.toLocaleString()}명</p>
                 <div className="text-sm text-gray-600">페이지 {page}</div>
             </header>
 
-            <ul className="bg-white rounded-md shadow divide-y divide-gray-200">
+            <ul className="bg-white rounded-md divide-y divide-gray-200">
                 {users.map((user) => {
                     const createdAtDate = new Date(user.createdAt);
                     const subscriptionExpires = user.subscriptionExpiresAt
