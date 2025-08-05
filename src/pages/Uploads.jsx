@@ -56,7 +56,7 @@ const Uploads = () => {
                     } else {
                         setQuestions((prev) => [...prev, ...data.questions]);
                     }
-
+                    console.log(data.questions)
                     setHasMore(data.questions.length === PAGE_SIZE);
                 } else {
                     console.error('Failed to load questions');
