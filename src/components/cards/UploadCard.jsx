@@ -29,19 +29,38 @@ const UploadsCard = ({ q, qIndex, onDelete, setFilter }) => {
                 <QuestionMetaInfo q={q} onDelete={onDelete} timeAgo={timeAgo} setFilter={setFilter} />
 
                 <div className="flex-1 text-xs text-black rounded overflow-hidden">
-                    {q.gptAnalyzed?.map((item, i) => {
-                        const key = `${qIndex}-${i}`;
-                        const isOpen = expanded[key];
-                        return (
-                            <div key={i} className="bg-gray-50 p-3 relative">
-                                <p className='text-gray-500 font-medium'>[{item?.questionType}]</p>
-                                {(item?.questionType === "ShortAnswer")
-                                    ? <ShortAnswerCard questionItem={item} isOpen={isOpen} toggleExpand={toggleExpand} expandKey={key} />
-                                    : <MCQCard questionItem={item} isOpen={isOpen} toggleExpand={toggleExpand} expandKey={key} />
-                                }
-                            </div>
-                        );
-                    })}
+                    {q.status === "processing" ? (
+                        <div className="flex justify-center bg-gray-50 items-center p-4">
+                            {/* You can customize the loader here */}
+                            <span className="animate-spin rounded-full h-4 w-4 border-b-2 border-r-2 border-indigo-500"></span>
+                            <span className="ml-2 text-indigo-500 italic">Processing...</span>
+                        </div>
+                    ) : (
+                        q.gptAnalyzed?.map((item, i) => {
+                            const key = `${qIndex}-${i}`;
+                            const isOpen = expanded[key];
+                            return (
+                                <div key={i} className="bg-gray-50 p-3 relative">
+                                    <p className="text-gray-500 font-medium">[{item?.questionType}]</p>
+                                    {item?.questionType === "ShortAnswer" ? (
+                                        <ShortAnswerCard
+                                            questionItem={item}
+                                            isOpen={isOpen}
+                                            toggleExpand={toggleExpand}
+                                            expandKey={key}
+                                        />
+                                    ) : (
+                                        <MCQCard
+                                            questionItem={item}
+                                            isOpen={isOpen}
+                                            toggleExpand={toggleExpand}
+                                            expandKey={key}
+                                        />
+                                    )}
+                                </div>
+                            );
+                        })
+                    )}
                 </div>
             </div>
         </div>
