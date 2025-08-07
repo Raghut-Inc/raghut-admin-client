@@ -1,9 +1,9 @@
-import FrameList from "./FrameList";
 import NavBar from "../components/NavBar";
 import { Route, Routes } from "react-router";
 import Uploads from "./Uploads";
 import Users from "./Users";
 import Analytics from "./Analytics";
+import Chats from "./Chats";
 
 export default function Admin({ user, setUser }) {
   return (
@@ -14,7 +14,8 @@ export default function Admin({ user, setUser }) {
           <Route path="/analytics" element={<Analytics />} />
           <Route path="/user" element={<Users />} />
           <Route path="/uploads" element={<Uploads />} />
-          <Route path="/frames" element={<FrameList />} />
+          <Route path="/chat" element={<Chats />} />
+          {/* <Route path="/frames" element={<FrameList />} /> */}
           {/* <Route path="/devices" element={<AdminDevices wsMessages={wsMessages} />} /> */}
           {/* <Route path="/register" element={<RegisterDevice />} /> */}
         </Routes>

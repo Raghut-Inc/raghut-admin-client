@@ -2,13 +2,6 @@ import { useEffect, useState, useCallback } from 'react';
 
 const PAGE_SIZE = 20;
 
-const subscriptionStatusColors = {
-    active: 'text-green-600 bg-green-100',
-    canceled: 'text-yellow-600 bg-yellow-100',
-    expired: 'text-red-600 bg-red-100',
-    none: 'text-gray-500 bg-gray-100',
-};
-
 const Users = () => {
     const [users, setUsers] = useState([]);
     const [totalCount, setTotalCount] = useState(0);
@@ -114,23 +107,21 @@ const Users = () => {
     };
 
     return (
-        <div className="max-w-6xl font-sans bg-gray-200 p-4">
-            <header className="flex items-center justify-between mb-4">
-                <p className='font-medium text-sm text-indigo-500'>유저 총 {totalCount.toLocaleString()}명</p>
-                <div className="text-sm text-gray-600">페이지 {page}</div>
-            </header>
+        <div className="font-sans bg-gray-200 flex flex-col items-center">
+            <div className="flex h-12 items-center w-full px-2 justify-end sticky top-0 bg-gray-200 z-20">
+                <div className='flex-col flex items-end'>
+                    <p className='font-medium text-xs text-indigo-500 flex-shrink-0'>유저수 {totalCount.toLocaleString()}</p>
+                    <p className='font-medium text-xs text-indigo-500 flex-shrink-0'>페이지 {page}</p>
+                </div>
+            </div>
 
-            <ul className="bg-white rounded-md divide-y divide-gray-200">
+            <ul className="bg-white rounded-md divide-y divide-gray-200 max-w-4xl w-full">
                 {users.map((user) => {
                     const createdAtDate = new Date(user.createdAt);
-                    const subscriptionExpires = user.subscriptionExpiresAt
-                        ? new Date(user.subscriptionExpiresAt).toLocaleDateString()
-                        : '-';
-
                     return (
                         <li
                             key={user._id}
-                            className="py-4 px-6 flex flex-col sm:flex-row sm:items-center sm:space-x-6"
+                            className="p-4 flex space-x-4"
                             title={`ID: ${user._id}`}
                         >
                             {/* Profile */}
@@ -140,7 +131,7 @@ const Users = () => {
                                         href={user.profileImageUrl}
                                         target="_blank"
                                         rel="noopener noreferrer"
-                                        className="inline-block w-14 h-14 rounded-full overflow-hidden border border-gray-300 hover:ring-2 hover:ring-indigo-400 transition"
+                                        className="inline-block w-12 h-12 rounded-full overflow-hidden border border-gray-300 hover:ring-2 hover:ring-indigo-400 transition"
                                     >
                                         <img
                                             src={user.profileImageUrl}
@@ -150,7 +141,7 @@ const Users = () => {
                                         />
                                     </a>
                                 ) : (
-                                    <div className="w-14 h-14 rounded-full bg-gray-300 flex items-center justify-center text-gray-600 font-semibold text-xl select-none">
+                                    <div className="w-12 h-12 rounded-full bg-gray-300 flex items-center justify-center text-gray-600 font-semibold text-xl select-none">
                                         {user.name?.[0]?.toUpperCase() || '?'}
                                     </div>
                                 )}
@@ -189,18 +180,6 @@ const Users = () => {
                                     >
                                         {user.email || 'No email'}
                                     </span>
-
-                                    <span>∙</span>
-
-                                    <span
-                                        className="truncate font-mono text-indigo-700 cursor-pointer underline decoration-dotted"
-                                        title="Click to copy referralId"
-                                        onClick={() =>
-                                            user.referralId && copyToClipboard(user.referralId)
-                                        }
-                                    >
-                                        초대코드: {user.referralId}
-                                    </span>
                                 </div>
 
                                 <div className="text-xs text-gray-400 font-mono truncate max-w-full">
@@ -216,36 +195,6 @@ const Users = () => {
                                         가입: {createdAtDate.toLocaleDateString()} (
                                         {timeAgo(user.createdAt)})
                                     </time>
-                                </div>
-
-                                <div className="mt-1 flex flex-wrap gap-2 items-center text-xs">
-                                    <span
-                                        className={`inline-block px-2 py-0.5 rounded-full font-mono ${subscriptionStatusColors[user.subscriptionStatus] ||
-                                            subscriptionStatusColors.none
-                                            }`}
-                                        title="Subscription status"
-                                    >
-                                        구독: {user.subscriptionStatus || 'none'}
-                                    </span>
-
-                                    <span className="text-gray-600 font-mono">
-                                        타입: {user.subscriptionType || '-'}
-                                    </span>
-
-                                    <span className="text-gray-600 font-mono">
-                                        만료: {subscriptionExpires}
-                                    </span>
-                                </div>
-
-                                {user.invitedByCode && (
-                                    <div className="text-xs text-gray-600 font-mono truncate max-w-full mt-1">
-                                        초대한 사람 코드: {user.invitedByCode}
-                                    </div>
-                                )}
-
-                                <div className="text-xs text-gray-600 font-mono mt-1">
-                                    초대한 사람 수: {user.invitees?.length || 0}명{' '}
-                                    (사용 완료: {user.invitees?.filter((i) => i.redeemed).length || 0}명)
                                 </div>
                             </div>
                         </li>
