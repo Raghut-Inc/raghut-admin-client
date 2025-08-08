@@ -8,6 +8,7 @@ import {
     Tooltip,
     ResponsiveContainer,
 } from "recharts";
+import NavBar from "../components/NavBar";
 
 const API_BASE = `${process.env.REACT_APP_API_URL}/analytics`;
 
@@ -25,7 +26,7 @@ function safeId(obj, key) {
     return String(obj);
 }
 
-export default function Analytics() {
+export default function Analytics({ user, setUser }) {
     const [userTableView, setUserTableView] = useState("monthly"); // default to monthly
 
     // State for users: total and monthly
@@ -204,6 +205,7 @@ export default function Analytics() {
 
     return (
         <div className="w-full font-sans bg-gray-100 flex flex-col items-center">
+            <NavBar user={user} setUser={setUser} animate={true} title={"분석"} />
             <div className="max-w-4xl w-full mx-auto mt-4 mb-16 font-sans">
                 {/* Header with Dropdown */}
                 <div className="flex items-center mb-3 text-lg font-semibold mx-4">

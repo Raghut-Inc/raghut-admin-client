@@ -1,10 +1,11 @@
 import React, { useEffect, useState, useCallback } from 'react';
 import { timeAgo } from '../utils/timeAgo';
+import NavBar from '../components/NavBar';
 
 const PAGE_SIZE = 30;
 const MSG_PAGE_SIZE = 20;
 
-const Chats = () => {
+const Chats = ({ user, setUser }) => {
     const [chats, setChats] = useState([]);
     const [page, setPage] = useState(1);
     const [totalPages, setTotalPages] = useState(1);
@@ -92,159 +93,163 @@ const Chats = () => {
     };
 
     return (
-        <div className="max-w-4xl mx-auto p-4 space-y-6 font-sans">
-            {loading && (
-                <div className="text-center py-10 text-indigo-500 font-medium">Loading chats…</div>
-            )}
+        <div>
+            <NavBar user={user} setUser={setUser} animate={true} title={"챗"} />
+            <div className="max-w-4xl mx-auto p-4 space-y-6 font-sans">
+                {loading && (
+                    <div className="text-center py-10 text-indigo-500 font-medium">Loading chats…</div>
+                )}
 
-            {error && (
-                <div className="text-center py-4 text-red-600 font-semibold">{error}</div>
-            )}
+                {error && (
+                    <div className="text-center py-4 text-red-600 font-semibold">{error}</div>
+                )}
 
-            {!loading && !error && chats.length === 0 && (
-                <div className="text-center py-10 text-gray-500">No chats found.</div>
-            )}
+                {!loading && !error && chats.length === 0 && (
+                    <div className="text-center py-10 text-gray-500">No chats found.</div>
+                )}
 
-            <div className="space-y-4">
-                {chats.map((chat) => (
-                    <div
-                        key={chat.chatRoomId}
-                        className="shadow rounded-md bg-white overflow-hidden border border-gray-200"
-                    >
-                        {/* Header with colored banner */}
+                <div className="space-y-4">
+                    {chats.map((chat) => (
                         <div
-                            className={`px-4 py-2 text-xs font-semibold text-white flex justify-between items-center
-                ${chat.messageCount === 0 ? 'bg-red-500' : 'bg-indigo-600'}`}
+                            key={chat.chatRoomId}
+                            className="shadow rounded-md bg-white overflow-hidden border border-gray-200"
                         >
-                            <span>{chat.messageCount === 0 ? 'No messages yet' : `${chat.messageCount} messages`}</span>
-                            <span className="italic text-indigo-200 text-xs">
-                                {timeAgo(chat.createdAt)} ({new Date(chat.createdAt).toLocaleDateString()})
-                            </span>
-                        </div>
-
-                        {/* Content */}
-                        <div className="p-4 space-y-2 text-sm text-gray-700">
-                            <div className="flex flex-wrap gap-4">
-                                <InfoItem label="Chat Room ID" value={chat.chatRoomId} copyable />
-                                <InfoItem label="User ID" value={chat.userId || '-'} copyable />
-                                <InfoItem label="Result ID" value={chat.resultId} />
-                                <InfoItem label="Question ID" value={chat.questionId} />
-                            </div>
-
-                            <div>
-                                <strong>Last message preview:</strong>
-                                <p
-                                    className="mt-1 text-gray-600 truncate cursor-default"
-                                    title={chat.lastMessagePreview || 'No messages'}
-                                >
-                                    {chat.lastMessagePreview || 'No messages'}
-                                </p>
-                            </div>
-
-                            <button
-                                onClick={() => toggleChatMessages(chat.chatRoomId)}
-                                className="mt-3 px-3 py-1 rounded-md bg-indigo-600 text-white font-semibold hover:bg-indigo-700"
+                            {/* Header with colored banner */}
+                            <div
+                                className={`px-4 py-2 text-xs font-semibold text-white flex justify-between items-center
+                ${chat.messageCount === 0 ? 'bg-red-500' : 'bg-indigo-600'}`}
                             >
-                                {expandedChatId === chat.chatRoomId ? 'Hide Messages' : 'View Messages'}
-                            </button>
+                                <span>{chat.messageCount === 0 ? 'No messages yet' : `${chat.messageCount} messages`}</span>
+                                <span className="italic text-indigo-200 text-xs">
+                                    {timeAgo(chat.createdAt)} ({new Date(chat.createdAt).toLocaleDateString()})
+                                </span>
+                            </div>
 
-                            {/* Messages list */}
-                            {expandedChatId === chat.chatRoomId && (
-                                <div className="mt-4 border-t border-gray-200 pt-4 max-h-96 overflow-auto">
-                                    {msgLoading && (
-                                        <p className="text-indigo-600 font-medium text-center">Loading messages...</p>
-                                    )}
-                                    {msgError && (
-                                        <p className="text-red-600 font-semibold text-center">{msgError}</p>
-                                    )}
-                                    {!msgLoading && !msgError && messages.length === 0 && (
-                                        <p className="text-gray-500 text-center italic">No messages in this chat.</p>
-                                    )}
-                                    {!msgLoading && messages.length > 0 && (
-                                        <ul className="space-y-3">
-                                            {messages.map((msg) => (
-                                                <li
-                                                    key={msg.id || msg._id}
-                                                    className={`p-3 rounded-md ${msg.sender === 'assistant'
+                            {/* Content */}
+                            <div className="p-4 space-y-2 text-sm text-gray-700">
+                                <div className="flex flex-wrap gap-4">
+                                    <InfoItem label="Chat Room ID" value={chat.chatRoomId} copyable />
+                                    <InfoItem label="User ID" value={chat.userId || '-'} copyable />
+                                    <InfoItem label="Result ID" value={chat.resultId} />
+                                    <InfoItem label="Question ID" value={chat.questionId} />
+                                </div>
+
+                                <div>
+                                    <strong>Last message preview:</strong>
+                                    <p
+                                        className="mt-1 text-gray-600 truncate cursor-default"
+                                        title={chat.lastMessagePreview || 'No messages'}
+                                    >
+                                        {chat.lastMessagePreview || 'No messages'}
+                                    </p>
+                                </div>
+
+                                <button
+                                    onClick={() => toggleChatMessages(chat.chatRoomId)}
+                                    className="mt-3 px-3 py-1 rounded-md bg-indigo-600 text-white font-semibold hover:bg-indigo-700"
+                                >
+                                    {expandedChatId === chat.chatRoomId ? 'Hide Messages' : 'View Messages'}
+                                </button>
+
+                                {/* Messages list */}
+                                {expandedChatId === chat.chatRoomId && (
+                                    <div className="mt-4 border-t border-gray-200 pt-4 max-h-96 overflow-auto">
+                                        {msgLoading && (
+                                            <p className="text-indigo-600 font-medium text-center">Loading messages...</p>
+                                        )}
+                                        {msgError && (
+                                            <p className="text-red-600 font-semibold text-center">{msgError}</p>
+                                        )}
+                                        {!msgLoading && !msgError && messages.length === 0 && (
+                                            <p className="text-gray-500 text-center italic">No messages in this chat.</p>
+                                        )}
+                                        {!msgLoading && messages.length > 0 && (
+                                            <ul className="space-y-3">
+                                                {messages.map((msg) => (
+                                                    <li
+                                                        key={msg.id || msg._id}
+                                                        className={`p-3 rounded-md ${msg.sender === 'assistant'
                                                             ? 'bg-indigo-50 text-indigo-800'
                                                             : 'bg-gray-100 text-gray-900'
+                                                            }`}
+                                                    >
+                                                        <div className="flex justify-between text-xs font-mono mb-1">
+                                                            <span>{msg.sender}</span>
+                                                            <time
+                                                                dateTime={msg.timestamp}
+                                                                title={new Date(msg.timestamp).toLocaleString()}
+                                                            >
+                                                                {timeAgo(msg.timestamp)}
+                                                            </time>
+                                                        </div>
+                                                        <p className="whitespace-pre-wrap">{msg.text}</p>
+                                                    </li>
+                                                ))}
+                                            </ul>
+                                        )}
+
+                                        {/* Message pagination */}
+                                        {msgTotalPages > 1 && (
+                                            <div className="flex justify-center items-center gap-4 mt-4">
+                                                <button
+                                                    disabled={msgPage <= 1}
+                                                    onClick={() => setMsgPage((p) => Math.max(p - 1, 1))}
+                                                    className={`px-3 py-1 rounded-md font-semibold ${msgPage <= 1
+                                                        ? 'bg-gray-300 cursor-not-allowed'
+                                                        : 'bg-indigo-600 text-white hover:bg-indigo-700'
                                                         }`}
                                                 >
-                                                    <div className="flex justify-between text-xs font-mono mb-1">
-                                                        <span>{msg.sender}</span>
-                                                        <time
-                                                            dateTime={msg.timestamp}
-                                                            title={new Date(msg.timestamp).toLocaleString()}
-                                                        >
-                                                            {timeAgo(msg.timestamp)}
-                                                        </time>
-                                                    </div>
-                                                    <p className="whitespace-pre-wrap">{msg.text}</p>
-                                                </li>
-                                            ))}
-                                        </ul>
-                                    )}
-
-                                    {/* Message pagination */}
-                                    {msgTotalPages > 1 && (
-                                        <div className="flex justify-center items-center gap-4 mt-4">
-                                            <button
-                                                disabled={msgPage <= 1}
-                                                onClick={() => setMsgPage((p) => Math.max(p - 1, 1))}
-                                                className={`px-3 py-1 rounded-md font-semibold ${msgPage <= 1
+                                                    Prev
+                                                </button>
+                                                <span className="text-sm text-gray-600">
+                                                    Page {msgPage} of {msgTotalPages}
+                                                </span>
+                                                <button
+                                                    disabled={msgPage >= msgTotalPages}
+                                                    onClick={() => setMsgPage((p) => Math.min(p + 1, msgTotalPages))}
+                                                    className={`px-3 py-1 rounded-md font-semibold ${msgPage >= msgTotalPages
                                                         ? 'bg-gray-300 cursor-not-allowed'
                                                         : 'bg-indigo-600 text-white hover:bg-indigo-700'
-                                                    }`}
-                                            >
-                                                Prev
-                                            </button>
-                                            <span className="text-sm text-gray-600">
-                                                Page {msgPage} of {msgTotalPages}
-                                            </span>
-                                            <button
-                                                disabled={msgPage >= msgTotalPages}
-                                                onClick={() => setMsgPage((p) => Math.min(p + 1, msgTotalPages))}
-                                                className={`px-3 py-1 rounded-md font-semibold ${msgPage >= msgTotalPages
-                                                        ? 'bg-gray-300 cursor-not-allowed'
-                                                        : 'bg-indigo-600 text-white hover:bg-indigo-700'
-                                                    }`}
-                                            >
-                                                Next
-                                            </button>
-                                        </div>
-                                    )}
-                                </div>
-                            )}
+                                                        }`}
+                                                >
+                                                    Next
+                                                </button>
+                                            </div>
+                                        )}
+                                    </div>
+                                )}
+                            </div>
                         </div>
-                    </div>
-                ))}
-            </div>
+                    ))}
+                </div>
 
-            {/* Chats pagination */}
-            <div className="flex justify-center items-center gap-4 mt-6">
-                <button
-                    disabled={page <= 1}
-                    onClick={() => setPage((p) => Math.max(p - 1, 1))}
-                    className={`px-3 py-1 rounded-md font-semibold ${page <= 1 ? 'bg-gray-300 cursor-not-allowed' : 'bg-indigo-600 text-white hover:bg-indigo-700'
-                        }`}
-                >
-                    Prev
-                </button>
-                <span className="text-sm text-gray-600">
-                    Page {page} of {totalPages}
-                </span>
-                <button
-                    disabled={page >= totalPages}
-                    onClick={() => setPage((p) => Math.min(p + 1, totalPages))}
-                    className={`px-3 py-1 rounded-md font-semibold ${page >= totalPages
+                {/* Chats pagination */}
+                <div className="flex justify-center items-center gap-4 mt-6">
+                    <button
+                        disabled={page <= 1}
+                        onClick={() => setPage((p) => Math.max(p - 1, 1))}
+                        className={`px-3 py-1 rounded-md font-semibold ${page <= 1 ? 'bg-gray-300 cursor-not-allowed' : 'bg-indigo-600 text-white hover:bg-indigo-700'
+                            }`}
+                    >
+                        Prev
+                    </button>
+                    <span className="text-sm text-gray-600">
+                        Page {page} of {totalPages}
+                    </span>
+                    <button
+                        disabled={page >= totalPages}
+                        onClick={() => setPage((p) => Math.min(p + 1, totalPages))}
+                        className={`px-3 py-1 rounded-md font-semibold ${page >= totalPages
                             ? 'bg-gray-300 cursor-not-allowed'
                             : 'bg-indigo-600 text-white hover:bg-indigo-700'
-                        }`}
-                >
-                    Next
-                </button>
+                            }`}
+                    >
+                        Next
+                    </button>
+                </div>
             </div>
         </div>
+
     );
 };
 

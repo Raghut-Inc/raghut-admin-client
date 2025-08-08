@@ -1,17 +1,18 @@
 import { useEffect, useState, useCallback } from 'react';
 import UploadsCard from '../components/cards/UploadCard';
 import { useSearchParams } from 'react-router';
+import NavBar from '../components/NavBar';
 
 const PAGE_SIZE = 25;
 
-const Uploads = () => {
+const Uploads = ({ user, setUser }) => {
 
     const [questions, setQuestions] = useState([]);
     const [totalCount, setTotalCount] = useState(0);
     const [page, setPage] = useState(1);
     const [loadingMore, setLoadingMore] = useState(false);
     const [hasMore, setHasMore] = useState(true);
-    const [totalQuestions, setTotalQuestions] = useState(true);
+    const [totalQuestions, setTotalQuestions] = useState(0);
     const [loading, setLoading] = useState(false);
 
     // Search params for filter
@@ -160,28 +161,27 @@ const Uploads = () => {
 
     return (
         <div className="w-full font-sans bg-gray-200 flex flex-col h-full items-center">
-            {/* View mode toggle buttons */}
-            <div className="flex h-12 items-center w-full justify-between px-2 sticky top-0 bg-white z-20">
-                <div className='max-w-64'>
-                    {userIdFilter && (
-                        <button onClick={clearUserIdFilter} className="text-white bg-indigo-400 border px-3 py-1 rounded-full flex items-center text-xs">
-                            <span className='line-clamp-1'>{userIdFilter}</span>
-                            <div className="font-bold text-green-900 hover:text-green-700" >×</div>
-                        </button>
-                    )}
-                    {guestUUIDFilter && (
-                        <button onClick={clearGuestUUIDFilter} className="text-white bg-indigo-400 border px-3 py-1 rounded-full flex items-center text-xs">
-                            <span className='line-clamp-1'>{guestUUIDFilter}</span>
-                            <div className="font-bold text-indigo-900 hover:text-indigo-700" >×</div>
-                        </button>
-                    )}
-                </div>
-                <div className='flex-col flex items-end'>
-                    <p className='font-medium text-xs text-indigo-500 flex-shrink-0'>업로드 {totalCount}</p>
-                    <p className='font-medium text-xs text-indigo-500 flex-shrink-0'>문제 {totalQuestions}</p>
-                </div>
-            </div>
+            <NavBar user={user} setUser={setUser} animate={true} title={"업로드"} value1={`업로드 ${totalCount}`} value2={`문제 ${totalQuestions}`} />
 
+            {/* View mode toggle buttons */}
+            {(userIdFilter || guestUUIDFilter) && (
+                <div className="flex h-12 items-center w-full justify-end px-2 sticky top-14 bg-white z-20">
+                    <div className='max-w-64'>
+                        {userIdFilter && (
+                            <button onClick={clearUserIdFilter} className="text-white bg-indigo-400 border px-3 py-1 rounded-full flex items-center text-xs space-x-2">
+                                <span className='line-clamp-1'>{userIdFilter}</span>
+                                <div className="font-bold text-indigo-800">×</div>
+                            </button>
+                        )}
+                        {guestUUIDFilter && (
+                            <button onClick={clearGuestUUIDFilter} className="text-white bg-indigo-400 border px-3 py-1 rounded-full flex items-center text-xs space-x-2">
+                                <span className='line-clamp-1'>{guestUUIDFilter}</span>
+                                <div className="font-bold text-indigo-800">×</div>
+                            </button>
+                        )}
+                    </div>
+                </div>
+            )}
 
             {loading ? (
                 <div className="flex items-center justify-center h-48 w-full bg-white rounded-lg shadow-inner">

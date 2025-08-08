@@ -1,8 +1,9 @@
 import { useEffect, useState, useCallback } from 'react';
+import NavBar from '../components/NavBar';
 
 const PAGE_SIZE = 20;
 
-const Users = () => {
+const Users = ({ user, setUser }) => {
     const [users, setUsers] = useState([]);
     const [totalCount, setTotalCount] = useState(0);
     const [page, setPage] = useState(1);
@@ -108,12 +109,7 @@ const Users = () => {
 
     return (
         <div className="font-sans bg-gray-200 flex flex-col items-center">
-            <div className="flex h-12 items-center w-full px-2 justify-end sticky top-0 bg-gray-200 z-20">
-                <div className='flex-col flex items-end'>
-                    <p className='font-medium text-xs text-indigo-500 flex-shrink-0'>유저수 {totalCount.toLocaleString()}</p>
-                    <p className='font-medium text-xs text-indigo-500 flex-shrink-0'>페이지 {page}</p>
-                </div>
-            </div>
+            <NavBar user={user} setUser={setUser} animate={true} title={"유저"} value1={`유저수 ${totalCount.toLocaleString()}`} value2={`페이지 ${page}`} />
 
             <ul className="bg-white rounded-md divide-y divide-gray-200 max-w-4xl w-full">
                 {users.map((user) => {
