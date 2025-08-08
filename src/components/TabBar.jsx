@@ -29,9 +29,9 @@ const TabBar = ({ user, setUser }) => {
             <div className="flex w-full h-14 justify-between space-x-2">
                 {user && (
                     <div className="flex flex-shrink-0 space-x-6 items-center justify-evenly md:justify-start w-full h-14">
-                        <MenuButton id="uploads" icon={<IoIosImage className="w-6 h-6" />} />
                         <MenuButton id="analytics" icon={<SiGoogleanalytics className="w-5 h-5" />} />
                         <MenuButton id="user" icon={<FaUserLarge className="w-5 h-5" />} />
+                        <MenuButton id="uploads" icon={<IoIosImage className="w-6 h-6" />} />
                         <MenuButton id="chat" icon={<IoChatbubbleSharp className="w-5 h-5" />} />
                         <MenuButton id="dev" icon={<FaDev className="w-5 h-5" />} />
                     </div>
