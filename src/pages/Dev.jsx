@@ -6,6 +6,7 @@ const PAGE_SIZE = 10;
 const Dev = ({ user, setUser }) => {
     // Upload states
     const [selectedFile, setSelectedFile] = useState(null);
+    const [subject, setSubject] = useState("math"); // default subject
     const [error, setError] = useState(null);
     const [isDragOver, setIsDragOver] = useState(false);
     // Uploads list states
@@ -71,6 +72,7 @@ const Dev = ({ user, setUser }) => {
         try {
             const formData = new FormData();
             formData.append("image", selectedFile);
+            formData.append("subject", subject);
             const apiUrl = `${process.env.REACT_APP_API_URL || ""}/v2/solve-question`;
 
             const res = await fetch(apiUrl, {
@@ -90,7 +92,7 @@ const Dev = ({ user, setUser }) => {
             console.error("❌ API error:", err);
             setError(err.message);
         }
-    }, [selectedFile, loadUploads]);
+    }, [selectedFile, loadUploads, subject]);
 
     // Form submit handler just calls uploadFile, prevents default
     const onSubmit = useCallback(
@@ -216,6 +218,17 @@ const Dev = ({ user, setUser }) => {
                             </p>
                         </div>
                     </form>
+
+                    {/* Subject dropdown */}
+                    <select
+                        value={subject}
+                        onChange={(e) => setSubject(e.target.value)}
+                        className="w-full border border-gray-300 rounded-md p-2 mt-4"
+                    >
+                        <option value="english">English</option>
+                        <option value="math">Math</option>
+                    </select>
+
 
                     {/* Error */}
                     {error && (
