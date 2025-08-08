@@ -4,6 +4,7 @@ import Users from "./Users";
 import Analytics from "./Analytics";
 import Chats from "./Chats";
 import TabBar from "../components/TabBar";
+import Dev from "./Dev";
 
 export default function Admin({ user, setUser }) {
   return (
@@ -14,6 +15,7 @@ export default function Admin({ user, setUser }) {
           <Route path="/user" element={<Users user={user} setUser={setUser} />} />
           <Route path="/uploads" element={<Uploads user={user} setUser={setUser} />} />
           <Route path="/chat" element={<Chats user={user} setUser={setUser} />} />
+          <Route path="/dev" element={<Dev user={user} setUser={setUser} />} />
         </Routes>
       </div>
       <TabBar user={user} setUser={setUser} animate={true} />
