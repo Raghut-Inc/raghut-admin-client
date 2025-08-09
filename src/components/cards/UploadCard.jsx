@@ -1,8 +1,10 @@
-import { useState } from 'react';
-import QuestionMetaInfo from './QuestionMetaInfo';
-import { timeAgo } from '../../utils/timeAgo';
-import ShortAnswerCard from './ShortAnswerCard';
-import MCQCard from './MCQCard';
+import { useState } from "react";
+import QuestionMetaInfo from "./QuestionMetaInfo";
+import { timeAgo } from "../../utils/timeAgo";
+import CardEngShortAnswer from "./CardEngShortAnswer";
+import CardEngMCQ from "./CardEngMCQ";
+import CardMathMCQ from "./CardMathMCQ";
+import CardMathShortAnswer from "./CardMathShortAnswer";
 
 const UploadsCard = ({ q, qIndex, onDelete, setFilter }) => {
     const [expanded, setExpanded] = useState({}); // { "qIndex-i": true }
@@ -14,14 +16,74 @@ const UploadsCard = ({ q, qIndex, onDelete, setFilter }) => {
         }));
     };
 
-
+    const renderQuestionCard = (item, key) => {
+        const isOpen = expanded[key];
+        // Use q.subject to pick card type
+        if (q.subject === "math") {
+            // Render math cards here
+            if (item.questionType === "ShortAnswer") {
+                return (
+                    <CardMathShortAnswer
+                        key={key}
+                        questionItem={item}
+                        isOpen={isOpen}
+                        toggleExpand={toggleExpand}
+                        expandKey={key}
+                    />
+                );
+            } else {
+                return (
+                    <CardMathMCQ
+                        key={key}
+                        questionItem={item}
+                        isOpen={isOpen}
+                        toggleExpand={toggleExpand}
+                        expandKey={key}
+                    />
+                );
+            }
+        } else {
+            // Default to English cards (or other subjects)
+            if (item.questionType === "ShortAnswer") {
+                return (
+                    <CardEngShortAnswer
+                        key={key}
+                        questionItem={item}
+                        isOpen={isOpen}
+                        toggleExpand={toggleExpand}
+                        expandKey={key}
+                    />
+                );
+            } else {
+                return (
+                    <CardEngMCQ
+                        key={key}
+                        questionItem={item}
+                        isOpen={isOpen}
+                        toggleExpand={toggleExpand}
+                        expandKey={key}
+                    />
+                );
+            }
+        }
+    };
 
     return (
         <div key={qIndex} className="max-w-xl overflow-hidden shadow-sm bg-white w-full">
-            <div className={`${(q.gptAnalyzed?.[0]?.questionText.includes("문제가 감지되지 않았습니다") || q.gptAnalyzed?.length === 0) ? "bg-red-500" : "bg-indigo-500"} text-white text-xs font-medium px-3 py-1.5 flex justify-between`}>
-                <span>{(q.numberOfQuestions === 0) ? "문제 인식 안됨" : `${q.numberOfQuestions} 문제 인식됨`}</span>
-                {q.processingTimeMs && (<span>{(q.processingTimeMs / 1000).toFixed(1)}초</span>)}
-                <span>{timeAgo(q.createdAt)} ({new Date(q.createdAt).toLocaleTimeString([], { hour: '2-digit', minute: '2-digit', hour12: true })})</span>
+            <div
+                className={`${q.gptAnalyzed?.[0]?.questionText.includes("문제가 감지되지 않았습니다") ||
+                    q.gptAnalyzed?.length === 0
+                    ? "bg-red-500"
+                    : "bg-indigo-500"
+                    } text-white text-xs font-medium px-3 py-1.5 flex justify-between`}
+            >
+                <span>{q.numberOfQuestions === 0 ? "문제 인식 안됨" : `${q.numberOfQuestions} 문제 인식됨`}</span>
+                {q.processingTimeMs && <span>{(q.processingTimeMs / 1000).toFixed(1)}초</span>}
+                <span>
+                    {timeAgo(q.createdAt)} (
+                    {new Date(q.createdAt).toLocaleTimeString([], { hour: "2-digit", minute: "2-digit", hour12: true })}
+                    )
+                </span>
             </div>
 
             <div className="flex flex-col w-full bg-gray-800 p-3 text-white text-xs space-y-3">
@@ -38,27 +100,7 @@ const UploadsCard = ({ q, qIndex, onDelete, setFilter }) => {
                     ) : (
                         q.gptAnalyzed?.map((item, i) => {
                             const key = `${qIndex}-${i}`;
-                            const isOpen = expanded[key];
-                            return (
-                                <div key={i} className="bg-gray-50 p-3 relative">
-                                    <p className="text-gray-500 font-medium">[{item?.questionType}]</p>
-                                    {item?.questionType === "ShortAnswer" ? (
-                                        <ShortAnswerCard
-                                            questionItem={item}
-                                            isOpen={isOpen}
-                                            toggleExpand={toggleExpand}
-                                            expandKey={key}
-                                        />
-                                    ) : (
-                                        <MCQCard
-                                            questionItem={item}
-                                            isOpen={isOpen}
-                                            toggleExpand={toggleExpand}
-                                            expandKey={key}
-                                        />
-                                    )}
-                                </div>
-                            );
+                            return <div key={key} className="bg-gray-50 p-3 relative">{renderQuestionCard(item, key)}</div>;
                         })
                     )}
                 </div>

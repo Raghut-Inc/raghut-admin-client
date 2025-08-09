@@ -1,4 +1,4 @@
-const MCQCard = ({ questionItem, isOpen, toggleExpand, expandKey }) => {
+const CardEngMCQ = ({ questionItem, isOpen, toggleExpand, expandKey }) => {
 
     function formatExplanation(explanation) {
         if (!explanation) return "";
@@ -71,4 +71,4 @@ const MCQCard = ({ questionItem, isOpen, toggleExpand, expandKey }) => {
     );
 };
 
-export default MCQCard;
+export default CardEngMCQ;

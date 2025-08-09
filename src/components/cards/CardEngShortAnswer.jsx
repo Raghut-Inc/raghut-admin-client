@@ -1,4 +1,4 @@
-const ShortAnswerCard = ({ questionItem, isOpen, toggleExpand, expandKey }) => {
+const CardEngShortAnswer = ({ questionItem, isOpen, toggleExpand, expandKey }) => {
     return (
         <div className="flex-1 text-xs text-black rounded overflow-hidden">
             <div className='relative w-full h-full'>
@@ -34,4 +34,4 @@ const ShortAnswerCard = ({ questionItem, isOpen, toggleExpand, expandKey }) => {
     );
 };
 
-export default ShortAnswerCard;
+export default CardEngShortAnswer;

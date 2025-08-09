@@ -249,16 +249,16 @@ const Dev = ({ user, setUser }) => {
                             {uploads.map((upload, i) => (
                                 <div
                                     key={upload._id || i}
-                                    className="bg-white rounded-lg shadow p-4 flex items-center space-x-4"
+                                    className="bg-white flex items-center space-x-4 border-b pb-3"
                                 >
                                     <img
                                         src={upload.imageUrl}
                                         alt={`Upload ${upload._id || i}`}
-                                        className="w-24 h-24 object-cover rounded-md flex-shrink-0"
+                                        className="w-16 h-16 object-cover rounded-md flex-shrink-0"
                                         loading="lazy"
                                     />
                                     <div>
-                                        <p className="font-semibold text-lg">
+                                        <p className="text-sm">
                                             {upload._id || `Upload #${i + 1}`}
                                         </p>
                                         <p
