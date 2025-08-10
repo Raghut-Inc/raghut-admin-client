@@ -1,28 +1,18 @@
-import React from 'react';
+import { renderMixedMath } from "../../utils/latexUtils";
 
 const CardMathShortAnswer = ({ questionItem, isOpen, toggleExpand, expandKey }) => {
-    function formatSolutionSteps(steps) {
-        if (!steps || steps.length === 0) return "";
-        return steps
-            .map(
-                (step) =>
-                    `${step.stepNumber}. ${step.stepTitle}\n${step.stepExplanation}`
-            )
-            .join("\n\n");
-    }
-
     return (
         <div className="flex-1 text-xs text-black rounded overflow-hidden">
             <div className="relative w-full h-full">
                 <p className="text-xs text-gray-500">[{questionItem.questionType}]</p>
                 <p className="font-semibold">
-                    {questionItem.questionNumber}. {questionItem.questionText}
+                    {questionItem.questionNumber}. {renderMixedMath(questionItem.questionText)}
                 </p>
 
                 {questionItem.expectedAnswer?.map((ans, idx) => (
                     <div key={idx} className="">
                         <p>
-                            <strong className="text-green-600">{ans.answer}</strong>
+                            <strong className="text-green-600">{renderMixedMath(ans.answer)}</strong>
                         </p>
                     </div>
                 ))}
@@ -39,15 +29,22 @@ const CardMathShortAnswer = ({ questionItem, isOpen, toggleExpand, expandKey }) 
                 <div className="mt-3 text-xs whitespace-pre-line border-t border-gray-300 pt-2">
                     <div>
                         <p className="font-semibold mb-1">풀이 단계 (Solution Steps):</p>
-                        <p style={{ whiteSpace: "pre-line" }}>
-                            {formatSolutionSteps(questionItem.solutionSteps)}
-                        </p>
+                        {questionItem.solutionSteps?.map((step) => (
+                            <div key={step.stepNumber} className="mb-3 whitespace-pre-line">
+                                <p className="font-semibold">
+                                    {step.stepNumber}. {step.stepTitle}
+                                </p>
+                                <p>{renderMixedMath(step.stepExplanation)}</p>
+                            </div>
+                        ))}
                     </div>
 
                     {questionItem.expectedAnswer?.map((ans, idx) => (
                         <div key={idx} className="mb-2">
                             {ans.reason && (
-                                <p className="text-xs text-gray-500">이유: {ans.reason}</p>
+                                <p className="text-xs text-gray-500">
+                                    이유: {renderMixedMath(ans.reason)}
+                                </p>
                             )}
                         </div>
                     ))}
