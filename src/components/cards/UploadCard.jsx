@@ -75,10 +75,13 @@ const UploadsCard = ({ q, qIndex, onDelete, setFilter }) => {
                     q.gptAnalyzed?.length === 0
                     ? "bg-red-500"
                     : "bg-indigo-500"
-                    } text-white text-xs font-medium px-3 py-1.5 flex justify-between`}
+                    } text-white text-xs font-medium px-3 py-1 flex justify-between items-center`}
             >
-                <span>{q.numberOfQuestions === 0 ? "문제 인식 안됨" : `${q.numberOfQuestions} 문제 인식됨`}</span>
-                {q.processingTimeMs && <span>{(q.processingTimeMs / 1000).toFixed(1)}초</span>}
+                <div className="flex space-x-1.5 items-center">
+                    <div className={`${q.subject === "math" ? "text-pink-500" : "text-indigo-500"} bg-white px-2 rounded text-xs`}>{q.subject}</div>
+                    <span>·</span>
+                    <span>{`${q.numberOfQuestions === 0 ? "문제 인식 안됨" : `${q.numberOfQuestions} 문제`} · ${(q.processingTimeMs / 1000).toFixed(1)}초`}</span>
+                </div>
                 <span>
                     {timeAgo(q.createdAt)} (
                     {new Date(q.createdAt).toLocaleTimeString([], { hour: "2-digit", minute: "2-digit", hour12: true })}
