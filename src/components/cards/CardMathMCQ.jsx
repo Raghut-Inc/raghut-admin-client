@@ -1,22 +1,13 @@
-import React from 'react';
+// CardMathMCQ.jsx
+import { renderMixedMath } from "../../utils/latexUtils";
 
 const CardMathMCQ = ({ questionItem, isOpen, toggleExpand, expandKey }) => {
-    // Format solution steps into readable string with line breaks
-    function formatSolutionSteps(steps) {
-        if (!steps || steps.length === 0) return "";
-        return steps
-            .map(
-                (step) =>
-                    `${step.stepNumber}. ${step.stepTitle}\n${step.stepExplanation}`
-            )
-            .join("\n\n");
-    }
-
     return (
         <div>
             <div className="relative w-full h-full">
+                <p className="text-xs text-gray-500">[{questionItem.questionType}]</p>
                 <p className="font-semibold">
-                    {questionItem?.questionNumber}. {questionItem.questionText}
+                    {questionItem?.questionNumber}. {renderMixedMath(questionItem.questionText)}
                 </p>
 
                 <ul className="mt-2 pl-4 list-disc">
@@ -27,14 +18,11 @@ const CardMathMCQ = ({ questionItem, isOpen, toggleExpand, expandKey }) => {
                         return (
                             <li
                                 key={i}
-                                className={isCorrect ? 'font-bold text-green-600' : 'text-gray-500'}
+                                className={isCorrect ? "font-bold text-green-600" : "text-gray-500"}
                             >
                                 {choice.choiceLabel}.{" "}
                                 <span>
-                                    {choice.choiceText}{" "}
-                                    {choice.choiceInLaTeX && (
-                                        <code className="bg-gray-100 px-1 rounded">{choice.choiceInLaTeX}</code>
-                                    )}
+                                    {renderMixedMath(choice.choiceText)}{" "}
                                 </span>
                             </li>
                         );
@@ -50,12 +38,17 @@ const CardMathMCQ = ({ questionItem, isOpen, toggleExpand, expandKey }) => {
             </div>
 
             {isOpen && (
-                <div className="mt-3 text-xs whitespace-pre-line border-t border-gray-300 pt-2">
+                <div className="mt-3 text-xs border-t border-gray-300 pt-2">
                     <div>
                         <p className="font-semibold mb-1">풀이 단계 (Solution Steps):</p>
-                        <p style={{ whiteSpace: 'pre-line' }}>
-                            {formatSolutionSteps(questionItem.solutionSteps)}
-                        </p>
+                        {questionItem.solutionSteps?.map((step) => (
+                            <div key={step.stepNumber} className="mb-3 whitespace-pre-line">
+                                <p className="font-semibold">
+                                    {step.stepNumber}. {step.stepTitle}
+                                </p>
+                                <p>{renderMixedMath(step.stepExplanation)}</p>
+                            </div>
+                        ))}
                     </div>
 
                     {questionItem.incorrectChoices?.length > 0 && (
@@ -65,13 +58,9 @@ const CardMathMCQ = ({ questionItem, isOpen, toggleExpand, expandKey }) => {
                                 {questionItem.incorrectChoices.map((wrong, idx) => (
                                     <li key={idx}>
                                         <p>
-                                            <strong>{wrong.choiceLabel}</strong> - {wrong.reason}
+                                            <strong>{wrong.choiceLabel}</strong> - {renderMixedMath(wrong.choiceText)}
                                         </p>
-                                        {wrong.choiceInLaTeX && (
-                                            <p>
-                                                <code className="bg-gray-100 px-1 rounded">{wrong.choiceInLaTeX}</code>
-                                            </p>
-                                        )}
+                                        <p>{renderMixedMath(wrong.reason)}</p>
                                     </li>
                                 ))}
                             </ul>

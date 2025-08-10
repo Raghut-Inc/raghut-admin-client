@@ -23,6 +23,7 @@ const CardEngMCQ = ({ questionItem, isOpen, toggleExpand, expandKey }) => {
     return (
         <div>
             <div className='relative w-full h-full'>
+                <p className="text-xs text-gray-500">[{questionItem.questionType}]</p>
                 <p className="font-semibold">{questionItem?.questionNumber}. {questionItem.questionText}</p>
                 <ul className="mt-2 pl-4 list-disc">
                     {questionItem.answers?.map((a, j) => {
