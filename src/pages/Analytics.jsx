@@ -1,4 +1,4 @@
-import React, { useEffect, useState } from "react";
+import { useEffect, useState } from "react";
 import {
     LineChart,
     Line,
@@ -27,15 +27,20 @@ function safeId(obj, key) {
 }
 
 export default function Analytics({ user, setUser }) {
-    const [userTableView, setUserTableView] = useState("monthly"); // default to monthly
+    const [userTableView, setUserTableView] = useState("daily"); // default to monthly
+    const [activeCounts, setActiveCounts] = useState([]); // holds merged user+guest active counts per period
 
     // State for users: total and monthly
     const [questionsPerUserTotal, setQuestionsPerUserTotal] = useState([]);
     const [questionsPerUserMonthly, setQuestionsPerUserMonthly] = useState([]);
+    const [questionsPerUserWeekly, setQuestionsPerUserWeekly] = useState([]);
+    const [questionsPerUserDaily, setQuestionsPerUserDaily] = useState([]);
 
     // State for guests: total and monthly
     const [questionsPerGuestTotal, setQuestionsPerGuestTotal] = useState([]);
     const [questionsPerGuestMonthly, setQuestionsPerGuestMonthly] = useState([]);
+    const [questionsPerGuestWeekly, setQuestionsPerGuestWeekly] = useState([]);
+    const [questionsPerGuestDaily, setQuestionsPerGuestDaily] = useState([]);
 
     const [questionsOverTimeGranularity, setQuestionsOverTimeGranularity] = useState(
         "daily"
@@ -56,21 +61,56 @@ export default function Analytics({ user, setUser }) {
             // Fetch total and monthly user stats
             fetchJson(`${API_BASE}/questions-per-user?granularity=all`),
             fetchJson(`${API_BASE}/questions-per-user?granularity=monthly`),
+            fetchJson(`${API_BASE}/questions-per-user?granularity=weekly`),
+            fetchJson(`${API_BASE}/questions-per-user?granularity=daily`),
 
             // Fetch total and monthly guest stats
             fetchJson(`${API_BASE}/questions-per-guest?granularity=all`),
             fetchJson(`${API_BASE}/questions-per-guest?granularity=monthly`),
+            fetchJson(`${API_BASE}/questions-per-guest?granularity=weekly`),
+            fetchJson(`${API_BASE}/questions-per-guest?granularity=daily`),
+
+            // Fetch combined active user+guest counts for all granularities if needed, or just the selected one
+            fetchJson(`${API_BASE}/active-users-guests-per-period?granularity=monthly`),
+            fetchJson(`${API_BASE}/active-users-guests-per-period?granularity=weekly`),
+            fetchJson(`${API_BASE}/active-users-guests-per-period?granularity=daily`),
         ])
-            .then(([userTotal, userMonthly, guestTotal, guestMonthly]) => {
+            .then(([
+                userTotal, userMonthly, userWeekly, userDaily,
+                guestTotal, guestMonthly, guestWeekly, guestDaily,
+                activeMonthly, activeWeekly, activeDaily
+            ]) => {
                 setQuestionsPerUserTotal(userTotal);
                 setQuestionsPerUserMonthly(userMonthly);
-                console.log(userMonthly)
+                setQuestionsPerUserWeekly(userWeekly);
+                setQuestionsPerUserDaily(userDaily);
 
                 setQuestionsPerGuestTotal(guestTotal);
                 setQuestionsPerGuestMonthly(guestMonthly);
+                setQuestionsPerGuestWeekly(guestWeekly);
+                setQuestionsPerGuestDaily(guestDaily);
+
+                setActiveCounts(activeDaily);
             })
             .catch((e) => setError(e.message));
     }, []);
+
+    useEffect(() => {
+        switch (userTableView) {
+            case "daily":
+                fetchJson(`${API_BASE}/active-users-guests-per-period?granularity=daily`).then(setActiveCounts).catch((e) => setError(e.message));
+                break;
+            case "weekly":
+                fetchJson(`${API_BASE}/active-users-guests-per-period?granularity=weekly`).then(setActiveCounts).catch((e) => setError(e.message));
+                break;
+            case "monthly":
+                fetchJson(`${API_BASE}/active-users-guests-per-period?granularity=monthly`).then(setActiveCounts).catch((e) => setError(e.message));
+                break;
+            default:
+                // For "total" you may want to fetch active counts for all time or skip
+                setActiveCounts([]);
+        }
+    }, [userTableView]);
 
     useEffect(() => {
         fetchJson(
@@ -89,10 +129,10 @@ export default function Analytics({ user, setUser }) {
         );
 
     // Helper table render function
-    function renderUserTable(data, title) {
+    function renderUserTable(data) {
         return (
             <>
-                <h2 className="text-xl font-semibold mb-3 px-4">{title} (Top 30)</h2>
+                <h2 className="text-xl font-semibold mb-3 px-4">회원 · top30 · {userTableView}</h2>
                 <div className="overflow-x-auto bg-white mb-10">
                     <table className="w-full border-collapse text-sm">
                         <thead className="bg-gray-100 text-gray-500 text-xs">
@@ -152,10 +192,10 @@ export default function Analytics({ user, setUser }) {
         );
     }
 
-    function renderGuestTable(data, title) {
+    function renderGuestTable(data) {
         return (
             <>
-                <h2 className="text-xl font-semibold mb-3 px-4">{title} (Top 30)</h2>
+                <h2 className="text-xl font-semibold mb-3 px-4">비회원 · top30 · {userTableView}</h2>
                 <div className="overflow-x-auto bg-white mb-10">
                     <table className="w-full border-collapse text-sm">
                         <thead className="bg-gray-100 text-gray-500 text-xs">
@@ -189,15 +229,29 @@ export default function Analytics({ user, setUser }) {
         if (userTableView === "total") {
             return (
                 <>
-                    {renderUserTable(questionsPerUserTotal, "전체 회원 활동")}
-                    {renderGuestTable(questionsPerGuestTotal, "전체 비회원 활동")}
+                    {renderUserTable(questionsPerUserTotal)}
+                    {renderGuestTable(questionsPerGuestTotal)}
+                </>
+            );
+        } else if (userTableView === "monthly") {
+            return (
+                <>
+                    {renderUserTable(questionsPerUserMonthly)}
+                    {renderGuestTable(questionsPerGuestMonthly)}
+                </>
+            );
+        } else if (userTableView === "weekly") {
+            return (
+                <>
+                    {renderUserTable(questionsPerUserWeekly)}
+                    {renderGuestTable(questionsPerGuestWeekly)}
                 </>
             );
         } else {
             return (
                 <>
-                    {renderUserTable(questionsPerUserMonthly, "월간 회원 활동")}
-                    {renderGuestTable(questionsPerGuestMonthly, "월간 비회원 활동")}
+                    {renderUserTable(questionsPerUserDaily)}
+                    {renderGuestTable(questionsPerGuestDaily)}
                 </>
             );
         }
@@ -266,13 +320,31 @@ export default function Analytics({ user, setUser }) {
 
                 <div className="mb-4 px-4">
                     <button
+                        onClick={() => setUserTableView("daily")}
+                        className={`mr-2 px-4 py-1 rounded ${userTableView === "daily"
+                            ? "bg-indigo-600 text-white"
+                            : "bg-gray-300 text-gray-700"
+                            }`}
+                    >
+                        24시간
+                    </button>
+                    <button
+                        onClick={() => setUserTableView("weekly")}
+                        className={`mr-2 px-4 py-1 rounded ${userTableView === "weekly"
+                            ? "bg-indigo-600 text-white"
+                            : "bg-gray-300 text-gray-700"
+                            }`}
+                    >
+                        7일
+                    </button>
+                    <button
                         onClick={() => setUserTableView("monthly")}
                         className={`mr-2 px-4 py-1 rounded ${userTableView === "monthly"
                             ? "bg-indigo-600 text-white"
                             : "bg-gray-300 text-gray-700"
                             }`}
                     >
-                        월간 회원 활동
+                        30일
                     </button>
                     <button
                         onClick={() => setUserTableView("total")}
@@ -281,12 +353,39 @@ export default function Analytics({ user, setUser }) {
                             : "bg-gray-300 text-gray-700"
                             }`}
                     >
-                        전체 회원 활동
+                        전체
                     </button>
                 </div>
 
-                {renderTables()}
+                {userTableView !== "total" && (
+                    <>
+                        <h2 className="text-xl font-semibold mb-3 px-4">활성 사용자 · {userTableView}</h2>
+                        <div className="overflow-x-auto bg-white mb-10">
+                            <table className="w-full border-collapse text-sm">
+                                <thead className="bg-gray-100 text-gray-500 text-xs">
+                                    <tr>
+                                        <th className="border-b border-gray-300 px-4 py-2 text-left font-semibold">Period</th>
+                                        <th className="border-b border-gray-300 px-4 py-2 text-right font-semibold">Users</th>
+                                        <th className="border-b border-gray-300 px-4 py-2 text-right font-semibold">Guests</th>
+                                        <th className="border-b border-gray-300 px-4 py-2 text-right font-semibold">Total</th>
+                                    </tr>
+                                </thead>
+                                <tbody>
+                                    {activeCounts.map(({ period, uniqueUserCount, uniqueGuestCount, totalUniqueCount }) => (
+                                        <tr key={period} className="border-b border-gray-200 hover:bg-gray-50">
+                                            <td className="px-4 py-2 font-mono whitespace-nowrap text-xs">{period}</td>
+                                            <td className="px-4 py-2 text-right">{uniqueUserCount}</td>
+                                            <td className="px-4 py-2 text-right">{uniqueGuestCount}</td>
+                                            <td className="px-4 py-2 text-right">{totalUniqueCount}</td>
+                                        </tr>
+                                    ))}
+                                </tbody>
+                            </table>
+                        </div>
+                    </>
+                )}
 
+                {renderTables()}
             </div>
         </div>
     );

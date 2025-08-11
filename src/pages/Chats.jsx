@@ -64,6 +64,31 @@ const Chats = ({ user, setUser }) => {
         []
     );
 
+    const handleDeleteChat = async (chatRoomId) => {
+        if (!window.confirm("Are you sure you want to delete this chat room? This action cannot be undone.")) return;
+
+        try {
+            const res = await fetch(`${process.env.REACT_APP_API_URL}/chat/${chatRoomId}`, {
+                method: "DELETE",
+                credentials: "include",
+                headers: { "Content-Type": "application/json" },
+            });
+
+            if (!res.ok) {
+                const data = await res.json();
+                throw new Error(data.error || "Failed to delete chat room");
+            }
+
+            alert("Chat room deleted successfully.");
+            // Refresh chat list after deletion
+            fetchChats(page);
+            // Collapse messages if deleted chat was expanded
+            if (expandedChatId === chatRoomId) setExpandedChatId(null);
+        } catch (err) {
+            alert(`Error deleting chat room: ${err.message}`);
+        }
+    };
+
     useEffect(() => {
         fetchChats(page);
     }, [page, fetchChats]);
@@ -149,6 +174,13 @@ const Chats = ({ user, setUser }) => {
                                     className="mt-3 px-3 py-1 rounded-md bg-indigo-600 text-white font-semibold hover:bg-indigo-700"
                                 >
                                     {expandedChatId === chat.chatRoomId ? 'Hide Messages' : 'View Messages'}
+                                </button>
+
+                                <button
+                                    onClick={() => handleDeleteChat(chat.chatRoomId)}
+                                    className="ml-2 mt-3 px-3 py-1 rounded-md bg-red-600 text-white font-semibold hover:bg-red-700"
+                                >
+                                    Delete Chat
                                 </button>
 
                                 {/* Messages list */}
