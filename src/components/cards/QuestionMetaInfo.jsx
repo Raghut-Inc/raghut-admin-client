@@ -71,6 +71,7 @@ function QuestionMetaInfo({ q, onDelete, timeAgo, setFilter }) {
                                 <span className="font-semibold">{q.userId.name || "Unnamed User"}</span>
                             </div>
 
+                            <div className="text-xs text-gray-400 font-mono">uName: {q.userId.username}</div>
                             <div className="text-xs text-gray-400 font-mono">uId: {q.userId._id}</div>
 
                             <div className="flex flex-wrap gap-2 text-xs text-gray-300 truncate">

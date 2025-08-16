@@ -179,6 +179,9 @@ const Users = ({ user, setUser }) => {
                                 </div>
 
                                 <div className="text-xs text-gray-400 font-mono truncate max-w-full">
+                                    Username: {user.username}
+                                </div>
+                                <div className="text-xs text-gray-400 font-mono truncate max-w-full">
                                     ID: {user._id}
                                 </div>
 
