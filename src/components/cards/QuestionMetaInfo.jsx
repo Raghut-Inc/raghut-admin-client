@@ -67,7 +67,7 @@ function QuestionMetaInfo({ q, onDelete, timeAgo, setFilter }) {
                                 >
                                     {q.userId.provider || "UNKNOWN"}
                                 </span>
-
+                                <span className="font-semibold text-base">{q.userId.preferredLanguage === "ko" ? "🇰🇷" : "🇺🇸"}</span>
                                 <span className="font-semibold">{q.userId.name || "Unnamed User"}</span>
                             </div>
 

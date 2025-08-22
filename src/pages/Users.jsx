@@ -28,6 +28,7 @@ const Users = ({ user, setUser }) => {
 
                 if (data.success) {
                     setTotalCount(data.totalCount);
+                    console.log(data.users)
 
                     if (pageToLoad === 1) {
                         setUsers(data.users);
@@ -150,14 +151,8 @@ const Users = ({ user, setUser }) => {
                                         {user.name || 'Unnamed User'}
                                     </p>
 
-                                    <span
-                                        className={`px-2 py-0.5 text-xs rounded-full font-mono ${user.role === 'admin'
-                                            ? 'bg-indigo-100 text-indigo-800'
-                                            : 'bg-gray-100 text-gray-600'
-                                            }`}
-                                        title="User Role"
-                                    >
-                                        {user.role.toUpperCase()}
+                                    <span className={`text-`}  >
+                                        {user.preferredLanguage === "ko" ? "🇰🇷" : "🇺🇸"}
                                     </span>
 
                                     <span
@@ -179,7 +174,7 @@ const Users = ({ user, setUser }) => {
                                 </div>
 
                                 <div className="text-xs text-gray-400 font-mono truncate max-w-full">
-                                    Username: {user.username}
+                                    @{user.username}
                                 </div>
                                 <div className="text-xs text-gray-400 font-mono truncate max-w-full">
                                     ID: {user._id}
