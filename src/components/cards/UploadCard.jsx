@@ -6,7 +6,7 @@ import CardEngMCQ from "./CardEngMCQ";
 import CardMathMCQ from "./CardMathMCQ";
 import CardMathShortAnswer from "./CardMathShortAnswer";
 
-const UploadsCard = ({ q, qIndex, onDelete, setFilter }) => {
+const UploadCard = ({ q, qIndex, onDelete, setFilter }) => {
     const [expanded, setExpanded] = useState({}); // { "qIndex-i": true }
 
     const toggleExpand = (key) => {
@@ -112,4 +112,4 @@ const UploadsCard = ({ q, qIndex, onDelete, setFilter }) => {
     );
 };
 
-export default UploadsCard;
+export default UploadCard;
