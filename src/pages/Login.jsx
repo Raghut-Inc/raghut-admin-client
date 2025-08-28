@@ -43,7 +43,7 @@ export default function Login({ user, setUser }) {
         style={{ minHeight: "calc(100svh - 7rem)" }}
         className="w-full h-full flex justify-center items-center flex-col p-6 relative"
       >
-        <div className="space-y-6 p-8 border shadow w-full text-center rounded-xl">
+        <div className="space-y-6 p-8 border shadow w-full text-center rounded-xl flex flex-col items-center">
           <h1 className="text-xl font-bold">Admin Login</h1>
           <GoogleLogin onSuccess={handleGoogleSuccess} onError={handleGoogleError} />
         </div>

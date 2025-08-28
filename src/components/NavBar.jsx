@@ -1,6 +1,6 @@
 import { Link } from "react-router";
 import UserSettingsButton from "./UserSettingsButton";
-import logo from "../assets/logo.png"
+import logo from "../assets/logo.png";
 
 const NavBar = ({ user, setUser, title, value1, value2 }) => {
   return (
@@ -14,23 +14,15 @@ const NavBar = ({ user, setUser, title, value1, value2 }) => {
 
         <div className="flex flex-col items-center">
           <p className="font-semibold text-center w-full">{title}</p>
-          <div className='flex space-x-1'>
-            {value1 && <p className='text-xs text-indigo-500 flex-shrink-0'>{value1}</p>}
-            {value2 && <p className='text-xs text-indigo-500 flex-shrink-0'>·</p>}
-            {value2 && <p className='text-xs text-indigo-500 flex-shrink-0'>{value2}</p>}
+          <div className="flex space-x-1">
+            {value1 && <p className="text-xs text-indigo-500 flex-shrink-0">{value1}</p>}
+            {value2 && <p className="text-xs text-indigo-500 flex-shrink-0">·</p>}
+            {value2 && <p className="text-xs text-indigo-500 flex-shrink-0">{value2}</p>}
           </div>
         </div>
 
         <div className="flex flex-shrink-0 space-x-6 items-center">
-          {user ? (
-            <UserSettingsButton user={user} setUser={setUser} />
-          ) : (
-            <Link to="/login">
-              <button className="bg-indigo-600 text-white px-4 py-2 rounded-lg hover:bg-indigo-700 transition-colors flex-shrink-0">
-                Sign in
-              </button>
-            </Link>
-          )}
+          {user && <UserSettingsButton user={user} setUser={setUser} />}
         </div>
       </div>
     </nav>
