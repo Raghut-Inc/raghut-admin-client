@@ -1,79 +1,53 @@
-import { useState } from "react";
-import axios from "axios";
 import { useNavigate } from "react-router";
+import { GoogleLogin } from "@react-oauth/google";
+import axios from "axios";
 import NavBar from "../components/NavBar";
 
 export default function Login({ user, setUser }) {
-    const [email, setEmail] = useState("");
-    const [password, setPassword] = useState("");
-    const [error, setError] = useState(null);
-    const navigate = useNavigate();
+  const navigate = useNavigate();
 
-    const handleSubmit = async (e) => {
-        e.preventDefault();
-        setError(null);
+  const handleGoogleSuccess = async (credentialResponse) => {
+    try {
+      const res = await axios.post(
+        `${process.env.REACT_APP_API_URL}/auth/google`,
+        { idToken: credentialResponse.credential },
+        { withCredentials: true }
+      );
 
-        try {
-            const res = await axios.post(`${process.env.REACT_APP_API_URL}/auth/login`, {
-                email,
-                password,
-            }, { withCredentials: true });
-
-            if (res.data.success) {
-                setUser(res.data.user);
-                navigate("/admin/uploads");
-            } else {
-                setError("Invalid login");
-            }
-        } catch (err) {
-            console.error("❌ Login error:", err);
-            setError("Invalid email or password");
+      if (res.data.success) {
+        // only allow admins through
+        if (res.data.user.role !== "admin") {
+          alert("You are not authorized to access the admin panel.");
+          return;
         }
-    };
 
-    return (
-        <>
-            <NavBar user={user} setUser={setUser} animate={true} />
-            <div
-                style={{ minHeight: "calc(100svh - 7rem)" }}
-                className="w-full h-full flex justify-center items-center flex-col p-4 md:p-6 relative"
-            >
+        setUser(res.data.user);
+        navigate("/admin/uploads");
+      } else {
+        alert("Google login failed");
+      }
+    } catch (err) {
+      console.error("❌ Google login error:", err);
+      alert("Google login failed");
+    }
+  };
 
-                <form onSubmit={handleSubmit} className="space-y-4 p-8 border rounded shadow w-96">
-                    <h1 className="text-xl font-bold">Login</h1>
+  const handleGoogleError = () => {
+    alert("Google login failed");
+  };
 
-                    {error && <p className="text-red-600 text-sm">{error}</p>}
-
-                    <div className="flex flex-col">
-                        <label>Email</label>
-                        <input
-                            className="border rounded px-2 py-1"
-                            type="email"
-                            value={email}
-                            onChange={(e) => setEmail(e.target.value)}
-                            required
-                        />
-                    </div>
-
-                    <div className="flex flex-col">
-                        <label>Password</label>
-                        <input
-                            className="border rounded px-2 py-1"
-                            type="password"
-                            value={password}
-                            onChange={(e) => setPassword(e.target.value)}
-                            required
-                        />
-                    </div>
-
-                    <button
-                        type="submit"
-                        className="w-full bg-black text-white py-2 rounded"
-                    >
-                        Log in
-                    </button>
-                </form>
-            </div>
-        </>
-    );
+  return (
+    <>
+      <NavBar user={user} setUser={setUser} animate={true} />
+      <div
+        style={{ minHeight: "calc(100svh - 7rem)" }}
+        className="w-full h-full flex justify-center items-center flex-col p-6 relative"
+      >
+        <div className="space-y-6 p-8 border shadow w-full text-center rounded-xl">
+          <h1 className="text-xl font-bold">Admin Login</h1>
+          <GoogleLogin onSuccess={handleGoogleSuccess} onError={handleGoogleError} />
+        </div>
+      </div>
+    </>
+  );
 }
