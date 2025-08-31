@@ -1,9 +1,12 @@
 import { useEffect, useState, useCallback } from 'react';
 import NavBar from '../components/NavBar';
+import { useNavigate } from 'react-router';
 
 const PAGE_SIZE = 20;
 
 const Users = ({ user, setUser }) => {
+    const navigate = useNavigate(); // ⬅️ add this
+
     const [users, setUsers] = useState([]);
     const [totalCount, setTotalCount] = useState(0);
     const [page, setPage] = useState(1);
@@ -50,6 +53,15 @@ const Users = ({ user, setUser }) => {
         []
     );
 
+    const goToUploads = ({ userId, guestUUID } = {}) => {
+        const params = new URLSearchParams();
+        params.set('page', '1');
+        params.set('pageSize', '25');        // match Uploads PAGE_SIZE
+        if (userId) params.set('userId', userId);
+        if (guestUUID) params.set('guestUUID', guestUUID);
+        // force Cards view (Uploads defaults to cards when 'mode' is absent)
+        navigate({ pathname: '/admin/uploads', search: `?${params.toString()}` });
+    };
     // Load first page on mount
     useEffect(() => {
         fetchUsers(1);
@@ -112,17 +124,18 @@ const Users = ({ user, setUser }) => {
         <div className="font-sans bg-gray-200 flex flex-col items-center">
             <NavBar user={user} setUser={setUser} animate={true} title={"유저"} value1={`유저수 ${totalCount.toLocaleString()}`} value2={`페이지 ${page}`} />
 
-            <ul className="bg-white rounded-md divide-y divide-gray-200 max-w-4xl w-full">
+            <div className="bg-white divide-y divide-gray-200 max-w-4xl w-full">
                 {users.map((user) => {
                     const createdAtDate = new Date(user.createdAt);
                     return (
-                        <li
+                        <button
                             key={user._id}
-                            className="p-4 flex space-x-4"
+                            className="p-4 flex space-x-4 items-start w-full"
                             title={`ID: ${user._id}`}
+                            onClick={() => goToUploads({ userId: user._id })}
                         >
                             {/* Profile */}
-                            <div className="flex-shrink-0 mb-3 sm:mb-0">
+                            <div className="flex-shrink-0 mb-3 sm:mb-0 relative">
                                 {user.profileImageUrl ? (
                                     <a
                                         href={user.profileImageUrl}
@@ -142,25 +155,20 @@ const Users = ({ user, setUser }) => {
                                         {user.name?.[0]?.toUpperCase() || '?'}
                                     </div>
                                 )}
+
+                                <div className={"absolute -top-1 -right-1 rounded-full w-6 h-6 flex items-center justify-center text-2xl"}  >
+                                    {user.preferredLanguage === "ko" ? "🇰🇷" : "🇺🇸"}
+                                </div>
                             </div>
 
                             {/* User Info */}
-                            <div className="flex-grow min-w-0 space-y-1">
+                            <div className="flex-grow min-w-0 space-y-1 w-full flex flex-col items-start">
                                 <div className="flex flex-wrap items-center gap-2">
                                     <p className="font-semibold text-sm truncate max-w-xs">
                                         {user.name || 'Unnamed User'}
                                     </p>
 
-                                    <span className={`text-`}  >
-                                        {user.preferredLanguage === "ko" ? "🇰🇷" : "🇺🇸"}
-                                    </span>
 
-                                    <span
-                                        className="text-xs text-gray-500 uppercase font-mono"
-                                        title="Login Provider"
-                                    >
-                                        {user.provider || 'UNKNOWN'}
-                                    </span>
                                 </div>
 
                                 <div className="flex flex-wrap items-center gap-2 text-xs text-gray-600 max-w-full">
@@ -173,10 +181,10 @@ const Users = ({ user, setUser }) => {
                                     </span>
                                 </div>
 
-                                <div className="text-xs text-gray-400 font-mono truncate max-w-full">
+                                <div className="text-xs text-gray-400 truncate max-w-full">
                                     @{user.username}
                                 </div>
-                                <div className="text-xs text-gray-400 font-mono truncate max-w-full">
+                                <div className="text-xs text-gray-400 truncate max-w-full">
                                     ID: {user._id}
                                 </div>
 
@@ -189,12 +197,18 @@ const Users = ({ user, setUser }) => {
                                         가입: {createdAtDate.toLocaleDateString()} (
                                         {timeAgo(user.createdAt)})
                                     </time>
+                                    <span
+                                        className="uppercase"
+                                        title="Login Provider"
+                                    >
+                                        {user.provider || 'UNKNOWN'}
+                                    </span>
                                 </div>
                             </div>
-                        </li>
+                        </button>
                     );
                 })}
-            </ul>
+            </div>
 
             {loadingMore && (
                 <div className="text-center py-4 font-semibold text-gray-600">

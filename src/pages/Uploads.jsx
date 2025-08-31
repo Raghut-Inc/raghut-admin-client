@@ -228,7 +228,7 @@ const Uploads = ({ user, setUser }) => {
               mode === "summary" ? "bg-indigo-600 text-white" : "bg-white text-gray-700"
             }`}
           >
-            Summary
+            Recent
           </button>
         </div>
 
