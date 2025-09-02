@@ -34,10 +34,17 @@ function QuestionMetaInfo({ q, onDelete, timeAgo, setFilter }) {
             {/* ID and Delete */}
             <div className="flex w-full justify-between items-center mt-2">
                 <div
-                    className="text-white text-xs cursor-pointer select-text"
-                    title="Click to filter by this user or guest"
+                    className="text-white text-xs select-text"
+                    title="Click to open solved question"
                 >
-                    <p>{q._id}</p>
+                    <button
+                        onClick={() =>
+                            window.open(`https://chalcack.com/solved/${q._id}`, "_blank")
+                        }
+                        className="underline hover:text-blue-300"
+                    >
+                        {q._id}
+                    </button>
                 </div>
                 <div className="flex justify-end">
                     <button
@@ -51,6 +58,7 @@ function QuestionMetaInfo({ q, onDelete, timeAgo, setFilter }) {
                     </button>
                 </div>
             </div>
+
 
             {/* User Info */}
             <div
