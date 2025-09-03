@@ -1,3 +1,5 @@
+import { renderMixedMath } from "../../utils/latexUtils";
+
 const CardEngMCQ = ({ questionItem, isOpen, toggleExpand, expandKey }) => {
 
     function formatExplanation(explanation) {
@@ -24,7 +26,7 @@ const CardEngMCQ = ({ questionItem, isOpen, toggleExpand, expandKey }) => {
         <div>
             <div className='relative w-full h-full'>
                 <p className="text-xs text-gray-500">[{questionItem.questionType}]</p>
-                <p className="font-semibold">{questionItem?.questionNumber}. {questionItem.questionText}</p>
+                <p className="font-semibold">{questionItem?.questionNumber}. {renderMixedMath(questionItem.questionText)}</p>
                 <ul className="mt-2 pl-4 list-disc">
                     {questionItem.answers?.map((a, j) => {
                         const isCorrect = questionItem.correctAnswers?.some(
@@ -35,7 +37,7 @@ const CardEngMCQ = ({ questionItem, isOpen, toggleExpand, expandKey }) => {
                                 key={j}
                                 className={isCorrect ? 'font-bold text-green-600' : 'text-gray-500'}
                             >
-                                {a.answerOption}. {a.answerText}{' '}({a.answerInKorean})
+                                {a.answerOption}. {renderMixedMath(a.answerText)}{' '}({renderMixedMath(a.answerInKorean)})
                             </li>
                         );
                     })}
@@ -52,7 +54,7 @@ const CardEngMCQ = ({ questionItem, isOpen, toggleExpand, expandKey }) => {
             {isOpen && (
                 <div className="mt-3 text-xs whitespace-pre-line border-t border-gray-300 pt-2">
                     <p style={{ whiteSpace: 'pre-line' }}>
-                        {formatExplanation(questionItem.explanation)}
+                        {renderMixedMath(formatExplanation(questionItem.explanation))}
                     </p>
                     {questionItem.wrongChoices?.length > 0 && (
                         <div className="bg-red-50 border border-red-200 rounded-md p-3 mt-3">
@@ -60,7 +62,7 @@ const CardEngMCQ = ({ questionItem, isOpen, toggleExpand, expandKey }) => {
                             <ul className="space-y-2">
                                 {questionItem.wrongChoices.map((wc, idx) => (
                                     <li key={idx}>
-                                        <p><strong>{wc.answerOption}</strong> - {wc.reason}</p>
+                                        <p><strong>{wc.answerOption}</strong> - {renderMixedMath(wc.reason)}</p>
                                     </li>
                                 ))}
                             </ul>

@@ -19,7 +19,7 @@ const UploadCard = ({ q, qIndex, onDelete, setFilter }) => {
     const renderQuestionCard = (item, key) => {
         const isOpen = expanded[key];
         // Use q.subject to pick card type
-        if (q.subject === "math") {
+        if (q.subject === "math" || q.subject === "physics" || q.subject === "chemistry") {
             // Render math cards here
             if (item.questionType === "ShortAnswer") {
                 return (

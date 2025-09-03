@@ -1,14 +1,16 @@
+import { renderMixedMath } from "../../utils/latexUtils";
+
 const CardEngShortAnswer = ({ questionItem, isOpen, toggleExpand, expandKey }) => {
     return (
         <div className="flex-1 text-xs text-black rounded overflow-hidden">
             <div className='relative w-full h-full'>
                 <p className="text-xs text-gray-500">[{questionItem.questionType}]</p>
-                <p className="font-semibold">{questionItem.questionNumber}. {questionItem.questionText}</p>
+                <p className="font-semibold">{questionItem.questionNumber}. {renderMixedMath(questionItem.questionText)}</p>
                 {questionItem.expectedAnswer?.map((ans, idx) => (
                     <div key={idx} className="">
                         <p>
-                            <strong className="text-green-600">{ans.answer}</strong>{" "}
-                            <span className="text-gray-600">({ans.answerInKorean})</span>
+                            <strong className="text-green-600">{renderMixedMath(ans.answer)}</strong>{" "}
+                            <span className="text-gray-600">({renderMixedMath(ans.answerInKorean)})</span>
                         </p>
                     </div>
                 ))}
@@ -24,11 +26,11 @@ const CardEngShortAnswer = ({ questionItem, isOpen, toggleExpand, expandKey }) =
                 <div className="mt-3 text-xs whitespace-pre-line border-t border-gray-300 pt-2">
                     {questionItem.expectedAnswer?.map((ans, idx) => (
                         <div key={idx} className="mb-2">
-                            {ans.reason && <p className="text-xs text-gray-500">이유: {ans.reason}</p>}
-                            {ans.sourceText && <p className="text-xs text-gray-500">출처: {ans.sourceText}</p>}
+                            {ans.reason && <p className="text-xs text-gray-500">이유: {renderMixedMath(ans.reason)}</p>}
+                            {ans.sourceText && <p className="text-xs text-gray-500">출처: {renderMixedMath(ans.sourceText)}</p>}
                         </div>
                     ))}
-                    {questionItem.explanation}
+                    {renderMixedMath(questionItem.explanation)}
                 </div>
             )}
         </div>
