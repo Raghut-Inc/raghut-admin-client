@@ -5,29 +5,31 @@ const CardMathMCQ = ({ questionItem, isOpen, toggleExpand, expandKey }) => {
     return (
         <div>
             <div className="relative w-full h-full">
-                <p className="text-xs text-gray-500">[{questionItem.questionType}]</p>
-                <p className="font-semibold">
-                    {questionItem?.questionNumber}. {renderMixedMath(questionItem.questionText)}
-                </p>
+                <div className="text-xs">
+                    <div className="flex gap-1">
+                        <span className="text-gray-400">[{questionItem.questionType}]</span>
+                        <span className="font-semibold line-clamp-1">
+                            {questionItem?.questionNumber}. {renderMixedMath(questionItem.questionText)}
+                        </span>
+                    </div>
+                    <ul className="pl-4 list-disc">
+                        {questionItem.choices?.map((choice, i) => {
+                            const isCorrect = questionItem.correctChoices?.some(
+                                (c) => c.choiceLabel === choice.choiceLabel
+                            );
+                            return (
+                                <li
+                                    key={i}
+                                    className={`leading-tight ${isCorrect ? "font-semibold text-green-600" : "text-gray-600"
+                                        }`}
+                                >
+                                    {choice.choiceLabel}. {renderMixedMath(choice.choiceText)}
+                                </li>
+                            );
+                        })}
+                    </ul>
+                </div>
 
-                <ul className="mt-2 pl-4 list-disc">
-                    {questionItem.choices?.map((choice, i) => {
-                        const isCorrect = questionItem.correctChoices?.some(
-                            (c) => c.choiceLabel === choice.choiceLabel
-                        );
-                        return (
-                            <li
-                                key={i}
-                                className={isCorrect ? "font-bold text-green-600" : "text-gray-500"}
-                            >
-                                {choice.choiceLabel}.{" "}
-                                <span>
-                                    {renderMixedMath(choice.choiceText)}{" "}
-                                </span>
-                            </li>
-                        );
-                    })}
-                </ul>
 
                 <button
                     className="text-indigo-700 underline absolute bottom-0 right-0 text-xs bg-white px-2 py-1 rounded-lg"

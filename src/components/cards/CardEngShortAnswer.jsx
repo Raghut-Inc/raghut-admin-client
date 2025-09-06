@@ -4,16 +4,22 @@ const CardEngShortAnswer = ({ questionItem, isOpen, toggleExpand, expandKey }) =
     return (
         <div className="flex-1 text-xs text-black rounded overflow-hidden">
             <div className='relative w-full h-full'>
-                <p className="text-xs text-gray-500">[{questionItem.questionType}]</p>
-                <p className="font-semibold">{questionItem.questionNumber}. {renderMixedMath(questionItem.questionText)}</p>
-                {questionItem.expectedAnswer?.map((ans, idx) => (
-                    <div key={idx} className="">
-                        <p>
-                            <strong className="text-green-600">{renderMixedMath(ans.answer)}</strong>{" "}
-                            <span className="text-gray-600">({renderMixedMath(ans.answerInKorean)})</span>
+                <div className="flex gap-1">
+                    <span className="text-gray-400">[{questionItem.questionType}]</span>
+                    <span className="font-semibold line-clamp-1">
+                        {questionItem.questionNumber}. {renderMixedMath(questionItem.questionText)}
+                    </span>
+                </div>
+
+                <div className="mt-1 space-y-1">
+                    {questionItem.expectedAnswer?.map((ans, idx) => (
+                        <p key={idx} className="leading-tight">
+                            <span className="font-semibold text-green-600">
+                                {renderMixedMath(ans.answer)}
+                            </span>
                         </p>
-                    </div>
-                ))}
+                    ))}
+                </div>
                 <button
                     className="text-indigo-700 underline absolute bottom-0 right-0 text-xs bg-white px-2 py-1 rounded-lg"
                     onClick={() => toggleExpand(expandKey)}

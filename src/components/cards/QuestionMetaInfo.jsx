@@ -20,7 +20,7 @@ function QuestionMetaInfo({ q, onDelete, timeAgo, setFilter }) {
                     href={q.imageUrl}
                     target="_blank"
                     rel="noopener noreferrer"
-                    className="block"
+                    className="block relative"
                     onClick={(e) => e.stopPropagation()}
                 >
                     <img
@@ -28,37 +28,11 @@ function QuestionMetaInfo({ q, onDelete, timeAgo, setFilter }) {
                         alt="Captured"
                         className="w-full max-h-64 object-contain object-center cursor-pointer rounded"
                     />
+                    <div className="absolute right-2 bottom-2 bg-gray-600 px-3 py-1 rounded">
+                        {(q.processingTimeMs / 1000).toFixed(1)}s
+                    </div>
                 </a>
             )}
-
-            {/* ID and Delete */}
-            <div className="flex w-full justify-between items-center mt-2">
-                <div
-                    className="text-white text-xs select-text"
-                    title="Click to open solved question"
-                >
-                    <button
-                        onClick={() =>
-                            window.open(`https://chalcack.com/solved/${q._id}`, "_blank")
-                        }
-                        className="underline hover:text-blue-300"
-                    >
-                        {q._id}
-                    </button>
-                </div>
-                <div className="flex justify-end">
-                    <button
-                        onClick={(e) => {
-                            e.stopPropagation(); // prevent filtering on delete click
-                            onDelete(q._id);
-                        }}
-                        className="bg-red-500 hover:bg-red-600 text-white text-xs font-semibold rounded px-3 py-1"
-                    >
-                        삭제
-                    </button>
-                </div>
-            </div>
-
 
             {/* User Info */}
             <div
@@ -67,19 +41,14 @@ function QuestionMetaInfo({ q, onDelete, timeAgo, setFilter }) {
                 title="Click here to filter by this user or guest"
             >
                 {q.userId ? (
-                    <div className="bg-gray-700 rounded-md text-xs text-white space-y-1 w-full">
+                    <div className="rounded-md text-xs text-white space-y-1 w-full">
                         <div className="flex flex-col w-full space-y-1">
                             <div className="flex items-center gap-2">
-                                <span
-                                    className={`px-1.5 py-0.5 rounded text-xs font-mono bg-gray-600 text-gray-200`}
-                                >
-                                    {q.userId.provider || "UNKNOWN"}
-                                </span>
                                 <span className="font-semibold text-base">{q.userId.preferredLanguage === "ko" ? "🇰🇷" : "🇺🇸"}</span>
                                 <span className="font-semibold">{q.userId.name || "Unnamed User"}</span>
+                                <div className="text-xs text-gray-400 font-mono">@{q.userId.username}</div>
                             </div>
 
-                            <div className="text-xs text-gray-400 font-mono">@{q.userId.username}</div>
                             <div className="text-xs text-gray-400 font-mono">{q.userId._id}</div>
 
                             <div className="flex flex-wrap gap-2 text-xs text-gray-300 truncate">
@@ -110,7 +79,7 @@ function QuestionMetaInfo({ q, onDelete, timeAgo, setFilter }) {
 
                             <div className="text-xs text-gray-400 mt-1 truncate max-w-xs font-mono">
                                 가입일: {q.userId.createdAt ? new Date(q.userId.createdAt).toLocaleDateString() : "-"} (
-                                {timeAgo(q.userId.createdAt)})
+                                {timeAgo(q.userId.createdAt)}) {q.userId.provider || "UNKNOWN"}
                             </div>
 
                             <div className="mt-1 text-xs text-gray-400 truncate max-w-xs font-mono">
