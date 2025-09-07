@@ -214,20 +214,18 @@ const Uploads = ({ user, setUser }) => {
       />
 
       <div className="flex justify-between h-10 items-center w-full px-2 sticky top-14 z-20">
-        <div className="flex rounded-md shadow-sm overflow-hidden gap-1">
+        <div className="flex rounded-md overflow-hidden gap-1">
           <button
             onClick={() => setMode("cards")}
-            className={`px-3 py-1 text-xs rounded-lg border ${
-              mode === "cards" ? "bg-indigo-600 text-white" : "bg-white text-gray-700"
-            }`}
+            className={`px-3 py-1 text-xs rounded-lg border ${mode === "cards" ? "bg-indigo-600 text-white" : "bg-white text-gray-700"
+              }`}
           >
             Cards
           </button>
           <button
             onClick={() => setMode("summary")}
-            className={`px-3 py-1 text-xs rounded-lg border ${
-              mode === "summary" ? "bg-indigo-600 text-white" : "bg-white text-gray-700"
-            }`}
+            className={`px-3 py-1 text-xs rounded-lg border ${mode === "summary" ? "bg-indigo-600 text-white" : "bg-white text-gray-700"
+              }`}
           >
             Recent
           </button>
@@ -289,8 +287,8 @@ const Uploads = ({ user, setUser }) => {
               {!hasMore && <p className="text-center text-sm py-4 text-gray-600">🔚🔚🔚 No more results 🔚🔚🔚</p>}
             </>
           ) : (
-            <>
-              <div className="space-y-8">
+            <div className="w-full flex flex-col items-center">
+              <div className="space-y-8 w-full flex flex-col items-center">
                 {questions.map((q, qIndex) => (
                   <UploadCard
                     key={q._id || qIndex}
@@ -303,7 +301,7 @@ const Uploads = ({ user, setUser }) => {
               </div>
               {loadingMore && <p className="text-center py-4 text-gray-600">Loading more...</p>}
               {!hasMore && <p className="text-center text-sm py-4 text-gray-600">🔚🔚🔚 No more results 🔚🔚🔚</p>}
-            </>
+            </div>
           )}
         </div>
       )}

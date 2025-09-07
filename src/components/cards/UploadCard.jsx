@@ -76,7 +76,7 @@ const UploadCard = ({ q, qIndex, onDelete, setFilter }) => {
             {/* top bar unchanged */}
             <div
                 className={`${q.validQuestionCount > 0 ? "bg-indigo-500" : "bg-red-500"
-                    } text-white text-xs font-medium px-1 py-1 flex justify-between items-center`}
+                    } text-white text-xs font-medium px-1 py-1 flex justify-between items-center w-full`}
             >
                 <div className="flex items-center gap-1">
                     <button
