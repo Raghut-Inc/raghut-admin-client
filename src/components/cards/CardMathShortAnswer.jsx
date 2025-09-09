@@ -1,6 +1,6 @@
 import { renderMixedMath } from "../../utils/latexUtils";
 
-const CardMathShortAnswer = ({ questionItem, isOpen, toggleExpand, expandKey }) => {
+const CardMathShortAnswer = ({ questionItem, isOpen}) => {
     return (
         <div className="flex-1 text-xs text-black rounded overflow-hidden">
             <div className="relative w-full h-full">
@@ -20,14 +20,6 @@ const CardMathShortAnswer = ({ questionItem, isOpen, toggleExpand, expandKey }) 
                         ))}
                     </div>
                 </div>
-
-
-                <button
-                    className="text-indigo-700 underline absolute bottom-0 right-0 text-xs bg-white px-2 py-1 rounded-lg"
-                    onClick={() => toggleExpand(expandKey)}
-                >
-                    {isOpen ? "접기 ▲" : "더보기 ▼"}
-                </button>
             </div>
 
             {isOpen && (

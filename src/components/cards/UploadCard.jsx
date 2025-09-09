@@ -58,15 +58,15 @@ const UploadCard = ({ q, qIndex, onDelete, setFilter }) => {
         const isSci = q.subject === "math" || q.subject === "physics" || q.subject === "chemistry";
         if (isSci) {
             return item.questionType === "ShortAnswer" ? (
-                <CardMathShortAnswer key={key} questionItem={item} isOpen toggleExpand={() => { }} expandKey={key} />
+                <CardMathShortAnswer key={key} questionItem={item} isOpen />
             ) : (
-                <CardMathMCQ key={key} questionItem={item} isOpen toggleExpand={() => { }} expandKey={key} />
+                <CardMathMCQ key={key} questionItem={item} isOpen />
             );
         } else {
             return item.questionType === "ShortAnswer" ? (
-                <CardEngShortAnswer key={key} questionItem={item} isOpen toggleExpand={() => { }} expandKey={key} />
+                <CardEngShortAnswer key={key} questionItem={item} isOpen />
             ) : (
-                <CardEngMCQ key={key} questionItem={item} isOpen toggleExpand={() => { }} expandKey={key} />
+                <CardEngMCQ key={key} questionItem={item} isOpen />
             );
         }
     };

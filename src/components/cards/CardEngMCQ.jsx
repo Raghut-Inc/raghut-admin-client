@@ -1,6 +1,6 @@
 import { renderMixedMath } from "../../utils/latexUtils";
 
-const CardEngMCQ = ({ questionItem, isOpen, toggleExpand, expandKey }) => {
+const CardEngMCQ = ({ questionItem, isOpen }) => {
 
     function formatExplanation(explanation) {
         if (!explanation) return "";
@@ -49,14 +49,6 @@ const CardEngMCQ = ({ questionItem, isOpen, toggleExpand, expandKey }) => {
                     </ul>
                 </div>
 
-
-
-                <button
-                    className="text-indigo-700 underline absolute bottom-0 right-0 text-xs bg-white px-2 py-1 rounded-lg"
-                    onClick={() => toggleExpand(expandKey)}
-                >
-                    {isOpen ? "접기 ▲" : "더보기 ▼"}
-                </button>
 
             </div>
             {isOpen && (

@@ -1,7 +1,7 @@
 // CardMathMCQ.jsx
 import { renderMixedMath } from "../../utils/latexUtils";
 
-const CardMathMCQ = ({ questionItem, isOpen, toggleExpand, expandKey }) => {
+const CardMathMCQ = ({ questionItem, isOpen}) => {
     return (
         <div>
             <div className="relative w-full h-full">
@@ -29,14 +29,6 @@ const CardMathMCQ = ({ questionItem, isOpen, toggleExpand, expandKey }) => {
                         })}
                     </ul>
                 </div>
-
-
-                <button
-                    className="text-indigo-700 underline absolute bottom-0 right-0 text-xs bg-white px-2 py-1 rounded-lg"
-                    onClick={() => toggleExpand(expandKey)}
-                >
-                    {isOpen ? "접기 ▲" : "더보기 ▼"}
-                </button>
             </div>
 
             {isOpen && (
