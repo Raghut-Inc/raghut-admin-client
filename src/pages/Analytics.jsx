@@ -297,7 +297,7 @@ export default function Analytics({ user, setUser }) {
                             )}
                         </div>
 
-                        <div className="text-sm space-x-2">
+                        <div className="text-xs space-x-2">
                             <button
                                 className="px-3 py-1 rounded bg-gray-100 hover:bg-gray-300"
                                 onClick={() => dailyPrevDate && (setDailyDate(dailyPrevDate), setDailyPage(1))}
@@ -309,7 +309,7 @@ export default function Analytics({ user, setUser }) {
 
                             <input
                                 type="date"
-                                className="px-2 py-1 border border-gray-300 rounded"
+                                className="px-2 py-1 border border-gray-300 rounded bg-white"
                                 value={dailyDate}
                                 max={TODAY_STR}
                                 onChange={(e) => {
