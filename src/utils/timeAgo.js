@@ -17,7 +17,7 @@ export function timeAgo(dateString) {
     if (days < 30) return `${days}d ago`;
 
     const months = Math.floor(days / 30);
-    if (months < 12) return `${months}m ago`;
+    if (months < 12) return `${months}mth ago`;
 
     const years = Math.floor(months / 12);
     return `${years}y ago`;

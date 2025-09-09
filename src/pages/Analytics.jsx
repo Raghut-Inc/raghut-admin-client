@@ -289,7 +289,7 @@ export default function Analytics({ user, setUser }) {
                     </div>
 
                     {/* Page totals */}
-                    <div className="flex items-center gap-2 bg-gray-200 rounded-xl px-3 py-1.5 justify-between">
+                    <div className="flex md:flex-row flex-col-reverse items-center gap-2 bg-gray-200 rounded-xl px-3 py-1.5 justify-between">
                         <div className="text-sm text-gray-700">
                             유저 <b>{dailyTotal}</b> · 업로드 <b>{pageUploads}</b> · 문제 <b>{pageQuestions}</b>
                             {dailyTotalPages > 1 && (
@@ -299,7 +299,7 @@ export default function Analytics({ user, setUser }) {
 
                         <div className="text-sm space-x-2">
                             <button
-                                className="px-3 py-1 rounded bg-gray-200 hover:bg-gray-300"
+                                className="px-3 py-1 rounded bg-gray-100 hover:bg-gray-300"
                                 onClick={() => dailyPrevDate && (setDailyDate(dailyPrevDate), setDailyPage(1))}
                                 disabled={!dailyPrevDate}
                                 title="이전날"
@@ -320,7 +320,7 @@ export default function Analytics({ user, setUser }) {
                             />
 
                             <button
-                                className="px-3 py-1 rounded bg-gray-200 hover:bg-gray-300"
+                                className="px-3 py-1 rounded bg-gray-100 hover:bg-gray-300"
                                 onClick={() => {
                                     if (!dailyNextDate) return;
                                     const next = clampToToday(dailyNextDate);
@@ -353,7 +353,7 @@ export default function Analytics({ user, setUser }) {
                             <thead className="bg-gray-100 text-gray-500 text-xs">
                                 <tr>
                                     <th className="border-b border-gray-300 px-4 py-2 text-left font-semibold">User</th>
-                                    <th className="border-b border-gray-300 px-4 py-2 text-right font-semibold">U / P</th>
+                                    <th className="border-b border-gray-300 px-4 py-2 text-right font-semibold">U/P</th>
                                     <th className="border-b border-gray-300 px-4 py-2 text-right font-semibold">Lifetime U / P</th>
                                     <th className="border-b border-gray-300 px-4 py-2 text-right font-semibold">Last Upload</th>
                                 </tr>
@@ -382,11 +382,10 @@ export default function Analytics({ user, setUser }) {
                                                 </div>
                                             </td>
                                             <td className="px-4 py-2 text-right">
-                                                {row.requestCount} / {row.totalQuestions}
+                                                {row.requestCount}/{row.totalQuestions}
                                             </td>
-                                            <td className="px-4 py-2 text-right">
-                                                {"lifetimeRequestCount" in row ? row.lifetimeRequestCount : "-"} /{" "}
-                                                {"lifetimeTotalQuestions" in row ? row.lifetimeTotalQuestions : "-"}
+                                            <td className="px-4 py-2 text-right flex-shrink-0">
+                                                {`${row.lifetimeRequestCount}/${row.lifetimeTotalQuestions}`}
                                             </td>
                                             <td className="px-4 py-2 text-right text-xs">
                                                 {row.lastUploadAt ? timeAgo(row.lastUploadAt) : "-"}
