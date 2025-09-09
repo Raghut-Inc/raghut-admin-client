@@ -1,4 +1,4 @@
-import { useEffect, useState } from "react";
+import { useEffect, useMemo, useState } from "react";
 import {
     LineChart,
     Line,
@@ -9,6 +9,7 @@ import {
     ResponsiveContainer,
 } from "recharts";
 import NavBar from "../components/NavBar";
+import { timeAgo } from "../utils/timeAgo";
 
 const API_BASE = `${process.env.REACT_APP_API_URL}/analytics`;
 
@@ -19,35 +20,44 @@ const granularityOptions = [
     { key: "monthly", value: "monthly", text: "Monthly" },
 ];
 
-function safeId(obj, key) {
-    if (!obj) return "-";
-    if (typeof obj === "string") return obj;
-    if (typeof obj === "object") return obj[key] ?? JSON.stringify(obj);
-    return String(obj);
-}
-
 export default function Analytics({ user, setUser }) {
-    const [userTableView, setUserTableView] = useState("daily"); // default to monthly
-    const [activeCounts, setActiveCounts] = useState([]); // holds merged user+guest active counts per period
-
-    // State for users: total and monthly
-    const [questionsPerUserTotal, setQuestionsPerUserTotal] = useState([]);
-    const [questionsPerUserMonthly, setQuestionsPerUserMonthly] = useState([]);
-    const [questionsPerUserWeekly, setQuestionsPerUserWeekly] = useState([]);
-    const [questionsPerUserDaily, setQuestionsPerUserDaily] = useState([]);
-
-    // State for guests: total and monthly
-    const [questionsPerGuestTotal, setQuestionsPerGuestTotal] = useState([]);
-    const [questionsPerGuestMonthly, setQuestionsPerGuestMonthly] = useState([]);
-    const [questionsPerGuestWeekly, setQuestionsPerGuestWeekly] = useState([]);
-    const [questionsPerGuestDaily, setQuestionsPerGuestDaily] = useState([]);
-
-    const [questionsOverTimeGranularity, setQuestionsOverTimeGranularity] = useState(
-        "daily"
-    );
+    const [activeOverTime, setActiveOverTime] = useState([]);
+    const [questionsOverTimeGranularity, setQuestionsOverTimeGranularity] = useState("daily");
     const [questionsOverTime, setQuestionsOverTime] = useState([]);
-
     const [error, setError] = useState(null);
+
+    // ---- DAU/WAU/MAU KPI ----
+    const [engagementMode, setEngagementMode] = useState("rolling"); // 'rolling' | 'calendar'
+    const [dau, setDau] = useState(0);
+    const [wau, setWau] = useState(0);
+    const [mau, setMau] = useState(0);
+    const [ratios, setRatios] = useState({ dauWau: 0, dauMau: 0, wauMau: 0 });
+
+    // ---- Daily uploaders (users only) ----
+    const TZ = "Asia/Seoul";
+    const TODAY_STR = new Intl.DateTimeFormat("en-CA", {
+        timeZone: TZ,
+        year: "numeric",
+        month: "2-digit",
+        day: "2-digit",
+    }).format(new Date());
+
+    function clampToToday(isoDate) {
+        if (!isoDate) return TODAY_STR;
+        return isoDate > TODAY_STR ? TODAY_STR : isoDate;
+    }
+
+    const [dailyDate, setDailyDate] = useState(TODAY_STR);
+    const [dailyRows, setDailyRows] = useState([]);
+    const [dailyPage, setDailyPage] = useState(1);
+    const [dailyLimit] = useState(100);
+    const [dailyTotal, setDailyTotal] = useState(0);
+    const [dailyTotalPages, setDailyTotalPages] = useState(1);
+    const [dailyPrevDate, setDailyPrevDate] = useState(null);
+    const [dailyNextDate, setDailyNextDate] = useState(null);
+    const [dailySortBy, setDailySortBy] = useState("questions"); // 'questions' | 'uploads' | 'last'
+    const [dailyOrder, setDailyOrder] = useState("desc"); // 'asc' | 'desc'
+    const [dailyLoading, setDailyLoading] = useState(false);
 
     async function fetchJson(url) {
         const res = await fetch(url, { credentials: "include" });
@@ -55,70 +65,69 @@ export default function Analytics({ user, setUser }) {
         return res.json();
     }
 
+    // Fetch DAU/WAU/MAU
     useEffect(() => {
-        setError(null);
-        Promise.all([
-            // Fetch total and monthly user stats
-            fetchJson(`${API_BASE}/questions-per-user?granularity=all`),
-            fetchJson(`${API_BASE}/questions-per-user?granularity=monthly`),
-            fetchJson(`${API_BASE}/questions-per-user?granularity=weekly`),
-            fetchJson(`${API_BASE}/questions-per-user?granularity=daily`),
-
-            // Fetch total and monthly guest stats
-            fetchJson(`${API_BASE}/questions-per-guest?granularity=all`),
-            fetchJson(`${API_BASE}/questions-per-guest?granularity=monthly`),
-            fetchJson(`${API_BASE}/questions-per-guest?granularity=weekly`),
-            fetchJson(`${API_BASE}/questions-per-guest?granularity=daily`),
-
-            // Fetch combined active user+guest counts for all granularities if needed, or just the selected one
-            fetchJson(`${API_BASE}/active-users-guests-per-period?granularity=monthly`),
-            fetchJson(`${API_BASE}/active-users-guests-per-period?granularity=weekly`),
-            fetchJson(`${API_BASE}/active-users-guests-per-period?granularity=daily`),
-        ])
-            .then(([
-                userTotal, userMonthly, userWeekly, userDaily,
-                guestTotal, guestMonthly, guestWeekly, guestDaily,
-                activeMonthly, activeWeekly, activeDaily
-            ]) => {
-                setQuestionsPerUserTotal(userTotal);
-                setQuestionsPerUserMonthly(userMonthly);
-                setQuestionsPerUserWeekly(userWeekly);
-                setQuestionsPerUserDaily(userDaily);
-
-                setQuestionsPerGuestTotal(guestTotal);
-                setQuestionsPerGuestMonthly(guestMonthly);
-                setQuestionsPerGuestWeekly(guestWeekly);
-                setQuestionsPerGuestDaily(guestDaily);
-
-                setActiveCounts(activeDaily);
+        fetchJson(`${API_BASE}/dau-wau-mau?mode=${engagementMode}&tz=${TZ}`)
+            .then((r) => {
+                setDau(r.dau || 0);
+                setWau(r.wau || 0);
+                setMau(r.mau || 0);
+                setRatios(r.ratios || { dauWau: 0, dauMau: 0, wauMau: 0 });
             })
             .catch((e) => setError(e.message));
-    }, []);
+    }, [engagementMode]);
 
+    // Active uploaders (users only) time series
     useEffect(() => {
-        switch (userTableView) {
-            case "daily":
-                fetchJson(`${API_BASE}/active-users-guests-per-period?granularity=daily`).then(setActiveCounts).catch((e) => setError(e.message));
-                break;
-            case "weekly":
-                fetchJson(`${API_BASE}/active-users-guests-per-period?granularity=weekly`).then(setActiveCounts).catch((e) => setError(e.message));
-                break;
-            case "monthly":
-                fetchJson(`${API_BASE}/active-users-guests-per-period?granularity=monthly`).then(setActiveCounts).catch((e) => setError(e.message));
-                break;
-            default:
-                // For "total" you may want to fetch active counts for all time or skip
-                setActiveCounts([]);
-        }
-    }, [userTableView]);
+        const windowParam =
+            questionsOverTimeGranularity === "daily"
+                ? "30d"
+                : questionsOverTimeGranularity === "weekly"
+                    ? "182d" // ~26 weeks
+                    : "730d"; // ~24 months
 
-    useEffect(() => {
         fetchJson(
-            `${API_BASE}/questions-over-time?granularity=${questionsOverTimeGranularity}`
+            `${API_BASE}/active-uploaders-over-time?granularity=${questionsOverTimeGranularity}&window=${windowParam}`
         )
+            .then(setActiveOverTime)
+            .catch((e) => setError(e.message));
+    }, [questionsOverTimeGranularity]);
+
+    // Questions over time series
+    useEffect(() => {
+        fetchJson(`${API_BASE}/questions-over-time?granularity=${questionsOverTimeGranularity}`)
             .then(setQuestionsOverTime)
             .catch((e) => setError(e.message));
     }, [questionsOverTimeGranularity]);
+
+    // Merge series by _id for chart
+    const merged = useMemo(() => {
+        const map = new Map();
+        questionsOverTime.forEach((d) => map.set(d._id, { ...d }));
+        activeOverTime.forEach((a) => {
+            const row = map.get(a._id) || { _id: a._id };
+            row.uniqueUploaderCount = a.uniqueUploaderCount;
+            map.set(a._id, row);
+        });
+        return Array.from(map.values()).sort((a, b) => (a._id > b._id ? 1 : -1));
+    }, [questionsOverTime, activeOverTime]);
+
+    // Daily uploaders list (users only) — request lifetime aggregates too (backend may ignore safely)
+    useEffect(() => {
+        setDailyLoading(true);
+        fetchJson(
+            `${API_BASE}/daily-uploaders?date=${dailyDate}&tz=${TZ}&page=${dailyPage}&limit=${dailyLimit}&sortBy=${dailySortBy}&order=${dailyOrder}&includeLifetime=1`
+        )
+            .then((r) => {
+                setDailyRows(r.rows || []);
+                setDailyTotal(r.total || 0);
+                setDailyTotalPages(r.totalPages || 1);
+                setDailyPrevDate(r.prevDate || null);
+                setDailyNextDate(r.nextDate || null);
+            })
+            .catch((e) => setError(e.message))
+            .finally(() => setDailyLoading(false));
+    }, [dailyDate, dailyPage, dailyLimit, dailySortBy, dailyOrder]);
 
     if (error)
         return (
@@ -128,142 +137,66 @@ export default function Analytics({ user, setUser }) {
             </div>
         );
 
-    // Helper table render function
-    function renderUserTable(data) {
-        return (
-            <>
-                <h2 className="text-xl font-semibold mb-3 px-4">회원 · top30 · {userTableView}</h2>
-                <div className="overflow-x-auto bg-white mb-10">
-                    <table className="w-full border-collapse text-sm">
-                        <thead className="bg-gray-100 text-gray-500 text-xs">
-                            <tr>
-                                <th className="border-b border-gray-300 px-4 py-2 text-left font-semibold">User</th>
-                                <th className="border-b border-gray-300 px-4 py-2 text-left font-semibold">Subs</th>
-                                <th className="border-b border-gray-300 px-4 py-2 text-right font-semibold">Qst.</th>
-                                <th className="border-b border-gray-300 px-4 py-2 text-right font-semibold">Rq.</th>
-                            </tr>
-                        </thead>
-                        <tbody>
-                            {data.map(
-                                ({
-                                    _id,
-                                    userName,
-                                    userEmail,
-                                    subscriptionStatus,
-                                    totalQuestions,
-                                    requestCount,
-                                }) => (
-                                    <tr
-                                        key={`${safeId(_id, "userId")}-${_id.period ?? "all"}`}
-                                        className="border-b border-gray-200 hover:bg-gray-50"
-                                    >
-                                        <td className="px-4 py-2 whitespace-nowrap w-64">
-                                            <div>
-                                                <div className="flex items-center space-x-2">
-                                                    <p>{userName || "-"}</p>
-                                                </div>
-                                                <p className="text-xs text-gray-500">{userEmail || "-"}</p>
-                                                <p className="text-xs text-gray-500">{safeId(_id, "userId")}</p>
-                                            </div>
-                                        </td>
-                                        <td className="px-4">
-                                            <span
-                                                className={`inline-block px-2 py-0.5 rounded-full font-mono text-xs ${{
-                                                    active: "bg-green-200 text-green-800",
-                                                    canceled: "bg-yellow-200 text-yellow-800",
-                                                    expired: "bg-red-200 text-red-800",
-                                                    none: "bg-gray-300 text-gray-700",
-                                                }[subscriptionStatus || "none"]
-                                                    }`}
-                                                title="Subscription status"
-                                            >
-                                                {subscriptionStatus || "none"}
-                                            </span>
-                                        </td>
-                                        <td className="px-4 py-2 text-right">{totalQuestions}</td>
-                                        <td className="px-4 py-2 text-right">{requestCount}</td>
-                                    </tr>
-                                )
-                            )}
-                        </tbody>
-                    </table>
-                </div>
-            </>
-        );
-    }
+    // Page totals (current page rows only)
+    const pageUploads = dailyRows.reduce((s, r) => s + (r.requestCount || 0), 0);
+    const pageQuestions = dailyRows.reduce((s, r) => s + (r.totalQuestions || 0), 0);
 
-    function renderGuestTable(data) {
-        return (
-            <>
-                <h2 className="text-xl font-semibold mb-3 px-4">비회원 · top30 · {userTableView}</h2>
-                <div className="overflow-x-auto bg-white mb-10">
-                    <table className="w-full border-collapse text-sm">
-                        <thead className="bg-gray-100 text-gray-500 text-xs">
-                            <tr>
-                                <th className="border-b border-gray-300 px-4 py-2 text-left font-semibold">GuestId</th>
-                                <th className="border-b border-gray-300 px-4 py-2 text-right font-semibold">Qst.</th>
-                                <th className="border-b border-gray-300 px-4 py-2 text-right font-semibold">Rq.</th>
-                            </tr>
-                        </thead>
-                        <tbody>
-                            {data.map(({ _id, totalQuestions, requestCount }, idx) => (
-                                <tr
-                                    key={`${safeId(_id, "guestUUID")}-${idx}`}
-                                    className="border-b border-gray-200 hover:bg-gray-50"
-                                >
-                                    <td className="px-4 py-2 font-mono whitespace-nowrap text-xs">
-                                        {safeId(_id, "guestUUID")}
-                                    </td>
-                                    <td className="px-4 py-2 text-right">{totalQuestions}</td>
-                                    <td className="px-4 py-2 text-right">{requestCount}</td>
-                                </tr>
-                            ))}
-                        </tbody>
-                    </table>
-                </div>
-            </>
-        );
-    }
-
-    function renderTables() {
-        if (userTableView === "total") {
-            return (
-                <>
-                    {renderUserTable(questionsPerUserTotal)}
-                    {renderGuestTable(questionsPerGuestTotal)}
-                </>
-            );
-        } else if (userTableView === "monthly") {
-            return (
-                <>
-                    {renderUserTable(questionsPerUserMonthly)}
-                    {renderGuestTable(questionsPerGuestMonthly)}
-                </>
-            );
-        } else if (userTableView === "weekly") {
-            return (
-                <>
-                    {renderUserTable(questionsPerUserWeekly)}
-                    {renderGuestTable(questionsPerGuestWeekly)}
-                </>
-            );
-        } else {
-            return (
-                <>
-                    {renderUserTable(questionsPerUserDaily)}
-                    {renderGuestTable(questionsPerGuestDaily)}
-                </>
-            );
-        }
-    }
+    const pct = (x) => `${(x * 100).toFixed(0)}%`;
 
     return (
-        <div className="w-full font-sans bg-gray-100 flex flex-col items-center">
+        <div className="w-full font-sans bg-gray-100 flex flex-col items-center min-h-screen">
             <NavBar user={user} setUser={setUser} animate={true} title={"분석"} />
             <div className="max-w-4xl w-full mx-auto mt-4 mb-16 font-sans">
+
+                {/* ===== KPI Bar: DAU / WAU / MAU ===== */}
+                <div className="mx-4 mb-4">
+                    <div className="flex items-center justify-between mb-2">
+                        <h2 className="text-lg font-semibold">활성 지표</h2>
+                        <div className="flex items-center gap-2 text-xs">
+                            <span className="text-gray-600">모드</span>
+                            <select
+                                className="px-2 py-1 border border-gray-300 rounded text-xs outline-none"
+                                value={engagementMode}
+                                onChange={(e) => setEngagementMode(e.target.value)}
+                            >
+                                <option value="rolling">Rolling (1/7/30일)</option>
+                                <option value="calendar">Calendar (오늘/이번주/이번달)</option>
+                            </select>
+                            <span className="text-gray-500 ml-2">TZ: {TZ}</span>
+                        </div>
+                    </div>
+
+                    <div className="grid grid-cols-1 sm:grid-cols-3 gap-3">
+                        {/* DAU */}
+                        <div className="rounded-2xl border border-gray-200 bg-white p-4 shadow-sm">
+                            <div className="text-xs text-gray-500 mb-1">DAU</div>
+                            <div className="text-3xl font-semibold">{dau}</div>
+                            <div className="mt-2 text-xs text-gray-500">
+                                DAU/WAU <b>{pct(ratios.dauWau || 0)}</b> · DAU/MAU <b>{pct(ratios.dauMau || 0)}</b>
+                            </div>
+                        </div>
+                        {/* WAU */}
+                        <div className="rounded-2xl border border-gray-200 bg-white p-4 shadow-sm">
+                            <div className="text-xs text-gray-500 mb-1">WAU</div>
+                            <div className="text-3xl font-semibold">{wau}</div>
+                            <div className="mt-2 text-xs text-gray-500">
+                                WAU/MAU <b>{pct(ratios.wauMau || 0)}</b>
+                            </div>
+                        </div>
+                        {/* MAU */}
+                        <div className="rounded-2xl border border-gray-200 bg-white p-4 shadow-sm">
+                            <div className="text-xs text-gray-500 mb-1">MAU</div>
+                            <div className="text-3xl font-semibold">{mau}</div>
+                            <div className="mt-2 text-xs text-gray-500">
+                                {engagementMode === "rolling" ? "최근 30일" : "이번 달"} 활성 사용자
+                            </div>
+                        </div>
+                    </div>
+                </div>
+
                 {/* Header with Dropdown */}
                 <div className="flex items-center mb-3 text-lg font-semibold mx-4">
-                    문제 / 사진 업로드 추이
+                    유저 / 업로드 / 문제수
                     <select
                         value={questionsOverTimeGranularity}
                         onChange={(e) => setQuestionsOverTimeGranularity(e.target.value)}
@@ -280,16 +213,13 @@ export default function Analytics({ user, setUser }) {
                 {/* Chart */}
                 <div className="h-96 mb-10 text-xs">
                     <ResponsiveContainer width="100%" height="100%">
-                        <LineChart
-                            data={questionsOverTime}
-                            margin={{ top: 10, right: 20, left: -24, bottom: 0 }}
-                        >
+                        <LineChart data={merged} margin={{ top: 10, right: 20, left: -24, bottom: 0 }}>
                             <CartesianGrid strokeDasharray="3 3" />
                             <XAxis
                                 dataKey="_id"
                                 tickFormatter={(str) => {
-                                    const date = new Date(str);
-                                    return `${date.getMonth() + 1}-${date.getDate()}`;
+                                    const d = new Date(str);
+                                    return isNaN(d.getTime()) ? String(str) : `${d.getMonth() + 1}-${d.getDate()}`;
                                 }}
                             />
                             <YAxis />
@@ -300,92 +230,173 @@ export default function Analytics({ user, setUser }) {
                                     name === "totalQuestions" ? "Total Questions" : name,
                                 ]}
                             />
-                            <Line
-                                type="monotone"
-                                dataKey="totalQuestions"
-                                stroke="#8884d8"
-                                name="인식된 문제수"
-                                dot={false}
-                            />
-                            <Line
-                                type="monotone"
-                                dataKey="requestCount"
-                                stroke="#82ca9d"
-                                name="업로드 수"
-                                dot={false}
-                            />
+                            <Line type="monotone" dataKey="totalQuestions" stroke="#8884d8" name="인식된 문제수" dot={false} />
+                            <Line type="monotone" dataKey="requestCount" stroke="#82ca9d" name="업로드 수" dot={false} />
+                            <Line type="monotone" dataKey="uniqueUploaderCount" stroke="#ff7300" name="활성 업로더(고유)" dot={false} />
                         </LineChart>
                     </ResponsiveContainer>
                 </div>
 
-                <div className="mb-4 px-4">
-                    <button
-                        onClick={() => setUserTableView("daily")}
-                        className={`mr-2 px-4 py-1 rounded ${userTableView === "daily"
-                            ? "bg-indigo-600 text-white"
-                            : "bg-gray-300 text-gray-700"
-                            }`}
-                    >
-                        24시간
-                    </button>
-                    <button
-                        onClick={() => setUserTableView("weekly")}
-                        className={`mr-2 px-4 py-1 rounded ${userTableView === "weekly"
-                            ? "bg-indigo-600 text-white"
-                            : "bg-gray-300 text-gray-700"
-                            }`}
-                    >
-                        7일
-                    </button>
-                    <button
-                        onClick={() => setUserTableView("monthly")}
-                        className={`mr-2 px-4 py-1 rounded ${userTableView === "monthly"
-                            ? "bg-indigo-600 text-white"
-                            : "bg-gray-300 text-gray-700"
-                            }`}
-                    >
-                        30일
-                    </button>
-                    <button
-                        onClick={() => setUserTableView("total")}
-                        className={`px-4 py-1 rounded ${userTableView === "total"
-                            ? "bg-indigo-600 text-white"
-                            : "bg-gray-300 text-gray-700"
-                            }`}
-                    >
-                        전체
-                    </button>
-                </div>
+                {/* Daily uploaders (users only) */}
+                <div className="px-4 mb-8">
+                    <div className="flex items-center justify-between mb-2">
+                        <h2 className="text-xl font-semibold">일별 업로더 (회원)</h2>
+                    </div>
 
-                {userTableView !== "total" && (
-                    <>
-                        <h2 className="text-xl font-semibold mb-3 px-4">활성 사용자 · {userTableView}</h2>
-                        <div className="overflow-x-auto bg-white mb-10">
-                            <table className="w-full border-collapse text-sm">
-                                <thead className="bg-gray-100 text-gray-500 text-xs">
-                                    <tr>
-                                        <th className="border-b border-gray-300 px-4 py-2 text-left font-semibold">Period</th>
-                                        <th className="border-b border-gray-300 px-4 py-2 text-right font-semibold">Users</th>
-                                        <th className="border-b border-gray-300 px-4 py-2 text-right font-semibold">Guests</th>
-                                        <th className="border-b border-gray-300 px-4 py-2 text-right font-semibold">Total</th>
-                                    </tr>
-                                </thead>
-                                <tbody>
-                                    {activeCounts.map(({ period, uniqueUserCount, uniqueGuestCount, totalUniqueCount }) => (
-                                        <tr key={period} className="border-b border-gray-200 hover:bg-gray-50">
-                                            <td className="px-4 py-2 font-mono whitespace-nowrap text-xs">{period}</td>
-                                            <td className="px-4 py-2 text-right">{uniqueUserCount}</td>
-                                            <td className="px-4 py-2 text-right">{uniqueGuestCount}</td>
-                                            <td className="px-4 py-2 text-right">{totalUniqueCount}</td>
-                                        </tr>
-                                    ))}
-                                </tbody>
-                            </table>
+                    <div className="flex flex-wrap items-center gap-2 mb-1 bg-gray-200 px-3 py-1.5 rounded-xl text-xs outline-none">
+                        <label className="text-gray-600">정렬:</label>
+                        <select
+                            className="px-2 py-1 border border-gray-300 rounded text-xs outline-none"
+                            value={dailySortBy}
+                            onChange={(e) => {
+                                setDailySortBy(e.target.value);
+                                setDailyPage(1);
+                            }}
+                        >
+                            <option value="questions">문제수</option>
+                            <option value="uploads">업로드수</option>
+                            <option value="last">최근업로드</option>
+                        </select>
+                        <select
+                            className="px-2 py-1 border border-gray-300 rounded outline-none"
+                            value={dailyOrder}
+                            onChange={(e) => {
+                                setDailyOrder(e.target.value);
+                                setDailyPage(1);
+                            }}
+                        >
+                            <option value="desc">내림차순</option>
+                            <option value="asc">오름차순</option>
+                        </select>
+
+                        <div className="ml-auto flex items-center gap-2">
+                            <button
+                                className="px-2 py-1 rounded bg-gray-200 hover:bg-gray-300 disabled:opacity-50"
+                                onClick={() => setDailyPage((p) => Math.max(1, p - 1))}
+                                disabled={dailyPage <= 1}
+                            >
+                                이전
+                            </button>
+                            <button
+                                className="px-2 py-1 rounded bg-gray-200 hover:bg-gray-300 disabled:opacity-50"
+                                onClick={() => setDailyPage((p) => Math.min(dailyTotalPages, p + 1))}
+                                disabled={dailyPage >= dailyTotalPages}
+                            >
+                                다음
+                            </button>
                         </div>
-                    </>
-                )}
+                    </div>
 
-                {renderTables()}
+                    {/* Page totals */}
+                    <div className="flex items-center gap-2 bg-gray-200 rounded-xl px-3 py-1.5 justify-between">
+                        <div className="text-sm text-gray-700">
+                            유저 <b>{dailyTotal}</b> · 업로드 <b>{pageUploads}</b> · 문제 <b>{pageQuestions}</b>
+                            {dailyTotalPages > 1 && (
+                                <em className="ml-1 text-xs text-gray-500">(현재 페이지 기준)</em>
+                            )}
+                        </div>
+
+                        <div className="text-sm space-x-2">
+                            <button
+                                className="px-3 py-1 rounded bg-gray-200 hover:bg-gray-300"
+                                onClick={() => dailyPrevDate && (setDailyDate(dailyPrevDate), setDailyPage(1))}
+                                disabled={!dailyPrevDate}
+                                title="이전날"
+                            >
+                                ← 이전날
+                            </button>
+
+                            <input
+                                type="date"
+                                className="px-2 py-1 border border-gray-300 rounded"
+                                value={dailyDate}
+                                max={TODAY_STR}
+                                onChange={(e) => {
+                                    const v = clampToToday(e.target.value);
+                                    setDailyDate(v);
+                                    setDailyPage(1);
+                                }}
+                            />
+
+                            <button
+                                className="px-3 py-1 rounded bg-gray-200 hover:bg-gray-300"
+                                onClick={() => {
+                                    if (!dailyNextDate) return;
+                                    const next = clampToToday(dailyNextDate);
+                                    if (next === dailyDate) return;
+                                    setDailyDate(next);
+                                    setDailyPage(1);
+                                }}
+                                disabled={!dailyNextDate || dailyDate >= TODAY_STR}
+                                title="다음날"
+                            >
+                                다음날 →
+                            </button>
+
+                            <button
+                                className="px-3 py-1 rounded bg-indigo-600 text-white hover:bg-indigo-700 disabled:opacity-50"
+                                onClick={() => {
+                                    setDailyDate(TODAY_STR);
+                                    setDailyPage(1);
+                                }}
+                                disabled={dailyDate === TODAY_STR}
+                                title="오늘로 이동"
+                            >
+                                오늘
+                            </button>
+                        </div>
+                    </div>
+
+                    <div className="overflow-x-auto bg-white">
+                        <table className="w-full border-collapse text-sm">
+                            <thead className="bg-gray-100 text-gray-500 text-xs">
+                                <tr>
+                                    <th className="border-b border-gray-300 px-4 py-2 text-left font-semibold">User</th>
+                                    <th className="border-b border-gray-300 px-4 py-2 text-right font-semibold">U / P</th>
+                                    <th className="border-b border-gray-300 px-4 py-2 text-right font-semibold">Lifetime U / P</th>
+                                    <th className="border-b border-gray-300 px-4 py-2 text-right font-semibold">Last Upload</th>
+                                </tr>
+                            </thead>
+                            <tbody>
+                                {dailyLoading ? (
+                                    <tr>
+                                        <td className="px-4 py-6 text-center text-gray-500" colSpan={6}>
+                                            Loading…
+                                        </td>
+                                    </tr>
+                                ) : dailyRows.length === 0 ? (
+                                    <tr>
+                                        <td className="px-4 py-6 text-center text-gray-500" colSpan={6}>
+                                            No uploads for this date.
+                                        </td>
+                                    </tr>
+                                ) : (
+                                    dailyRows.map((row) => (
+                                        <tr key={row.userId} className="border-b border-gray-200 hover:bg-gray-50">
+                                            <td className="px-4 py-2 whitespace-nowrap">
+                                                <div className="flex flex-col">
+                                                    <span>{row.userName || "-"}</span>
+                                                    <span className="text-xs text-gray-500">{row.userEmail || "-"}</span>
+                                                    <span className="text-xs text-gray-500">{row.userId}</span>
+                                                </div>
+                                            </td>
+                                            <td className="px-4 py-2 text-right">
+                                                {row.requestCount} / {row.totalQuestions}
+                                            </td>
+                                            <td className="px-4 py-2 text-right">
+                                                {"lifetimeRequestCount" in row ? row.lifetimeRequestCount : "-"} /{" "}
+                                                {"lifetimeTotalQuestions" in row ? row.lifetimeTotalQuestions : "-"}
+                                            </td>
+                                            <td className="px-4 py-2 text-right text-xs">
+                                                {row.lastUploadAt ? timeAgo(row.lastUploadAt) : "-"}
+                                            </td>
+                                        </tr>
+                                    ))
+                                )}
+                            </tbody>
+                        </table>
+                    </div>
+                </div>
             </div>
         </div>
     );
