@@ -153,14 +153,15 @@ export default function Analytics({ user, setUser }) {
                     <div className="flex items-center justify-between mb-2">
                         <h2 className="text-lg font-semibold">활성 지표</h2>
                         <div className="flex items-center gap-2 text-xs">
-                            <span className="text-gray-600">모드</span>
                             <select
                                 className="px-2 py-1 border border-gray-300 rounded text-xs outline-none"
                                 value={engagementMode}
                                 onChange={(e) => setEngagementMode(e.target.value)}
                             >
-                                <option value="rolling">Rolling (1/7/30일)</option>
-                                <option value="calendar">Calendar (오늘/이번주/이번달)</option>
+                                {/* (1/7/30일) */}
+                                <option value="rolling">Rolling</option>
+                                {/* 오늘/이번주/이번달 */}
+                                <option value="calendar">Calendar</option>
                             </select>
                             <span className="text-gray-500 ml-2">TZ: {TZ}</span>
                         </div>
