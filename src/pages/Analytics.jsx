@@ -34,7 +34,7 @@ export default function Analytics({ user, setUser }) {
     const [ratios, setRatios] = useState({ dauWau: 0, dauMau: 0, wauMau: 0 });
 
     // ---- Daily uploaders (users only) ----
-    const TZ = "Asia/Seoul";
+    const TZ = "UTC";
     const TODAY_STR = new Intl.DateTimeFormat("en-CA", {
         timeZone: TZ,
         year: "numeric",
