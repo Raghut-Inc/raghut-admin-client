@@ -29,7 +29,7 @@
     "build": "react-scripts build",
     "test": "react-scripts test",
     "eject": "react-scripts eject",
-    "deploy": "aws s3 sync ./build s3://www.raghut.com --delete",
+    "deploy": "aws s3 sync ./build s3://www.chalcack.com --delete",
     "invalidate": "aws cloudfront create-invalidation --distribution-id ES3F5VFE3RTPL --paths / /index.html /error.html /manifest.json /favicon.ico",
     "deploy:full": "npm run build && npm run deploy && npm run invalidate"
   },
