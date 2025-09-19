@@ -87,7 +87,7 @@ const Uploads = ({ user, setUser }) => {
         if (data.success) {
           setTotalCount(data.totalCount);
           setTotalQuestions(data.totalQuestions);
-          console.log(data.totalQuestions)
+          console.log(data.questions)
           if (pageToLoad === 1) setQuestions(data.questions);
           else setQuestions((prev) => [...prev, ...data.questions]);
           setHasMore(data.questions.length === PAGE_SIZE);
