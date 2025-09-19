@@ -24,6 +24,7 @@ const SUBJECT_OPTIONS = [
   { label: "Earth Science", value: "earth_science" },
   { label: "Korean History", value: "korean_history" },
   { label: "World History", value: "world_history" },
+  { label: "Philosophy", value: "philosophy" },
   { label: "Other", value: "other" },
 ];
 
@@ -86,6 +87,7 @@ const Uploads = ({ user, setUser }) => {
         if (data.success) {
           setTotalCount(data.totalCount);
           setTotalQuestions(data.totalQuestions);
+          console.log(data.totalQuestions)
           if (pageToLoad === 1) setQuestions(data.questions);
           else setQuestions((prev) => [...prev, ...data.questions]);
           setHasMore(data.questions.length === PAGE_SIZE);
