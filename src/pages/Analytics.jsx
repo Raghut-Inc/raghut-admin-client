@@ -7,6 +7,7 @@ import {
     CartesianGrid,
     Tooltip,
     ResponsiveContainer,
+    Legend,
 } from "recharts";
 import NavBar from "../components/NavBar";
 import { timeAgo } from "../utils/timeAgo";
@@ -24,6 +25,8 @@ export default function Analytics({ user, setUser }) {
     const [activeOverTime, setActiveOverTime] = useState([]);
     const [questionsOverTimeGranularity, setQuestionsOverTimeGranularity] = useState("daily");
     const [questionsOverTime, setQuestionsOverTime] = useState([]);
+    const [signupsOverTime, setSignupsOverTime] = useState([]);
+    const [useCumulativeSignups, setUseCumulativeSignups] = useState(false);
     const [error, setError] = useState(null);
 
     // ---- DAU/WAU/MAU KPI ----
@@ -100,6 +103,13 @@ export default function Analytics({ user, setUser }) {
             .catch((e) => setError(e.message));
     }, [questionsOverTimeGranularity]);
 
+    // Signups over time series (NEW)
+    useEffect(() => {
+        fetchJson(`${API_BASE}/signups-over-time?granularity=${questionsOverTimeGranularity}&tz=${TZ}`)
+            .then(setSignupsOverTime)
+            .catch((e) => setError(e.message));
+    }, [questionsOverTimeGranularity]);
+
     // Merge series by _id for chart
     const merged = useMemo(() => {
         const map = new Map();
@@ -109,8 +119,14 @@ export default function Analytics({ user, setUser }) {
             row.uniqueUploaderCount = a.uniqueUploaderCount;
             map.set(a._id, row);
         });
+        signupsOverTime.forEach((s) => {
+            const row = map.get(s._id) || { _id: s._id };
+            row.signups = s.signups;
+            row.cumulativeSignups = s.cumulativeSignups;
+            map.set(s._id, row);
+        });
         return Array.from(map.values()).sort((a, b) => (a._id > b._id ? 1 : -1));
-    }, [questionsOverTime, activeOverTime]);
+    }, [questionsOverTime, activeOverTime, signupsOverTime]);
 
     // Daily uploaders list (users only) — request lifetime aggregates too (backend may ignore safely)
     useEffect(() => {
@@ -147,7 +163,6 @@ export default function Analytics({ user, setUser }) {
         <div className="w-full font-sans bg-gray-100 flex flex-col items-center min-h-screen">
             <NavBar user={user} setUser={setUser} animate={true} title={"분석"} />
             <div className="max-w-4xl w-full mx-auto mt-4 mb-16 font-sans">
-
                 {/* ===== KPI Bar: DAU / WAU / MAU ===== */}
                 <div className="mx-4 mb-4">
                     <div className="flex items-center justify-between mb-2">
@@ -158,9 +173,7 @@ export default function Analytics({ user, setUser }) {
                                 value={engagementMode}
                                 onChange={(e) => setEngagementMode(e.target.value)}
                             >
-                                {/* (1/7/30일) */}
                                 <option value="rolling">Rolling</option>
-                                {/* 오늘/이번주/이번달 */}
                                 <option value="calendar">Calendar</option>
                             </select>
                             <span className="text-gray-500 ml-2">TZ: {TZ}</span>
@@ -168,7 +181,6 @@ export default function Analytics({ user, setUser }) {
                     </div>
 
                     <div className="grid grid-cols-1 sm:grid-cols-3 gap-3">
-                        {/* DAU */}
                         <div className="rounded-2xl border border-gray-200 bg-white p-4 shadow-sm">
                             <div className="text-xs text-gray-500 mb-1">DAU</div>
                             <div className="text-3xl font-semibold">{dau}</div>
@@ -176,15 +188,11 @@ export default function Analytics({ user, setUser }) {
                                 DAU/WAU <b>{pct(ratios.dauWau || 0)}</b> · DAU/MAU <b>{pct(ratios.dauMau || 0)}</b>
                             </div>
                         </div>
-                        {/* WAU */}
                         <div className="rounded-2xl border border-gray-200 bg-white p-4 shadow-sm">
                             <div className="text-xs text-gray-500 mb-1">WAU</div>
                             <div className="text-3xl font-semibold">{wau}</div>
-                            <div className="mt-2 text-xs text-gray-500">
-                                WAU/MAU <b>{pct(ratios.wauMau || 0)}</b>
-                            </div>
+                            <div className="mt-2 text-xs text-gray-500">WAU/MAU <b>{pct(ratios.wauMau || 0)}</b></div>
                         </div>
-                        {/* MAU */}
                         <div className="rounded-2xl border border-gray-200 bg-white p-4 shadow-sm">
                             <div className="text-xs text-gray-500 mb-1">MAU</div>
                             <div className="text-3xl font-semibold">{mau}</div>
@@ -197,7 +205,7 @@ export default function Analytics({ user, setUser }) {
 
                 {/* Header with Dropdown */}
                 <div className="flex items-center mb-3 text-lg font-semibold mx-4">
-                    유저 / 업로드 / 문제수
+                    유저 / 업로드 / 문제수 / 가입
                     <select
                         value={questionsOverTimeGranularity}
                         onChange={(e) => setQuestionsOverTimeGranularity(e.target.value)}
@@ -209,6 +217,16 @@ export default function Analytics({ user, setUser }) {
                             </option>
                         ))}
                     </select>
+
+                    {/* cumulative toggle for signups */}
+                    <label className="ml-3 text-xs flex items-center gap-1">
+                        <input
+                            type="checkbox"
+                            checked={useCumulativeSignups}
+                            onChange={(e) => setUseCumulativeSignups(e.target.checked)}
+                        />
+                        누적 가입선
+                    </label>
                 </div>
 
                 {/* Chart */}
@@ -219,6 +237,7 @@ export default function Analytics({ user, setUser }) {
                             <XAxis
                                 dataKey="_id"
                                 tickFormatter={(str) => {
+                                    // For daily "%Y-%m-%d" this renders as M-D; for weekly/monthly or "all", show raw string.
                                     const d = new Date(str);
                                     return isNaN(d.getTime()) ? String(str) : `${d.getMonth() + 1}-${d.getDate()}`;
                                 }}
@@ -226,14 +245,33 @@ export default function Analytics({ user, setUser }) {
                             <YAxis />
                             <Tooltip
                                 labelFormatter={(label) => `Date: ${label}`}
-                                formatter={(value, name) => [
-                                    value,
-                                    name === "totalQuestions" ? "Total Questions" : name,
-                                ]}
+                                formatter={(value, name) => {
+                                    const labelMap = {
+                                        totalQuestions: "인식된 문제수",
+                                        requestCount: "업로드 수",
+                                        uniqueUploaderCount: "활성 업로더(고유)",
+                                        signups: "신규 가입",
+                                        cumulativeSignups: "누적 가입",
+                                    };
+                                    return [value, labelMap[name] || name];
+                                }}
                             />
+                            <Legend />
+
+                            {/* Existing lines */}
                             <Line type="monotone" dataKey="totalQuestions" stroke="#8884d8" name="인식된 문제수" dot={false} />
                             <Line type="monotone" dataKey="requestCount" stroke="#82ca9d" name="업로드 수" dot={false} />
                             <Line type="monotone" dataKey="uniqueUploaderCount" stroke="#ff7300" name="활성 업로더(고유)" dot={false} />
+
+                            {/* NEW: signups per-period */}
+                            {!useCumulativeSignups && (
+                                <Line type="monotone" dataKey="signups" stroke="#1f77b4" name="신규 가입" dot={false} />
+                            )}
+
+                            {/* NEW: cumulative signups */}
+                            {useCumulativeSignups && (
+                                <Line type="monotone" dataKey="cumulativeSignups" stroke="#1f77b4" name="누적 가입" dot={false} />
+                            )}
                         </LineChart>
                     </ResponsiveContainer>
                 </div>
@@ -292,9 +330,7 @@ export default function Analytics({ user, setUser }) {
                     <div className="flex md:flex-row flex-col-reverse items-center gap-2 bg-gray-200 rounded-xl px-3 py-1.5 justify-between">
                         <div className="text-sm text-gray-700">
                             유저 <b>{dailyTotal}</b> · 업로드 <b>{pageUploads}</b> · 문제 <b>{pageQuestions}</b>
-                            {dailyTotalPages > 1 && (
-                                <em className="ml-1 text-xs text-gray-500">(현재 페이지 기준)</em>
-                            )}
+                            {dailyTotalPages > 1 && <em className="ml-1 text-xs text-gray-500">(현재 페이지 기준)</em>}
                         </div>
 
                         <div className="text-xs space-x-2">

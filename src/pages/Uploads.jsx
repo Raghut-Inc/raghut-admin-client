@@ -1,10 +1,31 @@
-import { useEffect, useState, useCallback } from "react";
+import { useEffect, useState, useCallback, useMemo } from "react";
 import UploadCard from "../components/cards/UploadCard";
 import UploaderSummaryTable from "../components/cards/UploaderSummaryTable";
 import { useSearchParams } from "react-router"; // keep your existing import
 import NavBar from "../components/NavBar";
 
 const PAGE_SIZE = 25;
+
+const STATUS_OPTIONS = [
+  { label: "Status", value: "" },
+  { label: "Processing", value: "processing" },
+  { label: "Done", value: "done" },
+  { label: "Failed", value: "failed" },
+];
+
+const SUBJECT_OPTIONS = [
+  { label: "Subject", value: "" },
+  { label: "English", value: "english" },
+  { label: "Korean", value: "korean" },
+  { label: "Math", value: "math" },
+  { label: "Physics", value: "physics" },
+  { label: "Chemistry", value: "chemistry" },
+  { label: "Biology", value: "biology" },
+  { label: "Earth Science", value: "earth_science" },
+  { label: "Korean History", value: "korean_history" },
+  { label: "World History", value: "world_history" },
+  { label: "Other", value: "other" },
+];
 
 const Uploads = ({ user, setUser }) => {
   const [questions, setQuestions] = useState([]);
@@ -25,7 +46,22 @@ const Uploads = ({ user, setUser }) => {
   const guestUUIDFilter = searchParams.get("guestUUID") || "";
   const mode = (searchParams.get("mode") || "cards").toLowerCase(); // 'cards' | 'summary'
 
-  // ---------------- CARDS (existing) ----------------
+  // New filters
+  const statusFilterRaw = searchParams.get("status") || "";
+  const subjectFilterRaw = searchParams.get("subject") || "";
+
+  // Validate enums (ignore unknowns)
+  const statusFilter = useMemo(() => {
+    const allowed = new Set(STATUS_OPTIONS.map(o => o.value));
+    return allowed.has(statusFilterRaw) ? statusFilterRaw : "";
+  }, [statusFilterRaw]);
+
+  const subjectFilter = useMemo(() => {
+    const allowed = new Set(SUBJECT_OPTIONS.map(o => o.value));
+    return allowed.has(subjectFilterRaw) ? subjectFilterRaw : "";
+  }, [subjectFilterRaw]);
+
+  // ---------------- CARDS (existing + filters) ----------------
   const loadQuestions = useCallback(
     async (pageToLoad) => {
       if (mode !== "cards") return; // guard
@@ -38,13 +74,15 @@ const Uploads = ({ user, setUser }) => {
         params.set("pageSize", PAGE_SIZE);
         if (userIdFilter) params.set("userId", userIdFilter);
         if (guestUUIDFilter) params.set("guestUUID", guestUUIDFilter);
+        if (statusFilter) params.set("status", statusFilter);
+        if (subjectFilter) params.set("subject", subjectFilter);
 
-        const res = await fetch(`${process.env.REACT_APP_API_URL}/solved-questions/admin-panel?${params.toString()}`, {
-          credentials: "include",
-        });
+        const res = await fetch(
+          `${process.env.REACT_APP_API_URL}/solved-questions/admin-panel?${params.toString()}`,
+          { credentials: "include" }
+        );
         const data = await res.json();
 
-        console.log(data)
         if (data.success) {
           setTotalCount(data.totalCount);
           setTotalQuestions(data.totalQuestions);
@@ -61,10 +99,10 @@ const Uploads = ({ user, setUser }) => {
         else setLoadingMore(false);
       }
     },
-    [userIdFilter, guestUUIDFilter, mode]
+    [userIdFilter, guestUUIDFilter, statusFilter, subjectFilter, mode]
   );
 
-  // ---------------- SUMMARY (new) ----------------
+  // ---------------- SUMMARY (unchanged) ----------------
   const loadSummary = useCallback(
     async (pageToLoad) => {
       if (mode !== "summary") return; // guard
@@ -75,8 +113,6 @@ const Uploads = ({ user, setUser }) => {
         const params = new URLSearchParams();
         params.set("page", pageToLoad);
         params.set("pageSize", PAGE_SIZE);
-        // Optional: allow subject/since/until/includeGuests via URL if you want later
-        // (we’ll keep userId/guestUUID OUT here; summary is "who uploaded how many")
 
         const res = await fetch(
           `${process.env.REACT_APP_API_URL}/solved-questions/admin-panel/summary?${params.toString()}`,
@@ -116,11 +152,12 @@ const Uploads = ({ user, setUser }) => {
     try {
       const res = await fetch(`${process.env.REACT_APP_API_URL}/solved-questions/${id}`, {
         method: "DELETE",
+        credentials: "include",
       });
       const data = await res.json();
       if (data.success) {
         setQuestions((prev) => prev.filter((q) => q._id !== id));
-        setTotalCount((count) => count - 1);
+        setTotalCount((count) => Math.max(0, count - 1));
       } else {
         alert("삭제에 실패했습니다.");
         console.error("Delete failed:", data.error);
@@ -161,9 +198,8 @@ const Uploads = ({ user, setUser }) => {
     else loadSummary(page);
   }, [page, mode, loadQuestions, loadSummary]);
 
-  // Filters (for cards view)
+  // Filters (for cards view) – keep existing userId/guestUUID behavior
   const setFilter = (filter) => {
-    console.log(filter);
     updateParams((np) => {
       np.set("page", "1");
       np.set("pageSize", String(PAGE_SIZE));
@@ -175,6 +211,30 @@ const Uploads = ({ user, setUser }) => {
         np.delete("userId");
       }
       // preserve current mode
+      if (mode !== "cards") np.set("mode", mode);
+    });
+    setPage(1);
+  };
+
+  // Apply status/subject changes
+  const applyStatus = (v) => {
+    updateParams((np) => {
+      if (v) np.set("status", v);
+      else np.delete("status");
+      np.set("page", "1");
+      np.set("pageSize", String(PAGE_SIZE));
+      // stay in current mode
+      if (mode !== "cards") np.set("mode", mode);
+    });
+    setPage(1);
+  };
+
+  const applySubject = (v) => {
+    updateParams((np) => {
+      if (v) np.set("subject", v);
+      else np.delete("subject");
+      np.set("page", "1");
+      np.set("pageSize", String(PAGE_SIZE));
       if (mode !== "cards") np.set("mode", mode);
     });
     setPage(1);
@@ -213,22 +273,57 @@ const Uploads = ({ user, setUser }) => {
         value2={`문제 ${totalQuestions}`}
       />
 
-      <div className="flex justify-between h-10 items-center w-full px-2 sticky top-14 z-20">
-        <div className="flex rounded-md overflow-hidden gap-1">
-          <button
-            onClick={() => setMode("cards")}
-            className={`px-3 py-1 text-xs rounded-lg border ${mode === "cards" ? "bg-indigo-600 text-white" : "bg-white text-gray-700"
-              }`}
-          >
-            Cards
-          </button>
-          <button
-            onClick={() => setMode("summary")}
-            className={`px-3 py-1 text-xs rounded-lg border ${mode === "summary" ? "bg-indigo-600 text-white" : "bg-white text-gray-700"
-              }`}
-          >
-            Recent
-          </button>
+      {/* Controls row */}
+      <div className="flex justify-between h-12 items-center w-full px-2 sticky top-14 z-20 bg-white backdrop-blur">
+        <div className="flex items-center gap-2">
+          {/* Mode toggle */}
+          <div className="flex rounded-md overflow-hidden gap-1">
+            <button
+              onClick={() => setMode("cards")}
+              className={`px-3 py-1 text-xs rounded-lg border ${mode === "cards" ? "bg-indigo-600 text-white" : "bg-white text-gray-700"
+                }`}
+            >
+              Cards
+            </button>
+            <button
+              onClick={() => setMode("summary")}
+              className={`px-3 py-1 text-xs rounded-lg border ${mode === "summary" ? "bg-indigo-600 text-white" : "bg-white text-gray-700"
+                }`}
+            >
+              Recent
+            </button>
+          </div>
+
+          {/* Filters (cards only) */}
+          {mode === "cards" && (
+            <div className="flex items-center gap-2 ml-2">
+              {/* Status select */}
+              <select
+                value={statusFilter}
+                onChange={(e) => applyStatus(e.target.value)}
+                className="text-xs border rounded-lg px-2 py-1 bg-white"
+              >
+                {STATUS_OPTIONS.map((opt) => (
+                  <option key={opt.value || "all"} value={opt.value}>
+                    {opt.label}
+                  </option>
+                ))}
+              </select>
+
+              {/* Subject select */}
+              <select
+                value={subjectFilter}
+                onChange={(e) => applySubject(e.target.value)}
+                className="text-xs border rounded-lg px-2 py-1 bg-white"
+              >
+                {SUBJECT_OPTIONS.map((opt) => (
+                  <option key={opt.value || "all"} value={opt.value}>
+                    {opt.label}
+                  </option>
+                ))}
+              </select>
+            </div>
+          )}
         </div>
 
         {(userIdFilter || guestUUIDFilter) && (
