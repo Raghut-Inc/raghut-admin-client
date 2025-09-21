@@ -1,16 +1,26 @@
 import { useEffect, useMemo, useState } from "react";
-import {
-    LineChart,
-    Line,
-    XAxis,
-    YAxis,
-    CartesianGrid,
-    Tooltip,
-    ResponsiveContainer,
-    Legend,
-} from "recharts";
+import { LineChart } from "@mui/x-charts/LineChart";
+import FormControlLabel from "@mui/material/FormControlLabel";
+import Switch from "@mui/material/Switch";
 import NavBar from "../components/NavBar";
 import { timeAgo } from "../utils/timeAgo";
+
+// Colors + formatting
+const COLORS = {
+    questions: "#8884d8",       // total / cumulative
+    uploads: "#82ca9d",         // requestCount / cumulative
+    uniqueUploaders: "#ff7300", // uniqueUploaderCount
+    signups: "#1f77b4",         // signups / cumulative
+};
+const LINE_WIDTH = 1.25;
+
+const fmtShort = (n) => {
+    if (n == null) return "";
+    const abs = Math.abs(n);
+    if (abs >= 1_000_000) return (n / 1_000_000).toFixed(1) + "M";
+    if (abs >= 1_000) return (n / 1_000).toFixed(1) + "k";
+    return String(n);
+};
 
 const API_BASE = `${process.env.REACT_APP_API_URL}/analytics`;
 
@@ -26,7 +36,10 @@ export default function Analytics({ user, setUser }) {
     const [questionsOverTimeGranularity, setQuestionsOverTimeGranularity] = useState("daily");
     const [questionsOverTime, setQuestionsOverTime] = useState([]);
     const [signupsOverTime, setSignupsOverTime] = useState([]);
-    const [useCumulativeSignups, setUseCumulativeSignups] = useState(false);
+
+    // ONE global toggle for all cumulative series
+    const [useCumulativeAll, setUseCumulativeAll] = useState(false);
+
     const [error, setError] = useState(null);
 
     // ---- DAU/WAU/MAU KPI ----
@@ -103,14 +116,14 @@ export default function Analytics({ user, setUser }) {
             .catch((e) => setError(e.message));
     }, [questionsOverTimeGranularity]);
 
-    // Signups over time series (NEW)
+    // Signups over time series
     useEffect(() => {
         fetchJson(`${API_BASE}/signups-over-time?granularity=${questionsOverTimeGranularity}&tz=${TZ}`)
             .then(setSignupsOverTime)
             .catch((e) => setError(e.message));
     }, [questionsOverTimeGranularity]);
 
-    // Merge series by _id for chart
+    // Merge series by _id + compute cumulative locally
     const merged = useMemo(() => {
         const map = new Map();
         questionsOverTime.forEach((d) => map.set(d._id, { ...d }));
@@ -122,13 +135,42 @@ export default function Analytics({ user, setUser }) {
         signupsOverTime.forEach((s) => {
             const row = map.get(s._id) || { _id: s._id };
             row.signups = s.signups;
-            row.cumulativeSignups = s.cumulativeSignups;
+            row.cumulativeSignups = s.cumulativeSignups; // if backend provides it
             map.set(s._id, row);
         });
-        return Array.from(map.values()).sort((a, b) => (a._id > b._id ? 1 : -1));
+
+        const arr = Array.from(map.values()).sort((a, b) => (a._id > b._id ? 1 : -1));
+
+        let qSum = 0,
+            uSum = 0,
+            sSum = 0;
+        for (const r of arr) {
+            qSum += r.totalQuestions ?? 0;
+            uSum += r.requestCount ?? 0;
+            sSum += r.signups ?? 0;
+            r.cumulativeQuestions = qSum;
+            r.cumulativeUploads = uSum;
+            if (typeof r.cumulativeSignups !== "number") r.cumulativeSignups = sSum;
+        }
+        return arr;
     }, [questionsOverTime, activeOverTime, signupsOverTime]);
 
-    // Daily uploaders list (users only) — request lifetime aggregates too (backend may ignore safely)
+    // Filter to last ~2 months for the chart
+    const chartData = useMemo(() => {
+        const cutoff = new Date();
+        cutoff.setMonth(cutoff.getMonth() - 2);
+
+        // Try to filter by date if _id looks like a date
+        const parsed = merged.map((r) => ({ r, d: new Date(r._id) }));
+        const validDates = parsed.filter((x) => !isNaN(x.d.getTime()));
+        if (validDates.length >= Math.max(1, Math.floor(merged.length * 0.6))) {
+            return validDates.filter((x) => x.d >= cutoff).map((x) => x.r);
+        }
+        // Fallback: last ~62 rows (≈ 2 months daily)
+        return merged.slice(-62);
+    }, [merged]);
+
+    // Daily uploaders list (users only)
     useEffect(() => {
         setDailyLoading(true);
         fetchJson(
@@ -158,6 +200,73 @@ export default function Analytics({ user, setUser }) {
     const pageQuestions = dailyRows.reduce((s, r) => s + (r.totalQuestions || 0), 0);
 
     const pct = (x) => `${(x * 100).toFixed(0)}%`;
+
+    // ---- Helpers for MUI X Charts
+    const xTickFormatter = (str) => {
+        const d = new Date(str);
+        return isNaN(d.getTime()) ? String(str) : `${d.getMonth() + 1}-${d.getDate()}`;
+    };
+
+    // Series for top (big counts) and bottom (small counts)
+    const seriesMain = [
+        !useCumulativeAll
+            ? {
+                dataKey: "totalQuestions",
+                label: "인식된 문제수",
+                showMark: false,
+                color: COLORS.questions,
+                lineWidth: LINE_WIDTH,
+            }
+            : {
+                dataKey: "cumulativeQuestions",
+                label: "누적 문제수",
+                showMark: false,
+                color: COLORS.questions,
+                lineWidth: LINE_WIDTH,
+            },
+        !useCumulativeAll
+            ? {
+                dataKey: "requestCount",
+                label: "업로드 수",
+                showMark: false,
+                color: COLORS.uploads,
+                lineWidth: LINE_WIDTH,
+            }
+            : {
+                dataKey: "cumulativeUploads",
+                label: "누적 업로드",
+                showMark: false,
+                color: COLORS.uploads,
+                lineWidth: LINE_WIDTH,
+            },
+    ];
+
+    const seriesSmall = [
+        {
+            dataKey: "uniqueUploaderCount",
+            label: "활성 업로더(고유)",
+            showMark: false,
+            color: COLORS.uniqueUploaders,
+            lineWidth: LINE_WIDTH,
+            area: !useCumulativeAll ? true : false
+        },
+        !useCumulativeAll
+            ? {
+                dataKey: "signups",
+                label: "신규 가입",
+                showMark: false,
+                color: COLORS.signups,
+                lineWidth: LINE_WIDTH,
+                area: true
+            }
+            : {
+                dataKey: "cumulativeSignups",
+                label: "누적 가입",
+                showMark: false,
+                color: COLORS.signups,
+                lineWidth: LINE_WIDTH,
+            },
+    ];
 
     return (
         <div className="w-full font-sans bg-gray-100 flex flex-col items-center min-h-screen">
@@ -204,82 +313,77 @@ export default function Analytics({ user, setUser }) {
                 </div>
 
                 {/* Header with Dropdown */}
-                <div className="flex items-center mb-3 text-lg font-semibold mx-4">
-                    유저 / 업로드 / 문제수 / 가입
-                    <select
-                        value={questionsOverTimeGranularity}
-                        onChange={(e) => setQuestionsOverTimeGranularity(e.target.value)}
-                        className="ml-4 px-3 py-1 border border-gray-300 rounded-md cursor-pointer text-base focus:outline-none focus:ring-2 focus:ring-indigo-400"
-                    >
-                        {granularityOptions.map(({ key, value, text }) => (
-                            <option key={key} value={value}>
-                                {text}
-                            </option>
-                        ))}
-                    </select>
+                <div className="flex flex-col items-start mb-3 text-lg font-semibold mx-4">
 
-                    {/* cumulative toggle for signups */}
-                    <label className="ml-3 text-xs flex items-center gap-1">
-                        <input
-                            type="checkbox"
-                            checked={useCumulativeSignups}
-                            onChange={(e) => setUseCumulativeSignups(e.target.checked)}
+                    <p>중요 지표</p>
+                    <div className="w-full flex items-center justify-end space-x-4">
+                        <select
+                            value={questionsOverTimeGranularity}
+                            onChange={(e) => setQuestionsOverTimeGranularity(e.target.value)}
+                            className="ml-4 px-3 py-1 border border-gray-300 rounded-md cursor-pointer text-base focus:outline-none focus:ring-2 focus:ring-indigo-400"
+                        >
+                            {granularityOptions.map(({ key, value, text }) => (
+                                <option key={key} value={value}>
+                                    {text}
+                                </option>
+                            ))}
+                        </select>
+
+                        {/* ONE global cumulative toggle (MUI) */}
+                        <FormControlLabel
+                            className="ml-2"
+                            control={
+                                <Switch
+                                    checked={useCumulativeAll}
+                                    onChange={(e) => setUseCumulativeAll(e.target.checked)}
+                                    size="small"
+                                />
+                            }
+                            label="누적"
                         />
-                        누적 가입선
-                    </label>
+                    </div>
                 </div>
 
-                {/* Chart */}
-                <div className="h-96 mb-10 text-xs">
-                    <ResponsiveContainer width="100%" height="100%">
-                        <LineChart data={merged} margin={{ top: 10, right: 20, left: -24, bottom: 0 }}>
-                            <CartesianGrid strokeDasharray="3 3" />
-                            <XAxis
-                                dataKey="_id"
-                                tickFormatter={(str) => {
-                                    // For daily "%Y-%m-%d" this renders as M-D; for weekly/monthly or "all", show raw string.
-                                    const d = new Date(str);
-                                    return isNaN(d.getTime()) ? String(str) : `${d.getMonth() + 1}-${d.getDate()}`;
-                                }}
-                            />
-                            <YAxis />
-                            <Tooltip
-                                labelFormatter={(label) => `Date: ${label}`}
-                                formatter={(value, name) => {
-                                    const labelMap = {
-                                        totalQuestions: "인식된 문제수",
-                                        requestCount: "업로드 수",
-                                        uniqueUploaderCount: "활성 업로더(고유)",
-                                        signups: "신규 가입",
-                                        cumulativeSignups: "누적 가입",
-                                    };
-                                    return [value, labelMap[name] || name];
-                                }}
-                            />
-                            <Legend />
+                {/* Chart 1: Questions / Uploads */}
+                <div className="mb-6">
+                    <div className="text-xs text-gray-600 mb-1 px-4">질문 / 업로드</div>
+                    <LineChart
+                        dataset={chartData}
+                        series={seriesMain}
+                        sx={{ "& .MuiLineElement-root": { strokeWidth: LINE_WIDTH } }}
+                        xAxis={[{ dataKey: "_id", scaleType: "point", valueFormatter: xTickFormatter }]}
+                        yAxis={[{ valueFormatter: fmtShort }]}
+                        height={320}
+                        margin={{ top: 8, bottom: 16 }}
+                        slotProps={{
+                            legend: { direction: "row", position: { vertical: "top", horizontal: "right" } },
+                            tooltip: { formatter: (item) => fmtShort(item.value) },
+                        }}
+                    />
+                </div>
 
-                            {/* Existing lines */}
-                            <Line type="monotone" dataKey="totalQuestions" stroke="#8884d8" name="인식된 문제수" dot={false} />
-                            <Line type="monotone" dataKey="requestCount" stroke="#82ca9d" name="업로드 수" dot={false} />
-                            <Line type="monotone" dataKey="uniqueUploaderCount" stroke="#ff7300" name="활성 업로더(고유)" dot={false} />
-
-                            {/* NEW: signups per-period */}
-                            {!useCumulativeSignups && (
-                                <Line type="monotone" dataKey="signups" stroke="#1f77b4" name="신규 가입" dot={false} />
-                            )}
-
-                            {/* NEW: cumulative signups */}
-                            {useCumulativeSignups && (
-                                <Line type="monotone" dataKey="cumulativeSignups" stroke="#1f77b4" name="누적 가입" dot={false} />
-                            )}
-                        </LineChart>
-                    </ResponsiveContainer>
+                {/* Chart 2: Unique uploaders / Signups */}
+                <div className="mb-10">
+                    <div className="text-xs text-gray-600 mb-1 px-4">고유 업로더 / 가입</div>
+                    <LineChart
+                        dataset={chartData}
+                        series={seriesSmall}
+                        sx={{ "& .MuiLineElement-root": { strokeWidth: LINE_WIDTH } }}
+                        xAxis={[{ dataKey: "_id", scaleType: "point", valueFormatter: xTickFormatter }]}
+                        yAxis={[{ valueFormatter: fmtShort }]}
+                        height={300}
+                        margin={{ top: 8, bottom: 16 }}
+                        slotProps={{
+                            legend: { direction: "row", position: { vertical: "top", horizontal: "right" } },
+                            tooltip: { formatter: (item) => fmtShort(item.value) },
+                        }}
+                    />
                 </div>
 
                 {/* Daily uploaders (users only) */}
                 <div className="px-4 mb-8">
                     <div className="flex items-center justify-between mb-2">
-                        <h2 className="text-xl font-semibold">일별 업로더 (회원)</h2>
+                        <h2 className="text-xl font-semibold">일별 활성 업로더 (고유)</h2>
                     </div>
 
                     <div className="flex flex-wrap items-center gap-2 mb-1 bg-gray-200 px-3 py-1.5 rounded-xl text-xs outline-none">
