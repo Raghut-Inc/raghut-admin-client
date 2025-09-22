@@ -31,6 +31,18 @@ const granularityOptions = [
     { key: "monthly", value: "monthly", text: "Monthly" },
 ];
 
+// --- Simple green heat scale for retention (0.0 -> light gray, 1.0 -> strong green)
+function heatColor(p) {
+    const v = Math.max(0, Math.min(1, Number.isFinite(p) ? p : 0));
+    // Interpolate from #e5e7eb (gray-200) to #16a34a (green-600)
+    const from = { r: 229, g: 231, b: 235 };
+    const to = { r: 22, g: 163, b: 74 };
+    const r = Math.round(from.r + (to.r - from.r) * v);
+    const g = Math.round(from.g + (to.g - from.g) * v);
+    const b = Math.round(from.b + (to.b - from.b) * v);
+    return `rgb(${r}, ${g}, ${b})`;
+}
+
 export default function Analytics({ user, setUser }) {
     const [activeOverTime, setActiveOverTime] = useState([]);
     const [questionsOverTimeGranularity, setQuestionsOverTimeGranularity] = useState("daily");
@@ -74,6 +86,13 @@ export default function Analytics({ user, setUser }) {
     const [dailySortBy, setDailySortBy] = useState("questions"); // 'questions' | 'uploads' | 'last'
     const [dailyOrder, setDailyOrder] = useState("desc"); // 'asc' | 'desc'
     const [dailyLoading, setDailyLoading] = useState(false);
+
+    // ---- Cohort retention ----
+    const [cohortRows, setCohortRows] = useState([]); // backend rows
+    const [cohortMetric, setCohortMetric] = useState("rates"); // 'rates' | 'counts'
+    const [maxWeeks, setMaxWeeks] = useState(8);
+    const [minCohortSize, setMinCohortSize] = useState(8);
+    const [selectedCohort, setSelectedCohort] = useState("avg"); // 'avg' | cohortLabel
 
     async function fetchJson(url) {
         const res = await fetch(url, { credentials: "include" });
@@ -123,6 +142,20 @@ export default function Analytics({ user, setUser }) {
             .catch((e) => setError(e.message));
     }, [questionsOverTimeGranularity]);
 
+    // Cohort retention fetch
+    useEffect(() => {
+        const qs = new URLSearchParams({
+            tz: TZ,
+            maxWeeks: String(maxWeeks),
+            minCohortSize: String(minCohortSize),
+        });
+        fetchJson(`${API_BASE}/weekly-cohort-retention?${qs.toString()}`)
+            .then((r) => {
+                setCohortRows(r?.rows || []);
+            })
+            .catch((e) => setError(e.message));
+    }, [maxWeeks, minCohortSize]);
+
     // Merge series by _id + compute cumulative locally
     const merged = useMemo(() => {
         const map = new Map();
@@ -169,6 +202,67 @@ export default function Analytics({ user, setUser }) {
         // Fallback: last ~62 rows (≈ 2 months daily)
         return merged.slice(-62);
     }, [merged]);
+
+    // ---- Cohort shaping for heatmap + line chart
+    const cohortMeta = useMemo(() => {
+        if (!cohortRows?.length) return { weeks: [], cohorts: [], matrixRates: [], matrixCounts: [] };
+
+        const maxW = cohortRows.reduce((m, r) => {
+            const keys = Object.keys(r.rates || {});
+            const maxKey = Math.max(...keys.map((k) => Number(k)).filter((n) => Number.isFinite(n)), 0);
+            return Math.max(m, maxKey);
+        }, 0);
+
+        const weeks = Array.from({ length: Math.min(maxW, maxWeeks) + 1 }, (_, i) => i);
+
+        const cohorts = cohortRows.map((r) => ({
+            label: r.cohortLabel,
+            size: r.size,
+            rates: r.rates || {},
+            counts: r.counts || {},
+        }));
+
+        // Build dense matrices aligned to weeks
+        const matrixRates = cohorts.map((c) => weeks.map((w) => c.rates?.[w] ?? 0));
+        const matrixCounts = cohorts.map((c) => weeks.map((w) => c.counts?.[w] ?? 0));
+
+        return { weeks, cohorts, matrixRates, matrixCounts };
+    }, [cohortRows, maxWeeks]);
+
+    const avgCurve = useMemo(() => {
+        const { weeks, matrixRates } = cohortMeta;
+        if (!weeks.length || !matrixRates.length) return [];
+        return weeks.map((w, idx) => {
+            let sum = 0;
+            let n = 0;
+            for (let r = 0; r < matrixRates.length; r++) {
+                const v = matrixRates[r][idx];
+                if (Number.isFinite(v)) {
+                    sum += v;
+                    n++;
+                }
+            }
+            return { week: w, value: n > 0 ? sum / n : 0 };
+        });
+    }, [cohortMeta]);
+
+    const selectedCurve = useMemo(() => {
+        const { weeks, cohorts, matrixRates, matrixCounts } = cohortMeta;
+        if (!weeks.length) return [];
+
+        if (selectedCohort === "avg") {
+            return avgCurve.map(({ week, value }) => ({ _id: week, y: value }));
+        }
+
+        const idx = cohorts.findIndex((c) => c.label === selectedCohort);
+        if (idx < 0) return [];
+
+        if (cohortMetric === "rates") {
+            return weeks.map((w, j) => ({ _id: w, y: matrixRates[idx][j] || 0 }));
+        } else {
+            return weeks.map((w, j) => ({ _id: w, y: matrixCounts[idx][j] || 0 }));
+        }
+    }, [cohortMeta, selectedCohort, cohortMetric, avgCurve]);
 
     // Daily uploaders list (users only)
     useEffect(() => {
@@ -314,7 +408,6 @@ export default function Analytics({ user, setUser }) {
 
                 {/* Header with Dropdown */}
                 <div className="flex flex-col items-start mb-3 text-lg font-semibold mx-4">
-
                     <p>중요 지표</p>
                     <div className="w-full flex items-center justify-end space-x-4">
                         <select
@@ -378,6 +471,111 @@ export default function Analytics({ user, setUser }) {
                             tooltip: { formatter: (item) => fmtShort(item.value) },
                         }}
                     />
+                </div>
+
+                {/* ===== Cohort Retention ===== */}
+                <div className="mx-4 mb-8">
+                    <div className="flex items-center justify-between mb-2">
+                        <h2 className="text-lg font-semibold">주간 코호트 리텐션</h2>
+                        <div className="flex flex-wrap items-center gap-2 text-xs">
+                            <label className="text-gray-600">표시:</label>
+                            <select
+                                className="px-2 py-1 border border-gray-300 rounded text-xs outline-none"
+                                value={cohortMetric}
+                                onChange={(e) => setCohortMetric(e.target.value)}
+                            >
+                                <option value="rates">비율 (%)</option>
+                                <option value="counts">인원 (명)</option>
+                            </select>
+                            <label className="text-gray-600 ml-2">Max Weeks:</label>
+                            <input
+                                type="number"
+                                min={0}
+                                max={52}
+                                className="w-16 px-2 py-1 border border-gray-300 rounded text-xs"
+                                value={maxWeeks}
+                                onChange={(e) => setMaxWeeks(Math.max(0, Math.min(52, Number(e.target.value) || 0)))}
+                            />
+                            <label className="text-gray-600 ml-2">Min Cohort:</label>
+                            <input
+                                type="number"
+                                min={1}
+                                className="w-16 px-2 py-1 border border-gray-300 rounded text-xs"
+                                value={minCohortSize}
+                                onChange={(e) => setMinCohortSize(Math.max(1, Number(e.target.value) || 1))}
+                            />
+                            <span className="text-gray-500 ml-2">TZ: {TZ}</span>
+                        </div>
+                    </div>
+
+                    {/* Heatmap */}
+                    <CohortHeatmap
+                        rows={cohortRows}
+                        metric={cohortMetric}
+                        onSelectCohort={(label) => setSelectedCohort(label)}
+                        selectedCohort={selectedCohort}
+                    />
+
+                    {/* Retention line chart */}
+                    <div className="mt-6">
+                        <div className="flex items-center justify-between mb-1">
+                            <div className="text-xs text-gray-600">
+                                {selectedCohort === "avg"
+                                    ? "평균 리텐션 곡선"
+                                    : `코호트 ${selectedCohort} 리텐션 곡선 (${cohortMetric === "rates" ? "비율" : "인원"})`}
+                            </div>
+                            <div className="flex items-center gap-2">
+                                <label className="text-xs text-gray-500">Cohort:</label>
+                                <select
+                                    className="px-2 py-1 border border-gray-300 rounded text-xs outline-none"
+                                    value={selectedCohort}
+                                    onChange={(e) => setSelectedCohort(e.target.value)}
+                                >
+                                    <option value="avg">Average</option>
+                                    {cohortRows.map((r) => (
+                                        <option key={r.cohortLabel} value={r.cohortLabel}>
+                                            {r.cohortLabel} (n={r.size})
+                                        </option>
+                                    ))}
+                                </select>
+                            </div>
+                        </div>
+
+                        <LineChart
+                            dataset={selectedCurve}
+                            series={[
+                                {
+                                    dataKey: "y",
+                                    label:
+                                        selectedCohort === "avg"
+                                            ? "Avg retention"
+                                            : cohortMetric === "rates"
+                                                ? "Retention %"
+                                                : "Active users",
+                                    showMark: false,
+                                    lineWidth: LINE_WIDTH,
+                                },
+                            ]}
+                            xAxis={[{ dataKey: "_id", valueFormatter: (w) => `W${w}` }]}
+                            yAxis={[
+                                {
+                                    valueFormatter:
+                                        cohortMetric === "rates" ? (v) => `${Math.round((v || 0) * 100)}%` : fmtShort,
+                                },
+                            ]}
+                            height={280}
+                            margin={{ top: 8, bottom: 16 }}
+                            slotProps={{
+                                legend: { direction: "row", position: { vertical: "top", horizontal: "right" } },
+                                tooltip: {
+                                    formatter: (item) =>
+                                        cohortMetric === "rates"
+                                            ? `${Math.round((item.value || 0) * 100)}%`
+                                            : fmtShort(item.value),
+                                },
+                            }}
+                        />
+                    </div>
                 </div>
 
                 {/* Daily uploaders (users only) */}
@@ -536,6 +734,94 @@ export default function Analytics({ user, setUser }) {
                             </tbody>
                         </table>
                     </div>
+                </div>
+            </div>
+        </div>
+    )
+}
+
+/** Cohort Heatmap (CSS grid, fast & dependency-free)
+ * rows: [{ cohortLabel, size, counts:{"0":n,...}, rates:{"0":p,...} }, ...]
+ */
+function CohortHeatmap({ rows, metric, onSelectCohort, selectedCohort }) {
+    const headerStyle = "text-xs text-gray-600 px-2 py-1 whitespace-nowrap";
+    const cellBase = "text-[11px] text-gray-900 text-center rounded-md cursor-pointer select-none";
+    const wrap = "overflow-x-auto bg-white rounded-2xl border border-gray-200";
+
+    const { weeks, cohorts, matrixRates, matrixCounts } = useMemo(() => {
+        if (!rows?.length) return { weeks: [], cohorts: [], matrixRates: [], matrixCounts: [] };
+
+        const maxW = rows.reduce((m, r) => {
+            const keys = Object.keys((r.rates || {}));
+            const mk = Math.max(...keys.map(k => +k).filter(Number.isFinite), 0);
+            return Math.max(m, mk);
+        }, 0);
+
+        const weeks = Array.from({ length: maxW + 1 }, (_, i) => i);
+        const cohorts = rows.map((r) => ({ label: r.cohortLabel, size: r.size, rates: r.rates, counts: r.counts }));
+
+        const matrixRates = cohorts.map((c) => weeks.map((w) => c.rates?.[w] ?? 0));
+        const matrixCounts = cohorts.map((c) => weeks.map((w) => c.counts?.[w] ?? 0));
+
+        return { weeks, cohorts, matrixRates, matrixCounts };
+    }, [rows]);
+
+    const isRates = metric === "rates";
+
+    return (
+        <div className={wrap}>
+            {/* Header */}
+            <div className="min-w-[720px]">
+                <div className="grid" style={{ gridTemplateColumns: `160px 72px repeat(${weeks.length}, 56px)` }}>
+                    <div className={headerStyle}>Cohort (ISO week)</div>
+                    <div className={`${headerStyle} text-right pr-3`}>Size</div>
+                    {weeks.map((w) => (
+                        <div key={`h-${w}`} className={`${headerStyle} text-center`}>W{w}</div>
+                    ))}
+                </div>
+
+                {/* Rows */}
+                <div className="divide-y divide-gray-100">
+                    {cohorts.map((c, i) => (
+                        <div
+                            key={c.label}
+                            className={`grid items-center ${selectedCohort === c.label ? "bg-amber-50" : ""}`}
+                            style={{ gridTemplateColumns: `160px 72px repeat(${weeks.length}, 56px)` }}
+                        >
+                            <div
+                                className="px-2 py-1 text-xs font-medium text-gray-800 truncate cursor-pointer"
+                                onClick={() => onSelectCohort(selectedCohort === c.label ? "avg" : c.label)}
+                                title={`${c.label} (n=${c.size}) — 클릭하여 라인차트 선택`}
+                            >
+                                {c.label}
+                            </div>
+                            <div className="px-2 py-1 text-right text-xs text-gray-600">{c.size}</div>
+                            {weeks.map((w, j) => {
+                                const v = isRates ? matrixRates[i][j] : matrixCounts[i][j];
+                                const bg = isRates ? heatColor(v) : heatColor((v && c.size) ? v / c.size : 0);
+                                const label = isRates ? `${Math.round((v || 0) * 100)}%` : `${v || 0}`;
+                                return (
+                                    <div
+                                        key={`${c.label}-${w}`}
+                                        className={`${cellBase} mx-1 my-1 px-1 py-1`}
+                                        style={{ backgroundColor: bg }}
+                                        title={
+                                            isRates
+                                                ? `${c.label} • Week ${w}\nRetention: ${Math.round((v || 0) * 100)}%`
+                                                : `${c.label} • Week ${w}\nActive users: ${v || 0}`
+                                        }
+                                        onClick={() => onSelectCohort(c.label)}
+                                    >
+                                        {label}
+                                    </div>
+                                );
+                            })}
+                        </div>
+                    ))}
+
+                    {cohorts.length === 0 && (
+                        <div className="px-3 py-4 text-sm text-gray-500">No cohort data.</div>
+                    )}
                 </div>
             </div>
         </div>
