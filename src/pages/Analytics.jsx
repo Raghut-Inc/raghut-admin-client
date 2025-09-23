@@ -90,8 +90,8 @@ export default function Analytics({ user, setUser }) {
     // ---- Cohort retention ----
     const [cohortRows, setCohortRows] = useState([]); // backend rows
     const [cohortMetric, setCohortMetric] = useState("rates"); // 'rates' | 'counts'
-    const [maxWeeks, setMaxWeeks] = useState(8);
-    const [minCohortSize, setMinCohortSize] = useState(8);
+    const [maxWeeks, setMaxWeeks] = useState(12);
+    const [minCohortSize, setMinCohortSize] = useState(1);
     const [selectedCohort, setSelectedCohort] = useState("avg"); // 'avg' | cohortLabel
 
     async function fetchJson(url) {
@@ -209,8 +209,8 @@ export default function Analytics({ user, setUser }) {
 
         const maxW = cohortRows.reduce((m, r) => {
             const keys = Object.keys(r.rates || {});
-            const maxKey = Math.max(...keys.map((k) => Number(k)).filter((n) => Number.isFinite(n)), 0);
-            return Math.max(m, maxKey);
+            const mk = Math.max(...keys.map((k) => Number(k)).filter((n) => Number.isFinite(n)), 0);
+            return Math.max(m, mk);
         }, 0);
 
         const weeks = Array.from({ length: Math.min(maxW, maxWeeks) + 1 }, (_, i) => i);
@@ -222,9 +222,13 @@ export default function Analytics({ user, setUser }) {
             counts: r.counts || {},
         }));
 
-        // Build dense matrices aligned to weeks
-        const matrixRates = cohorts.map((c) => weeks.map((w) => c.rates?.[w] ?? 0));
-        const matrixCounts = cohorts.map((c) => weeks.map((w) => c.counts?.[w] ?? 0));
+        // IMPORTANT: use null for missing cells (not 0)
+        const matrixRates = cohorts.map((c) =>
+            weeks.map((w) => (typeof c.rates?.[w] === "number" ? c.rates[w] : null))
+        );
+        const matrixCounts = cohorts.map((c) =>
+            weeks.map((w) => (Number.isFinite(c.counts?.[w]) ? c.counts[w] : null))
+        );
 
         return { weeks, cohorts, matrixRates, matrixCounts };
     }, [cohortRows, maxWeeks]);
@@ -233,16 +237,25 @@ export default function Analytics({ user, setUser }) {
         const { weeks, matrixRates } = cohortMeta;
         if (!weeks.length || !matrixRates.length) return [];
         return weeks.map((w, idx) => {
-            let sum = 0;
-            let n = 0;
+            let sum = 0, n = 0;
             for (let r = 0; r < matrixRates.length; r++) {
                 const v = matrixRates[r][idx];
-                if (Number.isFinite(v)) {
-                    sum += v;
-                    n++;
-                }
+                if (typeof v === "number") { sum += v; n++; }
             }
-            return { week: w, value: n > 0 ? sum / n : 0 };
+            return { week: w, value: n > 0 ? sum / n : null };
+        });
+    }, [cohortMeta]);
+
+    const avgCountsCurve = useMemo(() => {
+        const { weeks, matrixCounts } = cohortMeta;
+        if (!weeks.length || !matrixCounts.length) return [];
+        return weeks.map((w, idx) => {
+            let sum = 0, n = 0;
+            for (let r = 0; r < matrixCounts.length; r++) {
+                const v = matrixCounts[r][idx];
+                if (Number.isFinite(v)) { sum += v; n++; }
+            }
+            return { week: w, value: n > 0 ? sum / n : null };
         });
     }, [cohortMeta]);
 
@@ -251,18 +264,19 @@ export default function Analytics({ user, setUser }) {
         if (!weeks.length) return [];
 
         if (selectedCohort === "avg") {
-            return avgCurve.map(({ week, value }) => ({ _id: week, y: value }));
+            const src = cohortMetric === "rates" ? avgCurve : avgCountsCurve;
+            return src.map(({ week, value }) => ({ _id: week, y: value }));
         }
 
         const idx = cohorts.findIndex((c) => c.label === selectedCohort);
         if (idx < 0) return [];
 
         if (cohortMetric === "rates") {
-            return weeks.map((w, j) => ({ _id: w, y: matrixRates[idx][j] || 0 }));
+            return weeks.map((w, j) => ({ _id: w, y: matrixRates[idx][j] }));
         } else {
-            return weeks.map((w, j) => ({ _id: w, y: matrixCounts[idx][j] || 0 }));
+            return weeks.map((w, j) => ({ _id: w, y: matrixCounts[idx][j] }));
         }
-    }, [cohortMeta, selectedCohort, cohortMetric, avgCurve]);
+    }, [cohortMeta, selectedCohort, cohortMetric, avgCurve, avgCountsCurve]);
 
     // Daily uploaders list (users only)
     useEffect(() => {
