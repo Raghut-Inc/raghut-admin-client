@@ -205,7 +205,7 @@ export default function Analytics({ user, setUser }) {
 
     // ---- Cohort shaping for heatmap + line chart
     const cohortMeta = useMemo(() => {
-        if (!cohortRows?.length) return { weeks: [], cohorts: [], matrixRates: [], matrixCounts: [] };
+        if (!cohortRows?.length) return { weeks: [], cohorts: [], matrixRates: [], matrixCounts: [], lastWeekIdx: [] };
 
         const maxW = cohortRows.reduce((m, r) => {
             const keys = Object.keys(r.rates || {});
@@ -222,7 +222,6 @@ export default function Analytics({ user, setUser }) {
             counts: r.counts || {},
         }));
 
-        // IMPORTANT: use null for missing cells (not 0)
         const matrixRates = cohorts.map((c) =>
             weeks.map((w) => (typeof c.rates?.[w] === "number" ? c.rates[w] : null))
         );
@@ -230,15 +229,24 @@ export default function Analytics({ user, setUser }) {
             weeks.map((w) => (Number.isFinite(c.counts?.[w]) ? c.counts[w] : null))
         );
 
-        return { weeks, cohorts, matrixRates, matrixCounts };
+        // last week index that has a finite count for each cohort
+        const lastWeekIdx = matrixCounts.map((row) => {
+            for (let j = row.length - 1; j >= 0; j--) {
+                if (Number.isFinite(row[j])) return j;
+            }
+            return -1;
+        });
+
+        return { weeks, cohorts, matrixRates, matrixCounts, lastWeekIdx };
     }, [cohortRows, maxWeeks]);
 
     const avgCurve = useMemo(() => {
-        const { weeks, matrixRates } = cohortMeta;
+        const { weeks, matrixRates, lastWeekIdx } = cohortMeta;
         if (!weeks.length || !matrixRates.length) return [];
         return weeks.map((w, idx) => {
             let sum = 0, n = 0;
             for (let r = 0; r < matrixRates.length; r++) {
+                if (lastWeekIdx[r] === idx) continue;           // <-- skip cohort's latest week
                 const v = matrixRates[r][idx];
                 if (typeof v === "number") { sum += v; n++; }
             }
@@ -247,11 +255,12 @@ export default function Analytics({ user, setUser }) {
     }, [cohortMeta]);
 
     const avgCountsCurve = useMemo(() => {
-        const { weeks, matrixCounts } = cohortMeta;
+        const { weeks, matrixCounts, lastWeekIdx } = cohortMeta;
         if (!weeks.length || !matrixCounts.length) return [];
         return weeks.map((w, idx) => {
             let sum = 0, n = 0;
             for (let r = 0; r < matrixCounts.length; r++) {
+                if (lastWeekIdx[r] === idx) continue;           // <-- skip cohort's latest week
                 const v = matrixCounts[r][idx];
                 if (Number.isFinite(v)) { sum += v; n++; }
             }
@@ -260,7 +269,7 @@ export default function Analytics({ user, setUser }) {
     }, [cohortMeta]);
 
     const selectedCurve = useMemo(() => {
-        const { weeks, cohorts, matrixRates, matrixCounts } = cohortMeta;
+        const { weeks, cohorts, matrixRates, matrixCounts, lastWeekIdx } = cohortMeta;
         if (!weeks.length) return [];
 
         if (selectedCohort === "avg") {
@@ -271,11 +280,11 @@ export default function Analytics({ user, setUser }) {
         const idx = cohorts.findIndex((c) => c.label === selectedCohort);
         if (idx < 0) return [];
 
-        if (cohortMetric === "rates") {
-            return weeks.map((w, j) => ({ _id: w, y: matrixRates[idx][j] }));
-        } else {
-            return weeks.map((w, j) => ({ _id: w, y: matrixCounts[idx][j] }));
-        }
+        const isRates = cohortMetric === "rates";
+        return weeks.map((w, j) => ({
+            _id: w,
+            y: lastWeekIdx[idx] === j ? null : (isRates ? matrixRates[idx][j] : matrixCounts[idx][j]),
+        }));
     }, [cohortMeta, selectedCohort, cohortMetric, avgCurve, avgCountsCurve]);
 
     // Daily uploaders list (users only)
