@@ -532,7 +532,7 @@ export default function Analytics({ user, setUser }) {
 
                 {/* Chart 3: Hourly unique uploaders (last 48h) */}
                 <div className="mb-10">
-                    <div className="text-xs text-gray-600 mb-1 px-4">최근 48시간 업로더 (시간별)</div>
+                    <div className="text-xs text-gray-600 mb-1 px-4">최근 168시간 업로더 (시간별)</div>
                     <LineChart
                         dataset={hourlyDataset}
                         series={[{
