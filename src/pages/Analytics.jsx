@@ -110,7 +110,7 @@ export default function Analytics({ user, setUser }) {
     };
 
     useEffect(() => {
-        fetchJson(`${API_BASE}/active-uploaders-over-time?granularity=hourly&window=48h&tz=${TZ}`)
+        fetchJson(`${API_BASE}/active-uploaders-over-time?granularity=hourly&window=168h&tz=${TZ}`)
             .then((rows) => setHourlyUploaders48h(rows || []))
             .catch((e) => setError(e.message));
     }, []);
@@ -118,7 +118,7 @@ export default function Analytics({ user, setUser }) {
     // if server returns { ts, uniqueUploaderCount }, prefer that and only backfill by epoch-hour
     const hourlyDataset = useMemo(() => {
         const end = new Date(); end.setMinutes(0, 0, 0);         // current hour (browser local; OK – we compare epoch)
-        const start = new Date(end.getTime() - 48 * 3600_000); // 48 hours earlier
+        const start = new Date(end.getTime() - 168 * 3600_000); // 48 hours earlier
 
         const map = new Map();
         for (const r of (hourlyUploaders48h || [])) {
@@ -549,7 +549,7 @@ export default function Analytics({ user, setUser }) {
                             scaleType: "time",
                             valueFormatter: (v) => fmtHour(v),
                             tickNumber: 12,            // ~ every 4h
-                            min: new Date(Date.now() - 48 * 3600 * 1000),
+                            min: new Date(Date.now() - 168 * 3600 * 1000),
                             max: new Date(),
                         }]}
                         yAxis={[{ valueFormatter: fmtShort }]}
