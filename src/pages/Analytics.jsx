@@ -48,6 +48,7 @@ export default function Analytics({ user, setUser }) {
     const [questionsOverTimeGranularity, setQuestionsOverTimeGranularity] = useState("daily");
     const [questionsOverTime, setQuestionsOverTime] = useState([]);
     const [signupsOverTime, setSignupsOverTime] = useState([]);
+    const [hourlyUploaders48h, setHourlyUploaders48h] = useState([]);
 
     // ONE global toggle for all cumulative series
     const [useCumulativeAll, setUseCumulativeAll] = useState(false);
@@ -99,6 +100,39 @@ export default function Analytics({ user, setUser }) {
         if (!res.ok) throw new Error(`Failed to fetch ${url}: ${res.statusText}`);
         return res.json();
     }
+
+    // friendly label
+    const fmtHour = (d) => {
+        if (!(d instanceof Date) || isNaN(d)) return "";
+        const M = d.getMonth() + 1, D = d.getDate();
+        const hh = String(d.getHours()).padStart(2, "0");
+        return `${M}/${D} ${hh}:00`;
+    };
+
+    useEffect(() => {
+        fetchJson(`${API_BASE}/active-uploaders-over-time?granularity=hourly&window=48h&tz=${TZ}`)
+            .then((rows) => setHourlyUploaders48h(rows || []))
+            .catch((e) => setError(e.message));
+    }, []);
+
+    // if server returns { ts, uniqueUploaderCount }, prefer that and only backfill by epoch-hour
+    const hourlyDataset = useMemo(() => {
+        const end = new Date(); end.setMinutes(0, 0, 0);         // current hour (browser local; OK – we compare epoch)
+        const start = new Date(end.getTime() - 48 * 3600_000); // 48 hours earlier
+
+        const map = new Map();
+        for (const r of (hourlyUploaders48h || [])) {
+            const d = typeof r.ts === "number" ? new Date(r.ts) : new Date(r._id);
+            if (!isNaN(d)) map.set(d.getTime(), r.uniqueUploaderCount || 0);
+        }
+
+        const out = [];
+        for (let t = start.getTime(); t <= end.getTime(); t += 3600_000) {
+            out.push({ ts: new Date(t), uniqueUploaderCount: map.get(t) ?? 0 });
+        }
+        return out;
+    }, [hourlyUploaders48h]);
+
 
     // Fetch DAU/WAU/MAU
     useEffect(() => {
@@ -495,6 +529,42 @@ export default function Analytics({ user, setUser }) {
                         }}
                     />
                 </div>
+
+                {/* Chart 3: Hourly unique uploaders (last 48h) */}
+                <div className="mb-10">
+                    <div className="text-xs text-gray-600 mb-1 px-4">최근 48시간 업로더 (시간별)</div>
+                    <LineChart
+                        dataset={hourlyDataset}
+                        series={[{
+                            dataKey: "uniqueUploaderCount",
+                            label: "시간별 고유 업로더",
+                            showMark: false,
+                            color: COLORS.uniqueUploaders,
+                            lineWidth: LINE_WIDTH,
+                            area: true,
+                        }]}
+                        sx={{ "& .MuiLineElement-root": { strokeWidth: LINE_WIDTH } }}
+                        xAxis={[{
+                            dataKey: "ts",
+                            scaleType: "time",
+                            valueFormatter: (v) => fmtHour(v),
+                            tickNumber: 12,            // ~ every 4h
+                            min: new Date(Date.now() - 48 * 3600 * 1000),
+                            max: new Date(),
+                        }]}
+                        yAxis={[{ valueFormatter: fmtShort }]}
+                        height={260}
+                        margin={{ top: 8, bottom: 16 }}
+                        slotProps={{
+                            legend: { direction: "row", position: { vertical: "top", horizontal: "right" } },
+                            tooltip: {
+                                axisContent: ({ label }) => (label instanceof Date ? fmtHour(label) : String(label)),
+                                formatter: (item) => fmtShort(item.value),
+                            },
+                        }}
+                    />
+                </div>
+
 
                 {/* ===== Cohort Retention ===== */}
                 <div className="mx-4 mb-8">
