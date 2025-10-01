@@ -73,7 +73,7 @@ const Dev = ({ user, setUser }) => {
             const formData = new FormData();
             formData.append("image", selectedFile);
             formData.append("subject", subject);
-            const apiUrl = `${process.env.REACT_APP_API_URL || ""}/v2/solve-question`;
+            const apiUrl = `${process.env.REACT_APP_API_URL || ""}/v3/solve-question`;
 
             const res = await fetch(apiUrl, {
                 method: "POST",
