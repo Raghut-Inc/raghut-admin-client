@@ -1,6 +1,6 @@
 import React from "react";
 
-function QuestionMetaInfo({ q, onDelete, timeAgo, setFilter }) {
+function QuestionMetaInfo({ q, timeAgo, setFilter }) {
     // Handler to apply filter on userId or guestUUID
     const handleFilterClick = (e) => {
         e.stopPropagation(); // prevent event bubbling if inside clickable card
@@ -14,29 +14,11 @@ function QuestionMetaInfo({ q, onDelete, timeAgo, setFilter }) {
 
     return (
         <>
-            {/* Image Preview */}
-            {q.imageUrl && (
-                <a
-                    href={q.imageUrl}
-                    target="_blank"
-                    rel="noopener noreferrer"
-                    className="block relative"
-                    onClick={(e) => e.stopPropagation()}
-                >
-                    <img
-                        src={q.imageUrl}
-                        alt="Captured"
-                        className="w-full max-h-64 object-contain object-center cursor-pointer rounded"
-                    />
-                    <div className="absolute right-2 bottom-2 bg-gray-600 px-3 py-1 rounded">
-                        {(q.processingTimeMs / 1000).toFixed(1)}s
-                    </div>
-                </a>
-            )}
+
 
             {/* User Info */}
             <div
-                className="bg-gray-700 hover:bg-gray-600 transition text-xs text-white space-y-1 p-3 rounded mt-3 cursor-pointer"
+                className="bg-gray-700 hover:bg-gray-600 transition text-xs text-white space-y-1 p-3 cursor-pointer"
                 onClick={handleFilterClick}
                 title="Click here to filter by this user or guest"
             >
@@ -50,32 +32,6 @@ function QuestionMetaInfo({ q, onDelete, timeAgo, setFilter }) {
                             </div>
 
                             <div className="text-xs text-gray-400 font-mono">{q.userId._id}</div>
-
-                            <div className="flex flex-wrap gap-2 text-xs text-gray-300 truncate">
-                                <span
-                                    className="cursor-pointer underline decoration-dotted truncate"
-                                    title="Click to copy email"
-                                    onClick={(e) => {
-                                        e.stopPropagation();
-                                        q.userId.email && navigator.clipboard.writeText(q.userId.email);
-                                    }}
-                                >
-                                    {q.userId.email || "No email"}
-                                </span>
-
-                                <span>∙</span>
-
-                                <span
-                                    className="font-mono cursor-pointer underline decoration-dotted truncate"
-                                    title="Click to copy referral ID"
-                                    onClick={(e) => {
-                                        e.stopPropagation();
-                                        q.userId.referralId && navigator.clipboard.writeText(q.userId.referralId);
-                                    }}
-                                >
-                                    초대코드: {q.userId.referralId || "-"}
-                                </span>
-                            </div>
 
                             <div className="text-xs text-gray-400 mt-1 truncate max-w-xs font-mono">
                                 가입일: {q.userId.createdAt ? new Date(q.userId.createdAt).toLocaleDateString() : "-"} (

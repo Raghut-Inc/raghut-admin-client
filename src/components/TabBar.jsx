@@ -25,7 +25,7 @@ const TabBar = ({ user, setUser }) => {
     };
 
     return (
-        <nav className="flex-shrink-0 md:flex justify-center z-30 w-12 items-center overflow-hidden
+        <nav className="flex-shrink-0 justify-center z-30 w-12 items-center overflow-hidden
     fixed bottom-2 right-2 shadow-xl border-t rounded-full
     bg-white/60 backdrop-blur-xl">
             {user && (

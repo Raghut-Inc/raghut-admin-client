@@ -6,10 +6,19 @@ import CardEngMCQ from "./CardEngMCQ";
 import CardMathMCQ from "./CardMathMCQ";
 import CardMathShortAnswer from "./CardMathShortAnswer";
 import { renderMixedMath } from "../../utils/latexUtils";
+import { FaCircleCheck, FaTrashCan } from "react-icons/fa6";
+import { MdError } from "react-icons/md";
+import { FiCopy } from "react-icons/fi";
 
 const UploadCard = ({ q, qIndex, onDelete, setFilter }) => {
     const [showDetails, setShowDetails] = useState(false);
+    const [copied, setCopied] = useState(false);
 
+    const handleCopy = () => {
+        navigator.clipboard.writeText(q._id);
+        setCopied(true);
+        setTimeout(() => setCopied(false), 1000);
+    };
     // ---- helpers: build tokens without joining into one string
     const shortMathSafe = (s = "", max = 16) => {
         // don't truncate if looks like math
@@ -73,57 +82,130 @@ const UploadCard = ({ q, qIndex, onDelete, setFilter }) => {
 
     return (
         <div key={qIndex} className="max-w-xl overflow-hidden shadow-sm bg-white w-full">
-            {/* top bar unchanged */}
-            <div
-                className={`${q.status === "processing" ? "bg-gray-400" : q.validQuestionCount > 0 ? "bg-indigo-500" : "bg-red-500"
-                    } text-white text-xs font-medium px-1 py-1 flex justify-between items-center w-full`}
-            >
-                <div className="flex items-center gap-1">
-                    <button
-                        onClick={() => setShowDetails((v) => !v)}
-                        className="bg-white/10 hover:bg-white/20 text-white text-xs font-semibold rounded px-2 py-1"
-                    >
-                        {showDetails ? "요약" : "펼치기"}
-                    </button>
-                    <div className="text-white text-xs" title="Click to open solved question">
-                        <button
-                            onClick={() => window.open(`https://chalcack.com/solved/${q._id}`, "_blank")}
-                            className="px-2 py-1 bg-white rounded text-indigo-500 text-xs font-medium"
-                        >
-                            찰칵
-                        </button>
+            <div className="flex flex-col w-full bg-gray-800 text-white text-xs">
+                <div className="flex w-full h-full">
+                    {/* Image Preview */}
+                    <div className="flex-shrink-0 max-w-48 flex justify-start items-center bg-gray-700">
+                        {q.imageUrl && (
+                            <a
+                                href={q.imageUrl}
+                                target="_blank"
+                                rel="noopener noreferrer"
+                                className="block relative"
+                                onClick={(e) => e.stopPropagation()}
+                            >
+                                <img
+                                    src={q.imageUrl}
+                                    alt="Captured"
+                                    className="w-full max-h-64 object-contain cursor-pointer"
+                                />
+
+                            </a>
+                        )}
+                    </div>
+
+                    <div className="w-full h-full flex flex-col justify-start p-3">
+                        <div className="flex flex-col">
+                            <div className="w-full flex justify-between">
+                                <div className="flex space-x-2 items-center">
+                                    {q.status !== "processing" && (q.validQuestionCount > 0 ? <FaCircleCheck className="w-7 h-7 text-indigo-500 p-px bg-white rounded-full" /> : <MdError className="w-7 h-7 text-red-500 p-px bg-white rounded-full" />)}
+                                    <span>{timeAgo(q.createdAt)}</span>
+                                </div>
+
+                                <div className="flex justify-end space-x-1 items-center">
+                                    <button
+                                        onClick={handleCopy}
+                                        className="bg-gray-600 text-white font-semibold w-7 h-7 rounded-full flex items-center justify-center"
+                                        title="Copy ID"
+                                    >
+                                        {copied ? (
+                                            <FaCircleCheck className="w-5 h-5" />
+                                        ) : (
+                                            <FiCopy className="w-3 h-3" />
+                                        )}
+                                    </button>
+
+                                    <button
+                                        onClick={(e) => {
+                                            e.stopPropagation();
+                                            onDelete(q._id);
+                                        }}
+                                        className="bg-red-500 hover:bg-red-600 text-white font-semibold w-7 h-7 rounded-full flex items-center justify-center"
+                                    >
+                                        <FaTrashCan className="w-3 h-3" />
+                                    </button>
+                                </div>
+                            </div>
+
+                            <div className="flex flex-col mt-5 text-xs text-white space-y-1">
+
+                                <div>
+                                    <span className="font-semibold text-gray-400">Time:</span>{" "}
+                                    {(q.processingTimeMs / 1000).toFixed(1)}s
+                                </div>
+                                <div>
+                                    <span className="font-semibold text-gray-400">Upload:</span>{" "}
+                                    {new Date(q.createdAt).toLocaleString("ko-KR", {
+                                        month: "short",
+                                        day: "numeric",
+                                        hour: "2-digit",
+                                        minute: "2-digit",
+                                        hour12: true,
+                                    })}
+                                </div>
+                                <div>
+                                    <span className="font-semibold text-gray-400">Subject:</span> {q.subject || "—"}
+                                </div>
+
+                                <div>
+                                    <span className="font-semibold text-gray-400">Qs:</span>{" "}
+                                    {q.validQuestionCount}/{q.numberOfQuestions} valid
+                                    {q.validQuestionNumbers?.length > 0 && (
+                                        <span className="ml-1 text-gray-300">
+                                            (#{q.validQuestionNumbers.join(", ")})
+                                        </span>
+                                    )}
+                                </div>
+
+
+
+                                <div>
+                                    <span className="font-semibold text-gray-400">Status:</span> {q.status}
+                                </div>
+
+                                <div className="flex items-center space-x-2">
+                                    <span className="font-semibold text-gray-400">OG-img:</span>
+                                    {q.imageOriginalUrl ? (
+                                        <a
+                                            href={q.imageOriginalUrl}
+                                            target="_blank"
+                                            rel="noopener noreferrer"
+                                            className="text-blue-300 hover:underline"
+                                        >
+                                            open original
+                                        </a>
+                                    ) : (
+                                        <span className="text-gray-400">no image</span>
+                                    )}
+                                </div>
+
+                                <div className="flex items-center space-x-2">
+                                    <span className="font-semibold text-gray-400">ID:</span>
+                                    <span className="truncate max-w-[160px] text-gray-300">{q._id}</span>
+                                </div>
+                            </div>
+
+
+                        </div>
+
+
                     </div>
                 </div>
-
-                <div className="flex space-x-1 items-center">
-                    <div className="text-white text-xs">{q.subject}</div>
-                    <span>·</span>
-                    <span>{q.validQuestionCount === 0 ? "X" : `${q.validQuestionCount || "?"}/${q.numberOfQuestions || "?"}q`}</span>
-                    <span>·</span>
-                    <span>{`${timeAgo(q.createdAt)} (${new Date(q.createdAt).toLocaleTimeString([], {
-                        hour: "2-digit",
-                        minute: "2-digit",
-                        hour12: true,
-                    })})`}</span>
-                </div>
-
-                <button
-                    onClick={(e) => {
-                        e.stopPropagation();
-                        onDelete(q._id);
-                    }}
-                    className="bg-red-500 hover:bg-red-600 text-white text-xs font-semibold rounded px-3 py-1"
-                >
-                    삭제
-                </button>
-            </div>
-
-            <div className="flex flex-col w-full bg-gray-800 p-1 text-white text-xs space-y-1">
-                <QuestionMetaInfo q={q} onDelete={onDelete} timeAgo={timeAgo} setFilter={setFilter} />
+                <QuestionMetaInfo q={q} timeAgo={timeAgo} setFilter={setFilter} />
 
                 {/* SUMMARY ROW */}
                 {!showDetails && (
-                    <div className="text-gray-800 rounded">
+                    <div className="text-gray-800 rounded p-1">
                         {q.status === "processing" ? (
                             <div className="flex justify-center  items-center p-2">
                                 <svg aria-hidden="true" className="w-4 h-4 text-gray-500 animate-spin dark:text-gray-600 fill-white" viewBox="0 0 100 101" fill="none" xmlns="http://www.w3.org/2000/svg">
@@ -134,6 +216,12 @@ const UploadCard = ({ q, qIndex, onDelete, setFilter }) => {
                             </div>
                         ) : (
                             <div className="flex flex-wrap gap-1">
+                                <button
+                                    onClick={() => setShowDetails((v) => !v)}
+                                    className="bg-white/10 hover:bg-white/20 text-white text-xs font-semibold rounded px-2 py-1"
+                                >
+                                    {showDetails ? "요약" : "펼치기"}
+                                </button>
                                 {summaryItems.map((item, idx) => (
                                     <span
                                         key={idx}
@@ -164,7 +252,7 @@ const UploadCard = ({ q, qIndex, onDelete, setFilter }) => {
 
                 {/* FULL DETAILS (only when toggled) */}
                 {showDetails && (
-                    <div className="flex-1 text-xs text-black rounded overflow-hidden">
+                    <div className="flex-1 text-xs text-black overflow-hidden">
                         {q.status === "processing" ? (
                             <div className="flex justify-center items-center p-2">
                                 <svg aria-hidden="true" className="w-4 h-4 text-gray-500 animate-spin dark:text-gray-600 fill-white" viewBox="0 0 100 101" fill="none" xmlns="http://www.w3.org/2000/svg">
@@ -177,7 +265,13 @@ const UploadCard = ({ q, qIndex, onDelete, setFilter }) => {
                             q.gptAnalyzed?.map((item, i) => {
                                 const key = `${qIndex}-${i}`;
                                 return (
-                                    <div key={key} className="bg-gray-50 p-3 relative">
+                                    <div key={key} className="bg-gray-50 p-1 relative">
+                                        <button
+                                            onClick={() => setShowDetails((v) => !v)}
+                                            className="bg-gray-500 text-white text-xs font-semibold rounded px-2 py-1"
+                                        >
+                                            닫기
+                                        </button>
                                         {renderQuestionCard(item, key)}
                                     </div>
                                 );
