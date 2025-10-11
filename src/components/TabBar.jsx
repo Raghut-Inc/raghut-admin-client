@@ -14,9 +14,9 @@ const TabBar = ({ user, setUser }) => {
         const isActive = location.pathname === path;
 
         return (
-            <Link to={path}>
+            <Link to={path} className="w-full flex items-center justify-center">
                 <button
-                    className={clsx("px-3 h-14 rounded-lg", isActive ? "font-semibold text-indigo-600" : "text-gray-500")}
+                    className={clsx("flex items-center justify-center h-14 w-full", isActive ? "font-semibold bg-indigo-600 text-white" : "text-gray-500")}
                 >
                     {icon}
                 </button>
@@ -25,17 +25,16 @@ const TabBar = ({ user, setUser }) => {
     };
 
     return (
-        <nav className="flex-shrink-0 md:flex justify-center z-30 w-12 items-center md:px-4 
+        <nav className="flex-shrink-0 md:flex justify-center z-30 w-12 items-center overflow-hidden
     fixed bottom-2 right-2 shadow-xl border-t rounded-full
     bg-white/60 backdrop-blur-xl">
             {user && (
-                <div className="flex flex-col flex-shrink-0 items-center justify-evenly md:justify-start">
+                <div className="flex flex-col flex-shrink-0 items-center justify-evenly">
                     <MenuButton id="dev" icon={<FaDev className="w-5 h-5" />} />
                     <MenuButton id="chat" icon={<IoChatbubbleSharp className="w-5 h-5" />} />
                     <MenuButton id="user" icon={<FaUserLarge className="w-5 h-5" />} />
                     <MenuButton id="uploads" icon={<IoIosImage className="w-6 h-6" />} />
                     <MenuButton id="analytics" icon={<SiGoogleanalytics className="w-5 h-5" />} />
-
                 </div>
             )}
         </nav>
