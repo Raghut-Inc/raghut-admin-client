@@ -154,13 +154,13 @@ const Uploads = ({ user, setUser }) => {
     [mode]
   );
 
-  const updateParams = (mutate) => {
+  const updateParams = useCallback((mutate) => {
     setSearchParams((prev) => {
       const np = new URLSearchParams(prev);
       mutate(np);
       return np;
     });
-  };
+  }, [setSearchParams]);
 
   // Delete handler (cards)
   const handleDelete = async (id) => {
@@ -184,6 +184,21 @@ const Uploads = ({ user, setUser }) => {
     }
   };
 
+  // Apply status/subject changes
+  const applyStatus = useCallback(
+    (v) => {
+      updateParams((np) => {
+        if (v) np.set("status", v);
+        else np.delete("status");
+        np.set("page", "1");
+        np.set("pageSize", String(PAGE_SIZE));
+        if (mode !== "cards") np.set("mode", mode);
+      });
+      setPage(1);
+    },
+    [updateParams, mode, setPage] // ✅ add stable dependencies
+  );
+
   // Initial load & when mode changes
   useEffect(() => {
     setPage(1);
@@ -193,7 +208,7 @@ const Uploads = ({ user, setUser }) => {
     } else {
       loadSummary(1);
     }
-  }, [mode, loadQuestions, loadSummary]);
+  }, [mode, loadQuestions, loadSummary, applyStatus]);
 
   // Infinite scroll
   useEffect(() => {
@@ -228,30 +243,6 @@ const Uploads = ({ user, setUser }) => {
       }
       // preserve current mode
       if (mode !== "cards") np.set("mode", "cards");
-    });
-    setPage(1);
-  };
-
-  // Apply status/subject changes
-  const applyStatus = (v) => {
-    updateParams((np) => {
-      if (v) np.set("status", v);
-      else np.delete("status");
-      np.set("page", "1");
-      np.set("pageSize", String(PAGE_SIZE));
-      // stay in current mode
-      if (mode !== "cards") np.set("mode", mode);
-    });
-    setPage(1);
-  };
-
-  const applySubject = (v) => {
-    updateParams((np) => {
-      if (v) np.set("subject", v);
-      else np.delete("subject");
-      np.set("page", "1");
-      np.set("pageSize", String(PAGE_SIZE));
-      if (mode !== "cards") np.set("mode", mode);
     });
     setPage(1);
   };
@@ -309,24 +300,24 @@ const Uploads = ({ user, setUser }) => {
 
       {/* Status toggle */}
       {mode === "cards" && (
-        <div className="flex-shrink-0 flex justify-center z-30 h-10 items-center overflow-hidden fixed bottom-16 space-x-1">
+        <div className="flex-shrink-0 flex justify-center z-30 items-center overflow-hidden fixed bottom-12 space-x-1 p-4">
           <button
             onClick={() => applyStatus("")}
-            className={`px-3 h-full w-10 flex items-center justify-center text-xs rounded-full shadow-xl border-t ${status === "" ? "bg-indigo-600 text-white" : " bg-white/60 backdrop-blur-xl"
+            className={`px-3 h-10 w-10 flex items-center justify-center text-xs rounded-full shadow-xl border-t ${status === "" ? "bg-indigo-600 text-white" : " bg-white/60 backdrop-blur-xl"
               }`}
           >
             ALL
           </button>
           <button
             onClick={() => applyStatus("done")}
-            className={`px-3 h-full w-10 flex items-center justify-center text-xs rounded-full shadow-xl border-t ${status === "done" ? "bg-indigo-600 text-white" : " bg-white/60 backdrop-blur-xl"
+            className={`px-3 h-10 w-10 flex items-center justify-center text-xs rounded-full shadow-xl border-t ${status === "done" ? "bg-indigo-600 text-white" : " bg-white/60 backdrop-blur-xl"
               }`}
           >
             <FaCheck />
           </button>
           <button
             onClick={() => applyStatus("processing")}
-            className={`px-3 h-full w-10 flex items-center justify-center text-xs rounded-full shadow-xl border-t ${status === "processing" ? "bg-indigo-600 text-white" : "bg-white/60 backdrop-blur-xl"
+            className={`px-3 h-10 w-10 flex items-center justify-center text-xs rounded-full shadow-xl border-t ${status === "processing" ? "bg-indigo-600 text-white" : "bg-white/60 backdrop-blur-xl"
               }`}
           >
             <BsThreeDots />
@@ -335,64 +326,28 @@ const Uploads = ({ user, setUser }) => {
       )}
 
       {/* Controls row */}
-      <div className="flex justify-between h-12 items-center w-full px-2 sticky top-14 z-20 bg-white backdrop-blur">
-        <div className="flex items-center gap-2">
-
-          {/* Filters (cards only) */}
-          {mode === "cards" && (
-            <div className="flex items-center gap-2 ml-2">
-              {/* Status select */}
-              <select
-                value={statusFilter}
-                onChange={(e) => applyStatus(e.target.value)}
-                className="text-xs border rounded-lg px-2 py-1 bg-white"
-              >
-                {STATUS_OPTIONS.map((opt) => (
-                  <option key={opt.value || "all"} value={opt.value}>
-                    {opt.label}
-                  </option>
-                ))}
-              </select>
-
-              {/* Subject select */}
-              <select
-                value={subjectFilter}
-                onChange={(e) => applySubject(e.target.value)}
-                className="text-xs border rounded-lg px-2 py-1 bg-white"
-              >
-                {SUBJECT_OPTIONS.map((opt) => (
-                  <option key={opt.value || "all"} value={opt.value}>
-                    {opt.label}
-                  </option>
-                ))}
-              </select>
-            </div>
+      {(userIdFilter || guestUUIDFilter) && (
+        <div className="flex h-12 items-center justify-center w-full px-2 fixed top-12 z-30">
+          {userIdFilter && (
+            <button
+              onClick={clearUserIdFilter}
+              className="text-white bg-indigo-500 px-3 py-1 rounded-full flex items-center text-xs space-x-2 shadow-xl border-t w-40"
+            >
+              <span className="truncate">{userIdFilter}</span>
+              <div className="font-bold text-indigo-800">×</div>
+            </button>
+          )}
+          {guestUUIDFilter && (
+            <button
+              onClick={clearGuestUUIDFilter}
+              className="text-white bg-indigo-400 border px-3 py-1 rounded-full flex items-center text-xs space-x-2 w-40"
+            >
+              <span className="line-clamp-1">{guestUUIDFilter.slice(0, 6)}...</span>
+              <div className="font-bold text-indigo-800">×</div>
+            </button>
           )}
         </div>
-
-        {(userIdFilter || guestUUIDFilter) && (
-          <div className="max-w-48">
-            {userIdFilter && (
-              <button
-                onClick={clearUserIdFilter}
-                className="text-white bg-indigo-400 border px-3 py-1 rounded-full flex items-center text-xs space-x-2"
-              >
-                <span className="line-clamp-1">{userIdFilter.slice(0, 6)}...</span>
-                <div className="font-bold text-indigo-800">×</div>
-              </button>
-            )}
-            {guestUUIDFilter && (
-              <button
-                onClick={clearGuestUUIDFilter}
-                className="text-white bg-indigo-400 border px-3 py-1 rounded-full flex items-center text-xs space-x-2"
-              >
-                <span className="line-clamp-1">{guestUUIDFilter.slice(0, 6)}...</span>
-                <div className="font-bold text-indigo-800">×</div>
-              </button>
-            )}
-          </div>
-        )}
-      </div>
+      )}
 
       {loading ? (
         <div className="flex items-center justify-center h-48 w-full bg-white rounded-lg shadow-inner">

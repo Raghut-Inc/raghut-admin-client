@@ -19,7 +19,6 @@ export default function Admin({ user, setUser }) {
         </Routes>
       </div>
       <TabBar user={user} setUser={setUser} animate={true} />
-
     </>
   );
 }
