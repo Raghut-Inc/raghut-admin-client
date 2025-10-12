@@ -79,7 +79,7 @@ const Uploads = ({ user, setUser }) => {
         if (subjectFilter) params.set("subject", subjectFilter);
 
         const res = await fetch(
-          `${process.env.REACT_APP_API_URL}/solved-questions/admin-panel?${params.toString()}`,
+          `${process.env.REACT_APP_API_URL}/solved-questions/admin-panel?${params.toString()}&includeUserStats=true`,
           { credentials: "include" }
         );
         const data = await res.json();
