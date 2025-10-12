@@ -1,7 +1,6 @@
 import { useNavigate } from "react-router";
 import { GoogleLogin } from "@react-oauth/google";
 import axios from "axios";
-import NavBar from "../components/NavBar";
 
 export default function Login({ user, setUser }) {
   const navigate = useNavigate();
@@ -38,7 +37,6 @@ export default function Login({ user, setUser }) {
 
   return (
     <>
-      <NavBar user={user} setUser={setUser} animate={true} />
       <div
         style={{ minHeight: "calc(100svh - 7rem)" }}
         className="w-full h-full flex justify-center items-center flex-col p-6 relative"

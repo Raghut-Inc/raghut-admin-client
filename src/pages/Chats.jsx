@@ -1,6 +1,5 @@
 import React, { useEffect, useState } from "react";
 import { timeAgo } from "../utils/timeAgo";
-import NavBar from "../components/NavBar";
 import MessageMetaInfo from "../components/MessageMetaInfo";
 
 const AdminChats = ({ user, setUser }) => {
@@ -30,7 +29,6 @@ const AdminChats = ({ user, setUser }) => {
 
     return (
         <div>
-            <NavBar user={user} setUser={setUser} animate={true} title={"모든 채팅"} />
             <div className="max-w-5xl mx-auto font-sans">
                 {loading ? (
                     <p className="text-gray-500">Loading messages…</p>

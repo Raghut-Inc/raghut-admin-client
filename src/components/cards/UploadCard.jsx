@@ -5,7 +5,7 @@ import CardEngMCQ from "./CardEngMCQ";
 import CardMathMCQ from "./CardMathMCQ";
 import CardMathShortAnswer from "./CardMathShortAnswer";
 import { renderMixedMath } from "../../utils/latexUtils";
-import { FaCircleCheck, FaTrashCan } from "react-icons/fa6";
+import { FaAngleDown, FaAngleUp, FaCircleCheck, FaTrashCan } from "react-icons/fa6";
 import { MdError } from "react-icons/md";
 import { FiCopy } from "react-icons/fi";
 import UserCell from "../UserCell";
@@ -82,7 +82,7 @@ const UploadCard = ({ q, qIndex, onDelete, setFilter }) => {
 
     return (
         <div key={qIndex} className="max-w-xl overflow-hidden shadow-sm bg-white w-full">
-            <div className="flex flex-col w-full bg-gray-700 text-white text-xs">
+            <div className={`${q.status !== "processing" && q.validQuestionCount === 0 ? " bg-red-700" : "bg-gray-700"} flex flex-col w-full text-white text-xs`}>
                 <div className="flex w-full h-full">
                     {/* Image Preview */}
                     <div className="flex-shrink-0 max-w-48 flex justify-start items-center bg-black">
@@ -216,14 +216,8 @@ const UploadCard = ({ q, qIndex, onDelete, setFilter }) => {
 
                 {/* SUMMARY ROW */}
                 {q.status !== "processing" && !showDetails && (
-                    <div className="text-gray-800 rounded p-1">
+                    <div className="text-gray-800 p-1 flex w-full justify-between items-start bg-gray-700">
                         <div className="flex flex-wrap gap-1">
-                            <button
-                                onClick={() => setShowDetails((v) => !v)}
-                                className="bg-white/10 hover:bg-white/20 text-white text-xs font-semibold rounded px-2 py-1"
-                            >
-                                {showDetails ? "요약" : "펼치기"}
-                            </button>
                             {summaryItems.map((item, idx) => (
                                 <span
                                     key={idx}
@@ -247,6 +241,12 @@ const UploadCard = ({ q, qIndex, onDelete, setFilter }) => {
                                 </span>
                             ))}
                         </div>
+                        <button
+                            onClick={() => setShowDetails((v) => !v)}
+                            className="bg-white/10 hover:bg-white/20 text-white text-xs font-semibold rounded h-6 w-6 flex items-center justify-center flex-shrink-0"
+                        >
+                            <FaAngleDown />
+                        </button>
 
                     </div>
                 )}
@@ -263,20 +263,30 @@ const UploadCard = ({ q, qIndex, onDelete, setFilter }) => {
                                 <span className="ml-2 text-white italic">Processing...</span>
                             </div>
                         ) : (
-                            q.gptAnalyzed?.map((item, i) => {
-                                const key = `${qIndex}-${i}`;
-                                return (
-                                    <div key={key} className="bg-gray-50 p-1 relative">
-                                        <button
-                                            onClick={() => setShowDetails((v) => !v)}
-                                            className="bg-gray-500 text-white text-xs font-semibold rounded px-2 py-1"
-                                        >
-                                            닫기
-                                        </button>
-                                        {renderQuestionCard(item, key)}
+                            <div className="bg-white p-1">
+                                <div className="w-full flex justify-end">
+                                    <button
+                                        onClick={() => setShowDetails((v) => !v)}
+                                        className="bg-gray-500 text-white text-xs font-semibold rounded h-6 w-6 flex items-center justify-center flex-shrink-0"
+                                    >
+                                        <FaAngleUp />
+                                    </button>
+                                </div>
+                                {q.errorMessage && (
+                                    <div className="bg-yellow-50 border border-yellow-300 rounded-md p-3 mt-1">
+                                        <p className="font-semibold text-yellow-700">ERROR</p>
+                                        <p>{q.errorMessage}</p>
                                     </div>
-                                );
-                            })
+                                )}
+                                {q.gptAnalyzed?.map((item, i) => {
+                                    const key = `${qIndex}-${i}`;
+                                    return (
+                                        <div key={key} className="bg-white p-2 relative">
+                                            {renderQuestionCard(item, key)}
+                                        </div>
+                                    );
+                                })}
+                            </div>
                         )}
                     </div>
                 )}

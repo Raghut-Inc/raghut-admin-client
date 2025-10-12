@@ -5,11 +5,13 @@ import Analytics from "./Analytics";
 import Chats from "./Chats";
 import TabBar from "../components/TabBar";
 import Dev from "./Dev";
+import NavBar from "../components/NavBar";
 
 export default function Admin({ user, setUser }) {
   return (
     <>
-      <div className="min-h-screen space-y-6 pb-14">
+      <div className="min-h-screen pb-14">
+        <NavBar user={user} setUser={setUser} />
         <Routes>
           <Route path="/analytics" element={<Analytics user={user} setUser={setUser} />} />
           <Route path="/user" element={<Users user={user} setUser={setUser} />} />

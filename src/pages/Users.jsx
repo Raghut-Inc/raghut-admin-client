@@ -1,5 +1,5 @@
 import { useEffect, useState, useCallback } from 'react';
-import NavBar from '../components/NavBar';
+
 import { useNavigate } from 'react-router';
 
 const PAGE_SIZE = 20;
@@ -122,8 +122,10 @@ const Users = ({ user, setUser }) => {
 
     return (
         <div className="font-sans bg-gray-200 flex flex-col items-center">
-            <NavBar user={user} setUser={setUser} animate={true} title={"유저"} value1={`유저수 ${totalCount.toLocaleString()}`} value2={`페이지 ${page}`} />
-
+            <div className="flex space-x-1 p-2 w-full font-semibold items-center">
+                <p className="font-semibold w-full text-gray-500">유저목록</p>
+                <p className="text-xs text-indigo-600 flex-shrink-0">{totalCount.toLocaleString()}명</p>
+            </div>
             <div className="bg-white divide-y divide-gray-200 max-w-4xl w-full">
                 {users.map((user) => {
                     const createdAtDate = new Date(user.createdAt);

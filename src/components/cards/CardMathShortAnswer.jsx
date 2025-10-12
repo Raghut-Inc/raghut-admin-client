@@ -1,6 +1,6 @@
 import { renderMixedMath } from "../../utils/latexUtils";
 
-const CardMathShortAnswer = ({ questionItem, isOpen}) => {
+const CardMathShortAnswer = ({ questionItem, isOpen }) => {
     return (
         <div className="flex-1 text-xs text-black rounded overflow-hidden">
             <div className="relative w-full h-full">
@@ -22,7 +22,7 @@ const CardMathShortAnswer = ({ questionItem, isOpen}) => {
                 </div>
             </div>
 
-            {isOpen && (
+            {isOpen && !questionItem.error && (
                 <div className="mt-3 text-xs whitespace-pre-line border-t border-gray-300 pt-2">
                     <div>
                         <p className="font-semibold mb-1">풀이 단계 (Solution Steps):</p>
@@ -45,16 +45,13 @@ const CardMathShortAnswer = ({ questionItem, isOpen}) => {
                             )}
                         </div>
                     ))}
+                </div>
+            )}
 
-                    {!questionItem.isQuestionValid && (
-                        <div className="bg-yellow-50 border border-yellow-300 rounded-md p-3 mt-3">
-                            <p className="font-semibold text-yellow-700">
-                                문제 유효성 오류 (Invalid Question)
-                            </p>
-                            <p>이유: {questionItem.invalidReason}</p>
-                            <p>제안된 수정: {questionItem.suggestedFix}</p>
-                        </div>
-                    )}
+            {isOpen && questionItem.error && (
+                <div className="bg-yellow-50 border border-yellow-300 rounded-md p-3 mt-1">
+                    <p className="font-semibold text-yellow-700">ERROR</p>
+                    <p>{questionItem.error}</p>
                 </div>
             )}
         </div>

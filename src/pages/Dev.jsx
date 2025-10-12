@@ -1,5 +1,4 @@
 import React, { useState, useCallback, useRef, useEffect } from "react";
-import NavBar from "../components/NavBar";
 
 const PAGE_SIZE = 10;
 
@@ -184,7 +183,6 @@ const Dev = ({ user, setUser }) => {
 
     return (
         <div className="min-h-screen bg-gray-100 flex flex-col items-center w-full">
-            <NavBar user={user} setUser={setUser} animate={true} title="DEV" />
             <main className="w-full flex md:flex-row flex-col items-center md:items-start p-4 space-y-10 md:space-y-0 md:space-x-4">
                 {/* Upload form */}
                 <div className="w-full max-w-md bg-white rounded-lg shadow-md p-4">

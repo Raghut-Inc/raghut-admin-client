@@ -2,7 +2,6 @@ import { useEffect, useMemo, useState } from "react";
 import { LineChart } from "@mui/x-charts/LineChart";
 import FormControlLabel from "@mui/material/FormControlLabel";
 import Switch from "@mui/material/Switch";
-import NavBar from "../components/NavBar";
 import { timeAgo } from "../utils/timeAgo";
 
 // Colors + formatting
@@ -421,7 +420,6 @@ export default function Analytics({ user, setUser }) {
 
     return (
         <div className="w-full font-sans bg-gray-100 flex flex-col items-center min-h-screen">
-            <NavBar user={user} setUser={setUser} animate={true} title={"분석"} />
             <div className="max-w-4xl w-full mx-auto mt-4 mb-16 font-sans">
                 {/* ===== KPI Bar: DAU / WAU / MAU ===== */}
                 <div className="mx-4 mb-4">

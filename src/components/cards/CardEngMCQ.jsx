@@ -51,7 +51,7 @@ const CardEngMCQ = ({ questionItem, isOpen }) => {
 
 
             </div>
-            {isOpen && (
+            {isOpen && !questionItem.error && (
                 <div className="mt-3 text-xs whitespace-pre-line border-t border-gray-300 pt-2">
                     <p style={{ whiteSpace: 'pre-line' }}>
                         {renderMixedMath(formatExplanation(questionItem.explanation))}
@@ -68,6 +68,13 @@ const CardEngMCQ = ({ questionItem, isOpen }) => {
                             </ul>
                         </div>
                     )}
+                </div>
+            )}
+
+            {isOpen && questionItem.error && (
+                <div className="bg-yellow-50 border border-yellow-300 rounded-md p-3 mt-1">
+                    <p className="font-semibold text-yellow-700">ERROR</p>
+                    <p>{questionItem.error}</p>
                 </div>
             )}
         </div>
