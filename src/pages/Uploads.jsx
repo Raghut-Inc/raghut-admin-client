@@ -1,8 +1,12 @@
 import { useEffect, useState, useCallback, useMemo } from "react";
 import UploadCard from "../components/cards/UploadCard";
-import UploaderSummaryTable from "../components/cards/UploaderSummaryTable";
 import { useSearchParams } from "react-router"; // keep your existing import
 import NavBar from "../components/NavBar";
+import UserCell from "../components/UserCell";
+import { PiCardsThree } from "react-icons/pi";
+import { LiaIdCardSolid } from "react-icons/lia";
+import { BsThreeDots } from "react-icons/bs";
+import { FaCheck } from "react-icons/fa6";
 
 const PAGE_SIZE = 25;
 
@@ -39,13 +43,13 @@ const Uploads = ({ user, setUser }) => {
 
   // SUMMARY STATE
   const [summaryRows, setSummaryRows] = useState([]);
-  const [summaryTotal, setSummaryTotal] = useState(0);
 
   const [searchParams, setSearchParams] = useSearchParams();
 
   const userIdFilter = searchParams.get("userId") || "";
   const guestUUIDFilter = searchParams.get("guestUUID") || "";
   const mode = (searchParams.get("mode") || "cards").toLowerCase(); // 'cards' | 'summary'
+  const status = (searchParams.get("status") || "").toLowerCase(); // 'cards' | 'summary'
 
   // New filters
   const statusFilterRaw = searchParams.get("status") || "";
@@ -87,7 +91,7 @@ const Uploads = ({ user, setUser }) => {
         if (data.success) {
           setTotalCount(data.totalCount);
           setTotalQuestions(data.totalQuestions);
-          console.log(data.questions)
+          console.log("✅ Questions:", data.questions);
           if (pageToLoad === 1) setQuestions(data.questions);
           else setQuestions((prev) => [...prev, ...data.questions]);
           setHasMore(data.questions.length === PAGE_SIZE);
@@ -104,7 +108,7 @@ const Uploads = ({ user, setUser }) => {
     [userIdFilter, guestUUIDFilter, statusFilter, subjectFilter, mode]
   );
 
-  // ---------------- SUMMARY (unchanged) ----------------
+  // ---------------- SUMMARY (updated) ----------------
   const loadSummary = useCallback(
     async (pageToLoad) => {
       if (mode !== "summary") return; // guard
@@ -122,14 +126,24 @@ const Uploads = ({ user, setUser }) => {
         );
         const data = await res.json();
 
-        if (data.success) {
-          setSummaryTotal(data.total);
-          if (pageToLoad === 1) setSummaryRows(data.rows);
-          else setSummaryRows((prev) => [...prev, ...data.rows]);
-          setHasMore(data.rows.length === PAGE_SIZE);
-        } else {
-          console.error("Failed to load summary");
+        if (!data.success) {
+          console.error("⚠️ Failed to load summary:", data.error);
+          return;
         }
+
+        console.log("✅ Summary users:", data.users);
+
+        // 🔹 Update list of users
+        const newUsers = data.users || [];
+
+        if (pageToLoad === 1) {
+          setSummaryRows(newUsers);
+        } else {
+          setSummaryRows((prev) => [...prev, ...newUsers]);
+        }
+
+        // 🔹 Update pagination flags
+        setHasMore(newUsers.length === PAGE_SIZE);
       } catch (err) {
         console.error("❌ Summary API error:", err);
       } finally {
@@ -213,7 +227,7 @@ const Uploads = ({ user, setUser }) => {
         np.delete("userId");
       }
       // preserve current mode
-      if (mode !== "cards") np.set("mode", mode);
+      if (mode !== "cards") np.set("mode", "cards");
     });
     setPage(1);
   };
@@ -275,26 +289,54 @@ const Uploads = ({ user, setUser }) => {
         value2={`문제 ${totalQuestions}`}
       />
 
+      {/* Mode toggle */}
+      <div className="flex-shrink-0 flex justify-center z-30 h-12 items-center overflow-hidden fixed bottom-2 shadow-xl border-t rounded-full bg-white/60 backdrop-blur-xl">
+        <button
+          onClick={() => setMode("cards")}
+          className={`px-3 h-full w-16 flex items-center justify-center text-xs ${mode === "cards" ? "bg-indigo-600 text-white" : "text-gray-700"
+            }`}
+        >
+          <PiCardsThree className="w-6 h-6" />
+        </button>
+        <button
+          onClick={() => setMode("summary")}
+          className={`px-3 h-full w-16 flex items-center justify-center text-xs ${mode === "summary" ? "bg-indigo-600 text-white" : "text-gray-700"
+            }`}
+        >
+          <LiaIdCardSolid className="w-6 h-6" />
+        </button>
+      </div>
+
+      {/* Status toggle */}
+      {mode === "cards" && (
+        <div className="flex-shrink-0 flex justify-center z-30 h-10 items-center overflow-hidden fixed bottom-16 space-x-1">
+          <button
+            onClick={() => applyStatus("")}
+            className={`px-3 h-full w-10 flex items-center justify-center text-xs rounded-full shadow-xl border-t ${status === "" ? "bg-indigo-600 text-white" : " bg-white/60 backdrop-blur-xl"
+              }`}
+          >
+            ALL
+          </button>
+          <button
+            onClick={() => applyStatus("done")}
+            className={`px-3 h-full w-10 flex items-center justify-center text-xs rounded-full shadow-xl border-t ${status === "done" ? "bg-indigo-600 text-white" : " bg-white/60 backdrop-blur-xl"
+              }`}
+          >
+            <FaCheck />
+          </button>
+          <button
+            onClick={() => applyStatus("processing")}
+            className={`px-3 h-full w-10 flex items-center justify-center text-xs rounded-full shadow-xl border-t ${status === "processing" ? "bg-indigo-600 text-white" : "bg-white/60 backdrop-blur-xl"
+              }`}
+          >
+            <BsThreeDots />
+          </button>
+        </div>
+      )}
+
       {/* Controls row */}
       <div className="flex justify-between h-12 items-center w-full px-2 sticky top-14 z-20 bg-white backdrop-blur">
         <div className="flex items-center gap-2">
-          {/* Mode toggle */}
-          <div className="flex rounded-md overflow-hidden gap-1">
-            <button
-              onClick={() => setMode("cards")}
-              className={`px-3 py-1 text-xs rounded-lg border ${mode === "cards" ? "bg-indigo-600 text-white" : "bg-white text-gray-700"
-                }`}
-            >
-              Cards
-            </button>
-            <button
-              onClick={() => setMode("summary")}
-              className={`px-3 py-1 text-xs rounded-lg border ${mode === "summary" ? "bg-indigo-600 text-white" : "bg-white text-gray-700"
-                }`}
-            >
-              Recent
-            </button>
-          </div>
 
           {/* Filters (cards only) */}
           {mode === "cards" && (
@@ -360,26 +402,25 @@ const Uploads = ({ user, setUser }) => {
         <div className="w-full max-w-4xl flex flex-col items-center">
           {mode === "summary" ? (
             <>
-              <UploaderSummaryTable
-                rows={summaryRows}
-                total={summaryTotal}
-                onFilter={(row) => {
-                  updateParams((np) => {
-                    np.set("page", "1");
-                    np.set("pageSize", String(PAGE_SIZE));
-                    if (row.kind === "user" && row.userId) {
-                      np.set("userId", row.userId);
-                      np.delete("guestUUID");
-                    } else if (row.kind === "guest" && row.guestUUID) {
-                      np.set("guestUUID", row.guestUUID);
-                      np.delete("userId");
-                    }
-                    // force cards view
-                    np.delete("mode"); // cards is default
-                  });
-                  setPage(1);
-                }}
-              />
+              {summaryRows.map((row) => (
+                <div className="bg-gray-800 w-full mb-1">
+                  <UserCell
+                    key={row.userId}
+                    user={row.user}
+                    stats={{
+                      totalUploads: row.uploads,
+                      totalQuestions: row.totalQuestions,
+                      todayUploads: row.todayUploads,
+                      todayQuestions: row.todayQuestions,
+                      activeDays: row.activeDays,
+                      firstAt: row.firstAt,
+                      lastAt: row.lastAt,
+                      avgProcessingTimeMs: row.avgProcessingTimeMs,
+                    }}
+                    onFilter={setFilter}
+                  />
+                </div>
+              ))}
               {loadingMore && <p className="text-center py-4 text-gray-600">Loading more...</p>}
               {!hasMore && <p className="text-center text-sm py-4 text-gray-600">🔚🔚🔚 No more results 🔚🔚🔚</p>}
             </>

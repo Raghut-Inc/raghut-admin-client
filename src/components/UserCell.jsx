@@ -63,36 +63,131 @@ const UserCell = ({ user, q, stats = {}, compact = false, onFilter }) => {
         return (
             <div
                 onClick={handleFilter}
-                className="flex flex-col text-xs cursor-pointer hover:bg-gray-50 transition rounded px-2 py-1"
+                className="flex flex-col gap-1 text-xs cursor-pointer transition px-2 py-1.5 bg-white"
                 title="유저 업로드 보기"
             >
-                <div className="flex items-center gap-1">
+                {/* Top Row — Avatar, Name, Lang */}
+                <div className="flex items-center gap-2">
                     {u?.profileImageUrl && (
                         <img
                             src={u.profileImageUrl}
                             alt=""
-                            className="w-4 h-4 bg-gray-100 rounded-full object-cover"
+                            className="w-5 h-5 rounded-full object-cover border border-gray-300"
                         />
                     )}
-                    <span className="font-semibold text-gray-800">
-                        {u?.name || "이름없음"}
-                    </span>
-                    {u?.preferredLanguage && (
-                        <span>{u.preferredLanguage === "ko" ? "🇰🇷" : "🇺🇸"}</span>
+
+                    <div className="flex flex-1 min-w-0 space-x-2">
+                        <div className="flex items-center gap-1">
+                            <span className="font-semibold text-gray-800 truncate">
+                                {u.preferredLanguage === "ko" ? "🇰🇷" : "🇺🇸"}
+                                {u?.name || "이름없음"}
+                            </span>
+                        </div>
+                        <div className="text-gray-400 text-[10px] truncate">
+                            @{u?.username}
+                        </div>
+                    </div>
+                </div>
+
+                <div className="flex flex-wrap gap-1.5 items-center">
+                    {stats?.totalUploads >= 2 && (
+                        <span className="inline-flex items-center gap-1 px-2 py-[2px] text-[10px] font-semibold rounded-lg bg-green-500/80 text-white shadow-sm">
+                            <span className="text-xs">📸</span>업로드 2번+
+                        </span>
+                    )}
+
+                    {stats?.activeDays >= 2 && (
+                        <span className="inline-flex items-center gap-1 px-2 py-[2px] text-[10px] font-semibold rounded-lg bg-blue-500/80 text-white shadow-sm">
+                            <span className="text-xs">📅</span>이용 2일+
+                        </span>
+                    )}
+
+                    {u?.userType !== "other" && (
+                        <>
+                            <span
+                                className={`inline-flex items-center gap-1 px-2 py-[2px] text-[10px] font-semibold rounded-lg shadow-sm text-black ${u.userType === "study"
+                                    ? "bg-indigo-500/80"
+                                    : u.userType === "homework"
+                                        ? "bg-amber-500/80"
+                                        : "bg-gray-500/80"
+                                    }`}
+                            >
+                                <span className="text-xs">
+                                    {u.userType === "study"
+                                        ? "📖"
+                                        : u.userType === "homework"
+                                            ? "📝"
+                                            : "🎯"}
+                                </span>
+                                {u.userType === "study"
+                                    ? "공부러"
+                                    : u.userType === "homework"
+                                        ? "숙제러"
+                                        : "기타"}
+                            </span>
+
+                            {/* ✅ Reset button */}
+                            <button
+                                onClick={onResetClick}
+                                disabled={updatingType}
+                                className="ml-1 px-1.5 py-[1px] text-[9px] rounded-full bg-red-500/20 text-red-500 border border-red-500/10 transition"
+                            >
+                                X
+                            </button>
+                        </>
+                    )}
+
+                    {/* Only show select if userType is "other" or missing */}
+                    {(u?.userType === "other" || !u?.userType) && (
+                        <div onClick={(e) => e.stopPropagation()}>
+                            <select
+                                disabled={updatingType}
+                                onChange={onSelectChange}
+                                defaultValue=""
+                                className="text-[10px] px-2 py-[2px] rounded-lg bg-white/20 text-black font-semibold outline-none cursor-pointer border border-white/10 hover:bg-white/30"
+                            >
+                                <option value="" disabled>
+                                    🔧 유저 유형
+                                </option>
+                                <option value="study">📘 공부러</option>
+                                <option value="homework">📚 숙제러</option>
+                            </select>
+                        </div>
+                    )}
+
+                    {updateMsg && (
+                        <span className="text-[10px] text-gray-300 ml-1">{updateMsg}</span>
                     )}
                 </div>
 
-                <div className="text-gray-400 font-mono truncate">{u?._id}</div>
-
-                {(stats?.totalUploads || stats?.todayUploads) && (
-                    <div className="text-gray-500 flex gap-2 mt-1">
-                        <span>총 {stats.totalUploads || 0} 업로드</span>
-                        <span>오늘 {stats.todayUploads || 0}</span>
+                {/* Bottom Row — Stats */}
+                <div className="flex items-center justify-between text-[10px] text-gray-600">
+                    <div className="flex items-center gap-2">
+                        <span className="flex items-center gap-1">
+                            📸 {stats?.totalUploads || 0}회
+                        </span>
+                        <span className="flex items-center gap-1">
+                            🕓 {stats?.activeDays || 0}일
+                        </span>
+                        {stats?.lastAt && (
+                            <span className="text-gray-400">· {timeAgo(stats.lastAt)}</span>
+                        )}
                     </div>
+                </div>
+
+                {/* Reset Button */}
+                {(u?.userType === "study" || u?.userType === "homework") && (
+                    <button
+                        onClick={onResetClick}
+                        disabled={updatingType}
+                        className="self-start mt-1 text-[9px] px-2 py-[1px] bg-red-100 text-red-500 rounded-full border border-red-200 hover:bg-red-200/80 transition"
+                    >
+                        기타로
+                    </button>
                 )}
 
-                {stats?.lastAt && (
-                    <div className="text-gray-400">마지막: {timeAgo(stats.lastAt)}</div>
+                {updateMsg && (
+                    <div className="text-[10px] text-gray-500 mt-0.5">{updateMsg}</div>
                 )}
             </div>
         );
@@ -102,7 +197,7 @@ const UserCell = ({ user, q, stats = {}, compact = false, onFilter }) => {
     return (
         <div
             onClick={handleFilter}
-            className="transition text-xs text-white space-y-2 p-3 cursor-pointer"
+            className="transition text-xs text-white space-y-2 p-2 cursor-pointer"
             title="클릭 시 해당 유저로 필터"
         >
             {/* ---- Header ---- */}
