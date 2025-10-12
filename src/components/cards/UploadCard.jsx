@@ -210,7 +210,7 @@ const UploadCard = ({ q, qIndex, onDelete, setFilter }) => {
                     </div>
                 </div>
                 <div className="bg-gray-800">
-                    <UserCell q={q} onFilter={setFilter} stats={q.userId.stats} />
+                    <UserCell user={q.userId} onFilter={setFilter} stats={q.userId?.stats || {}} />
                 </div>
 
 

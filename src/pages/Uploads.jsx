@@ -356,9 +356,8 @@ const Uploads = ({ user, setUser }) => {
           {mode === "summary" ? (
             <>
               {summaryRows.map((row) => (
-                <div className="bg-gray-800 w-full mb-1">
+                <div key={row.user._id} className="bg-gray-800 w-full mb-1">
                   <UserCell
-                    key={row.userId}
                     user={row.user}
                     stats={{
                       totalUploads: row.uploads,
