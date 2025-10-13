@@ -493,7 +493,7 @@ export default function Analytics({ user, setUser }) {
     ];
 
     const Subheader = ({ title = "" }) => <h3 className="text-xs font-semibold text-gray-500 mb-3">{title}</h3>
-    
+
     return (
         <div className="w-full font-sans bg-gray-100 flex flex-col items-center min-h-screen">
             <div className="max-w-4xl w-full mx-auto mb-16 font-sans">
@@ -501,7 +501,7 @@ export default function Analytics({ user, setUser }) {
                 <div className="flex space-x-1 p-2 w-full font-semibold items-center max-w-4xl">
                     <p className="font-semibold w-full text-gray-500">활성 지표</p>
                     <p className="text-xs text-indigo-600 flex-shrink-0">
-                        TZ: {TZ}
+                        TZ: {TZ} (9시 리셋)
                     </p>
                 </div>
 
@@ -538,28 +538,20 @@ export default function Analytics({ user, setUser }) {
                         </div>
 
                         {/* Rolling Mode */}
-                        <div className="rounded-lg bg-white p-4">
+                        <div className="rounded-lg bg-gray-50 px-4 py-2">
                             <Subheader title="📈 Rolling (최근 7·30일)" />
                             <div className="grid grid-cols-3 gap-3">
                                 <div>
                                     <div className="text-xs text-gray-500 mb-1">DAU</div>
-                                    <div className="text-2xl font-semibold">{rollingStats?.dau ?? '-'}</div>
-                                    <div className="mt-1 text-xs text-gray-500">
-                                        D/W <b>{pct(rollingStats?.ratios?.dauWau || 0)}</b><br />
-                                        D/M <b>{pct(rollingStats?.ratios?.dauMau || 0)}</b>
-                                    </div>
+                                    <div className="text-lg font-semibold text-gray-500">{rollingStats?.dau ?? '-'}</div>
                                 </div>
                                 <div>
                                     <div className="text-xs text-gray-500 mb-1">WAU</div>
-                                    <div className="text-2xl font-semibold">{rollingStats?.wau ?? '-'}</div>
-                                    <div className="mt-1 text-xs text-gray-500">
-                                        W/M <b>{pct(rollingStats?.ratios?.wauMau || 0)}</b>
-                                    </div>
+                                    <div className="text-lg font-semibold text-gray-500">{rollingStats?.wau ?? '-'}</div>
                                 </div>
                                 <div>
                                     <div className="text-xs text-gray-500 mb-1">MAU</div>
-                                    <div className="text-2xl font-semibold">{rollingStats?.mau ?? '-'}</div>
-                                    <div className="mt-1 text-xs text-gray-500">30일</div>
+                                    <div className="text-lg font-semibold text-gray-500">{rollingStats?.mau ?? '-'}</div>
                                 </div>
                             </div>
                         </div>
@@ -602,24 +594,24 @@ export default function Analytics({ user, setUser }) {
                         </div>
 
                         {/* Rolling Mode */}
-                        <div className="rounded-lg bg-white p-4">
+                        <div className="rounded-lg bg-gray-50 px-4 py-2">
                             <Subheader title="📈 Rolling (최근 7·30일)" />
                             <div className="grid grid-cols-3 gap-3">
                                 <div>
                                     <div className="text-xs text-gray-500 mb-1">최근 1일</div>
-                                    <div className="text-2xl font-semibold">
+                                    <div className="text-lg text-gray-500 font-semibold">
                                         {rollingSignup?.today?.toLocaleString?.() ?? '-'}
                                     </div>
                                 </div>
                                 <div>
                                     <div className="text-xs text-gray-500 mb-1">최근 7일</div>
-                                    <div className="text-2xl font-semibold">
+                                    <div className="text-lg text-gray-500 font-semibold">
                                         {rollingSignup?.thisWeek?.toLocaleString?.() ?? '-'}
                                     </div>
                                 </div>
                                 <div>
                                     <div className="text-xs text-gray-500 mb-1">최근 30일</div>
-                                    <div className="text-2xl font-semibold">
+                                    <div className="text-lg text-gray-500 font-semibold">
                                         {rollingSignup?.thisMonth?.toLocaleString?.() ?? '-'}
                                     </div>
                                 </div>
@@ -642,25 +634,25 @@ export default function Analytics({ user, setUser }) {
                             <div className="grid grid-cols-4 gap-3">
                                 <div>
                                     <div className="text-xs text-gray-500 mb-1">공부러</div>
-                                    <div className="text-2xl font-semibold">
+                                    <div className="text-xl font-semibold">
                                         {userTypeSummary.breakdown?.study?.toLocaleString?.() ?? '–'}
                                     </div>
                                 </div>
                                 <div>
                                     <div className="text-xs text-gray-500 mb-1">숙제러</div>
-                                    <div className="text-2xl font-semibold">
+                                    <div className="text-xl font-semibold">
                                         {userTypeSummary.breakdown?.homework?.toLocaleString?.() ?? '–'}
                                     </div>
                                 </div>
                                 <div>
                                     <div className="text-xs text-gray-500 mb-1">반반</div>
-                                    <div className="text-2xl font-semibold">
+                                    <div className="text-xl font-semibold">
                                         {userTypeSummary.breakdown?.half?.toLocaleString?.() ?? '–'}
                                     </div>
                                 </div>
                                 <div>
                                     <div className="text-xs text-gray-500 mb-1">미확인</div>
-                                    <div className="text-2xl font-semibold">
+                                    <div className="text-xl font-semibold">
                                         {userTypeSummary.breakdown?.other?.toLocaleString?.() ?? '–'}
                                     </div>
                                 </div>
@@ -671,7 +663,7 @@ export default function Analytics({ user, setUser }) {
                         </div>
 
                         {/* Percentage Ratios */}
-                        <div className="rounded-lg bg-white p-4">
+                        <div className="rounded-lg bg-gray-50 px-4 py-2">
                             <Subheader title="📊 사용자 비율 (%)" />
                             <div className="grid grid-cols-4 gap-3">
                                 {[
@@ -688,7 +680,7 @@ export default function Analytics({ user, setUser }) {
                                     return (
                                         <div key={key}>
                                             <div className="text-xs text-gray-500 mb-1">{label}</div>
-                                            <div className="text-2xl font-semibold">{pct}%</div>
+                                            <div className="text-gray-500 font-semibold">{pct}%</div>
                                         </div>
                                     );
                                 })}
