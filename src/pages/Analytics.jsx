@@ -49,17 +49,23 @@ export default function Analytics({ user, setUser }) {
     const [signupsOverTime, setSignupsOverTime] = useState([]);
     const [hourlyUploaders48h, setHourlyUploaders48h] = useState([]);
 
+    const [calendarStats, setCalendarStats] = useState(null);
+    const [rollingStats, setRollingStats] = useState(null);
+
+    const [calendarSignup, setCalendarSignup] = useState(null);
+    const [rollingSignup, setRollingSignup] = useState(null);
+
+    const [userTypeSummary, setUserTypeSummary] = useState({
+        totalUsers: 0,
+        breakdown: {},
+        rows: [],
+    });
+
+
     // ONE global toggle for all cumulative series
     const [useCumulativeAll, setUseCumulativeAll] = useState(false);
 
     const [error, setError] = useState(null);
-
-    // ---- DAU/WAU/MAU KPI ----
-    const [engagementMode, setEngagementMode] = useState("rolling"); // 'rolling' | 'calendar'
-    const [dau, setDau] = useState(0);
-    const [wau, setWau] = useState(0);
-    const [mau, setMau] = useState(0);
-    const [ratios, setRatios] = useState({ dauWau: 0, dauMau: 0, wauMau: 0 });
 
     // ---- Daily uploaders (users only) ----
     const TZ = "UTC";
@@ -135,15 +141,83 @@ export default function Analytics({ user, setUser }) {
 
     // Fetch DAU/WAU/MAU
     useEffect(() => {
-        fetchJson(`${API_BASE}/dau-wau-mau?mode=${engagementMode}&tz=${TZ}`)
-            .then((r) => {
-                setDau(r.dau || 0);
-                setWau(r.wau || 0);
-                setMau(r.mau || 0);
-                setRatios(r.ratios || { dauWau: 0, dauMau: 0, wauMau: 0 });
-            })
-            .catch((e) => setError(e.message));
-    }, [engagementMode]);
+        const fetchBoth = async () => {
+            try {
+                const [calendarRes, rollingRes] = await Promise.all([
+                    fetchJson(`${API_BASE}/dau-wau-mau?mode=calendar&tz=${TZ}`),
+                    fetchJson(`${API_BASE}/dau-wau-mau?mode=rolling&tz=${TZ}`),
+                ]);
+
+                setCalendarStats({
+                    dau: calendarRes.dau || 0,
+                    wau: calendarRes.wau || 0,
+                    mau: calendarRes.mau || 0,
+                    ratios: calendarRes.ratios || {},
+                });
+
+                setRollingStats({
+                    dau: rollingRes.dau || 0,
+                    wau: rollingRes.wau || 0,
+                    mau: rollingRes.mau || 0,
+                    ratios: rollingRes.ratios || {},
+                });
+            } catch (err) {
+                setError(err.message);
+            }
+        };
+
+        fetchBoth();
+    }, [TZ]);
+
+    // Fetch signup summary (today / this week / this month)
+    useEffect(() => {
+        const fetchSignupSummary = async () => {
+            try {
+                const [calendarRes, rollingRes] = await Promise.all([
+                    fetchJson(`${API_BASE}/signup-summary?mode=calendar&tz=${TZ}`),
+                    fetchJson(`${API_BASE}/signup-summary?mode=rolling&tz=${TZ}`),
+                ]);
+
+                setCalendarSignup({
+                    today: calendarRes.today || 0,
+                    thisWeek: calendarRes.thisWeek || 0,
+                    thisMonth: calendarRes.thisMonth || 0,
+                });
+
+                setRollingSignup({
+                    today: rollingRes.today || 0,
+                    thisWeek: rollingRes.thisWeek || 0,
+                    thisMonth: rollingRes.thisMonth || 0,
+                });
+            } catch (err) {
+                setError(err.message);
+            }
+        };
+
+        fetchSignupSummary();
+    }, [TZ]);
+
+    useEffect(() => {
+        const fetchUserTypeSummary = async () => {
+            try {
+                const res = await fetchJson(`${API_BASE}/user-type-summary`);
+                if (res.success) {
+                    setUserTypeSummary({
+                        totalUsers: res.totalUsers || 0,
+                        breakdown: res.breakdown || {},
+                        rows: res.rows || [],
+                    });
+                } else {
+                    console.error("Failed to load user-type summary:", res.error);
+                }
+            } catch (err) {
+                console.error("Error fetching user-type summary:", err);
+            }
+        };
+
+        fetchUserTypeSummary();
+    }, []);
+
 
     // Active uploaders (users only) time series
     useEffect(() => {
@@ -418,44 +492,206 @@ export default function Analytics({ user, setUser }) {
             },
     ];
 
+    const Subheader = ({ title = "" }) => <h3 className="text-xs font-semibold text-gray-500 mb-3">{title}</h3>
+    
     return (
         <div className="w-full font-sans bg-gray-100 flex flex-col items-center min-h-screen">
-            <div className="max-w-4xl w-full mx-auto mt-4 mb-16 font-sans">
-                {/* ===== KPI Bar: DAU / WAU / MAU ===== */}
-                <div className="mx-4 mb-4">
-                    <div className="flex items-center justify-between mb-2">
-                        <h2 className="text-lg font-semibold">활성 지표</h2>
-                        <div className="flex items-center gap-2 text-xs">
-                            <select
-                                className="px-2 py-1 border border-gray-300 rounded text-xs outline-none"
-                                value={engagementMode}
-                                onChange={(e) => setEngagementMode(e.target.value)}
-                            >
-                                <option value="rolling">Rolling</option>
-                                <option value="calendar">Calendar</option>
-                            </select>
-                            <span className="text-gray-500 ml-2">TZ: {TZ}</span>
-                        </div>
-                    </div>
+            <div className="max-w-4xl w-full mx-auto mb-16 font-sans">
+                {/* --- HEADER --- */}
+                <div className="flex space-x-1 p-2 w-full font-semibold items-center max-w-4xl">
+                    <p className="font-semibold w-full text-gray-500">활성 지표</p>
+                    <p className="text-xs text-indigo-600 flex-shrink-0">
+                        TZ: {TZ}
+                    </p>
+                </div>
 
-                    <div className="grid grid-cols-1 sm:grid-cols-3 gap-3">
-                        <div className="rounded-2xl border border-gray-200 bg-white p-4 shadow-sm">
-                            <div className="text-xs text-gray-500 mb-1">DAU</div>
-                            <div className="text-3xl font-semibold">{dau}</div>
-                            <div className="mt-2 text-xs text-gray-500">
-                                DAU/WAU <b>{pct(ratios.dauWau || 0)}</b> · DAU/MAU <b>{pct(ratios.dauMau || 0)}</b>
+                {/* ===== KPI Bar: DAU / WAU / MAU ===== */}
+                <div className="mx-2 mb-4">
+                    {/* ==== GRID: Rolling vs Calendar ==== */}
+                    <div className="grid grid-cols-1 md:grid-cols-2 gap-2">
+
+                        {/* Calendar Mode */}
+                        <div className="rounded-lg bg-white p-4">
+                            <Subheader title="📅 Calendar (이번 주·달)" />
+                            <div className="grid grid-cols-3 gap-3">
+                                <div>
+                                    <div className="text-xs text-gray-500 mb-1">DAU</div>
+                                    <div className="text-2xl font-semibold">{calendarStats?.dau ?? '-'}</div>
+                                    <div className="mt-1 text-xs text-gray-500">
+                                        D/W <b>{pct(calendarStats?.ratios?.dauWau || 0)}</b><br />
+                                        D/M <b>{pct(calendarStats?.ratios?.dauMau || 0)}</b>
+                                    </div>
+                                </div>
+                                <div>
+                                    <div className="text-xs text-gray-500 mb-1">WAU</div>
+                                    <div className="text-2xl font-semibold">{calendarStats?.wau ?? '-'}</div>
+                                    <div className="mt-1 text-xs text-gray-500">
+                                        W/M <b>{pct(calendarStats?.ratios?.wauMau || 0)}</b>
+                                    </div>
+                                </div>
+                                <div>
+                                    <div className="text-xs text-gray-500 mb-1">MAU</div>
+                                    <div className="text-2xl font-semibold">{calendarStats?.mau ?? '-'}</div>
+                                    <div className="mt-1 text-xs text-gray-500">이달</div>
+                                </div>
                             </div>
                         </div>
-                        <div className="rounded-2xl border border-gray-200 bg-white p-4 shadow-sm">
-                            <div className="text-xs text-gray-500 mb-1">WAU</div>
-                            <div className="text-3xl font-semibold">{wau}</div>
-                            <div className="mt-2 text-xs text-gray-500">WAU/MAU <b>{pct(ratios.wauMau || 0)}</b></div>
+
+                        {/* Rolling Mode */}
+                        <div className="rounded-lg bg-white p-4">
+                            <Subheader title="📈 Rolling (최근 7·30일)" />
+                            <div className="grid grid-cols-3 gap-3">
+                                <div>
+                                    <div className="text-xs text-gray-500 mb-1">DAU</div>
+                                    <div className="text-2xl font-semibold">{rollingStats?.dau ?? '-'}</div>
+                                    <div className="mt-1 text-xs text-gray-500">
+                                        D/W <b>{pct(rollingStats?.ratios?.dauWau || 0)}</b><br />
+                                        D/M <b>{pct(rollingStats?.ratios?.dauMau || 0)}</b>
+                                    </div>
+                                </div>
+                                <div>
+                                    <div className="text-xs text-gray-500 mb-1">WAU</div>
+                                    <div className="text-2xl font-semibold">{rollingStats?.wau ?? '-'}</div>
+                                    <div className="mt-1 text-xs text-gray-500">
+                                        W/M <b>{pct(rollingStats?.ratios?.wauMau || 0)}</b>
+                                    </div>
+                                </div>
+                                <div>
+                                    <div className="text-xs text-gray-500 mb-1">MAU</div>
+                                    <div className="text-2xl font-semibold">{rollingStats?.mau ?? '-'}</div>
+                                    <div className="mt-1 text-xs text-gray-500">30일</div>
+                                </div>
+                            </div>
                         </div>
-                        <div className="rounded-2xl border border-gray-200 bg-white p-4 shadow-sm">
-                            <div className="text-xs text-gray-500 mb-1">MAU</div>
-                            <div className="text-3xl font-semibold">{mau}</div>
-                            <div className="mt-2 text-xs text-gray-500">
-                                {engagementMode === "rolling" ? "최근 30일" : "이번 달"} 활성 사용자
+
+                    </div>
+                </div>
+
+                {/* --- HEADER --- */}
+                <div className="flex space-x-1 p-2 w-full font-semibold items-center max-w-4xl">
+                    <p className="font-semibold w-full text-gray-500">신규 유저 지표</p>
+                </div>
+
+                {/* ===== KPI Bar: Signups ===== */}
+                <div className="mx-2 mb-4">
+                    {/* ==== GRID: Rolling vs Calendar ==== */}
+                    <div className="grid grid-cols-1 md:grid-cols-2 gap-2">
+                        {/* Calendar Mode */}
+                        <div className="rounded-lg bg-white p-4">
+                            <Subheader title="📅 Calendar (이번 주·달)" />
+                            <div className="grid grid-cols-3 gap-3">
+                                <div>
+                                    <div className="text-xs text-gray-500 mb-1">오늘</div>
+                                    <div className="text-2xl font-semibold">
+                                        {calendarSignup?.today?.toLocaleString?.() ?? '-'}
+                                    </div>
+                                </div>
+                                <div>
+                                    <div className="text-xs text-gray-500 mb-1">이번 주</div>
+                                    <div className="text-2xl font-semibold">
+                                        {calendarSignup?.thisWeek?.toLocaleString?.() ?? '-'}
+                                    </div>
+                                </div>
+                                <div>
+                                    <div className="text-xs text-gray-500 mb-1">이번 달</div>
+                                    <div className="text-2xl font-semibold">
+                                        {calendarSignup?.thisMonth?.toLocaleString?.() ?? '-'}
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+
+                        {/* Rolling Mode */}
+                        <div className="rounded-lg bg-white p-4">
+                            <Subheader title="📈 Rolling (최근 7·30일)" />
+                            <div className="grid grid-cols-3 gap-3">
+                                <div>
+                                    <div className="text-xs text-gray-500 mb-1">최근 1일</div>
+                                    <div className="text-2xl font-semibold">
+                                        {rollingSignup?.today?.toLocaleString?.() ?? '-'}
+                                    </div>
+                                </div>
+                                <div>
+                                    <div className="text-xs text-gray-500 mb-1">최근 7일</div>
+                                    <div className="text-2xl font-semibold">
+                                        {rollingSignup?.thisWeek?.toLocaleString?.() ?? '-'}
+                                    </div>
+                                </div>
+                                <div>
+                                    <div className="text-xs text-gray-500 mb-1">최근 30일</div>
+                                    <div className="text-2xl font-semibold">
+                                        {rollingSignup?.thisMonth?.toLocaleString?.() ?? '-'}
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+
+                {/* --- HEADER --- */}
+                <div className="flex space-x-1 p-2 w-full font-semibold items-center max-w-4xl">
+                    <p className="font-semibold w-full text-gray-500">사용자 유형 지표</p>
+                </div>
+
+                {/* ===== KPI Bar: User Types ===== */}
+                <div className="mx-2 mb-4">
+                    <div className="grid grid-cols-1 md:grid-cols-2 gap-2">
+                        {/* Absolute Counts */}
+                        <div className="rounded-lg bg-white p-4">
+                            <Subheader title="👥 유형별 사용자 수" />
+                            <div className="grid grid-cols-4 gap-3">
+                                <div>
+                                    <div className="text-xs text-gray-500 mb-1">공부러</div>
+                                    <div className="text-2xl font-semibold">
+                                        {userTypeSummary.breakdown?.study?.toLocaleString?.() ?? '–'}
+                                    </div>
+                                </div>
+                                <div>
+                                    <div className="text-xs text-gray-500 mb-1">숙제러</div>
+                                    <div className="text-2xl font-semibold">
+                                        {userTypeSummary.breakdown?.homework?.toLocaleString?.() ?? '–'}
+                                    </div>
+                                </div>
+                                <div>
+                                    <div className="text-xs text-gray-500 mb-1">반반</div>
+                                    <div className="text-2xl font-semibold">
+                                        {userTypeSummary.breakdown?.half?.toLocaleString?.() ?? '–'}
+                                    </div>
+                                </div>
+                                <div>
+                                    <div className="text-xs text-gray-500 mb-1">미확인</div>
+                                    <div className="text-2xl font-semibold">
+                                        {userTypeSummary.breakdown?.other?.toLocaleString?.() ?? '–'}
+                                    </div>
+                                </div>
+                            </div>
+                            <div className="mt-3 text-xs text-gray-400">
+                                총 사용자 수: {userTypeSummary.totalUsers?.toLocaleString?.() ?? '–'}명
+                            </div>
+                        </div>
+
+                        {/* Percentage Ratios */}
+                        <div className="rounded-lg bg-white p-4">
+                            <Subheader title="📊 사용자 비율 (%)" />
+                            <div className="grid grid-cols-4 gap-3">
+                                {[
+                                    { key: 'study', label: '공부러' },
+                                    { key: 'homework', label: '숙제러' },
+                                    { key: 'half', label: '반반' },
+                                    { key: 'other', label: '미확인' },
+                                ].map(({ key, label }) => {
+                                    const count = userTypeSummary.breakdown?.[key] || 0;
+                                    const pct =
+                                        userTypeSummary.totalUsers > 0
+                                            ? ((count / userTypeSummary.totalUsers) * 100).toFixed(1)
+                                            : '0.0';
+                                    return (
+                                        <div key={key}>
+                                            <div className="text-xs text-gray-500 mb-1">{label}</div>
+                                            <div className="text-2xl font-semibold">{pct}%</div>
+                                        </div>
+                                    );
+                                })}
                             </div>
                         </div>
                     </div>
