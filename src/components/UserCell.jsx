@@ -107,25 +107,31 @@ const UserCell = ({ user, q, stats = {}, compact = false, onFilter }) => {
                 {u?.userType !== "other" && (
                     <>
                         <span
-                            className={`inline-flex items-center gap-1 px-2 py-[2px] text-[10px] font-semibold rounded-lg shadow-sm text-white ${u?.userType === "study"
-                                ? "bg-indigo-500/80"
-                                : u?.userType === "homework"
-                                    ? "bg-amber-500/80"
-                                    : "bg-gray-500/80"
+                            className={`inline-flex items-center gap-1 px-2 py-[2px] text-[10px] font-semibold rounded-lg shadow-sm text-white 
+                                ${u?.userType === "study"
+                                    ? "bg-indigo-500/80"
+                                    : u?.userType === "homework"
+                                        ? "bg-yellow-500/80"
+                                        : u?.userType === "half"
+                                            ? "bg-indigo-500/80"
+                                            : "bg-gray-500/80"
                                 }`}
                         >
                             <span className="text-xs">
                                 {u?.userType === "study"
                                     ? "📖"
                                     : u?.userType === "homework"
-                                        ? "📝"
-                                        : "🎯"}
+                                        ? "📝" : u?.userType === "half"
+                                            ? "🌗"
+                                            : "🎯"}
                             </span>
                             {u?.userType === "study"
                                 ? "공부러"
                                 : u?.userType === "homework"
                                     ? "숙제러"
-                                    : "기타"}
+                                    : u?.userType === "half"
+                                        ? "반반"
+                                        : "기타"}
                         </span>
 
                         {/* ✅ Reset button */}
@@ -153,6 +159,7 @@ const UserCell = ({ user, q, stats = {}, compact = false, onFilter }) => {
                             </option>
                             <option value="study">📘 공부러</option>
                             <option value="homework">📚 숙제러</option>
+                            <option value="half">🌗 반반</option>
                         </select>
                     </div>
                 )}
