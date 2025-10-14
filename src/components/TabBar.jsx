@@ -10,7 +10,7 @@ const TabBar = ({ user, setUser }) => {
 
     const MenuButton = ({ icon, id }) => {
         const path = `/admin/${id}`;
-        const isActive = location.pathname === path;
+        const isActive = location.pathname.includes(path)
 
         return (
             <Link to={path} className="w-full flex items-center justify-center">

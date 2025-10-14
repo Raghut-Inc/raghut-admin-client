@@ -1,10 +1,8 @@
 import { useEffect, useState } from "react";
-import { timeAgo } from '../../utils/timeAgo';
+import UserCell from "../UserCell"; // ✅ import your new reusable cell
 const API_BASE = `${process.env.REACT_APP_API_URL}/analytics`;
 
 const AnalyticsUsers = () => {
-
-    // ---- Daily uploaders (users only) ----
     const TZ = "UTC";
     const TODAY_STR = new Intl.DateTimeFormat("en-CA", {
         timeZone: TZ,
@@ -21,35 +19,31 @@ const AnalyticsUsers = () => {
     const [dailyTotalPages, setDailyTotalPages] = useState(1);
     const [dailyPrevDate, setDailyPrevDate] = useState(null);
     const [dailyNextDate, setDailyNextDate] = useState(null);
-    const [dailySortBy, setDailySortBy] = useState("questions"); // 'questions' | 'uploads' | 'last'
-    const [dailyOrder, setDailyOrder] = useState("desc"); // 'asc' | 'desc'
+    const [dailySortBy, setDailySortBy] = useState("last");
+    const [dailyOrder, setDailyOrder] = useState("desc");
     const [dailyLoading, setDailyLoading] = useState(false);
-
     const [, setError] = useState(null);
 
-    function clampToToday(isoDate) {
+    const clampToToday = (isoDate) => {
         if (!isoDate) return TODAY_STR;
         return isoDate > TODAY_STR ? TODAY_STR : isoDate;
-    }
+    };
 
-    async function fetchJson(url) {
+    const fetchJson = async (url) => {
         const res = await fetch(url, { credentials: "include" });
         if (!res.ok) throw new Error(`Failed to fetch ${url}: ${res.statusText}`);
         return res.json();
-    }
+    };
 
-    // Page totals (current page rows only)
     const pageUploads = dailyRows.reduce((s, r) => s + (r.requestCount || 0), 0);
     const pageQuestions = dailyRows.reduce((s, r) => s + (r.totalQuestions || 0), 0);
 
-    // Daily uploaders list (users only)
     useEffect(() => {
         setDailyLoading(true);
         fetchJson(
             `${API_BASE}/daily-uploaders?date=${dailyDate}&tz=${TZ}&page=${dailyPage}&limit=${dailyLimit}&sortBy=${dailySortBy}&order=${dailyOrder}&includeLifetime=1`
         )
             .then((r) => {
-                console.log(r.rows)
                 setDailyRows(r.rows || []);
                 setDailyTotal(r.total || 0);
                 setDailyTotalPages(r.totalPages || 1);
@@ -61,19 +55,32 @@ const AnalyticsUsers = () => {
     }, [dailyDate, dailyPage, dailyLimit, dailySortBy, dailyOrder]);
 
     const Header = ({ title, subtitle }) => (
-        < div className="flex space-x-1 p-2 w-full font-semibold items-center max-w-4xl" >
+        <div className="flex space-x-1 p-2 w-full font-semibold items-center max-w-4xl">
             <p className="font-semibold w-full text-gray-500">{title}</p>
             <p className="text-xs text-indigo-600 flex-shrink-0">{subtitle}</p>
-        </div >
-    )
+        </div>
+    );
+
+    // ✅ Open uploads view in new tab
+    const goToUploads = ({ userId, guestUUID } = {}) => {
+        const params = new URLSearchParams();
+        params.set("page", "1");
+        params.set("pageSize", "25");
+        if (userId) params.set("userId", userId);
+        if (guestUUID) params.set("guestUUID", guestUUID);
+
+        const url = `/admin/uploads?${params.toString()}`;
+        window.open(url, "_blank", "noopener,noreferrer");
+    };
+
 
     return (
-        <div className="max-w-4xl w-full mx-auto mb-16 font-sans">
+        <div className="max-w-4xl w-full mb-16 font-sans">
+            <Header title="일별 활성 업로더 (고유)" />
 
-            <Header title={"일별 활성 업로더 (고유)"} />
-            {/* Daily uploaders (users only) */}
-            <div className="px-4 mb-8">
-                <div className="flex flex-wrap items-center gap-2 mb-1 bg-gray-200 px-3 py-1.5 rounded-xl text-xs outline-none">
+            {/* === Controls === */}
+            <div className="mb-8">
+                <div className="flex flex-wrap items-center gap-2 mb-1 bg-gray-200 px-3 py-1.5 text-xs outline-none">
                     <label className="text-gray-600">정렬:</label>
                     <select
                         className="px-2 py-1 border border-gray-300 rounded text-xs outline-none"
@@ -118,7 +125,7 @@ const AnalyticsUsers = () => {
                 </div>
 
                 {/* Page totals */}
-                <div className="flex md:flex-row flex-col-reverse items-center gap-2 bg-gray-200 rounded-xl px-3 py-1.5 justify-between">
+                <div className="flex md:flex-row flex-col-reverse items-center gap-2 bg-gray-200 px-3 py-1.5 justify-between">
                     <div className="text-sm text-gray-700">
                         유저 <b>{dailyTotal}</b> · 업로드 <b>{pageUploads}</b> · 문제 <b>{pageQuestions}</b>
                         {dailyTotalPages > 1 && <em className="ml-1 text-xs text-gray-500">(현재 페이지 기준)</em>}
@@ -175,57 +182,39 @@ const AnalyticsUsers = () => {
                     </div>
                 </div>
 
-                <div className="overflow-x-auto bg-white">
-                    <table className="w-full border-collapse text-sm">
-                        <thead className="bg-gray-100 text-gray-500 text-xs">
-                            <tr>
-                                <th className="border-b border-gray-300 px-4 py-2 text-left font-semibold">User</th>
-                                <th className="border-b border-gray-300 px-4 py-2 text-right font-semibold">U/P</th>
-                                <th className="border-b border-gray-300 px-4 py-2 text-right font-semibold">Lifetime U / P</th>
-                                <th className="border-b border-gray-300 px-4 py-2 text-right font-semibold">Last Upload</th>
-                            </tr>
-                        </thead>
-                        <tbody>
-                            {dailyLoading ? (
-                                <tr>
-                                    <td className="px-4 py-6 text-center text-gray-500" colSpan={6}>
-                                        Loading…
-                                    </td>
-                                </tr>
-                            ) : dailyRows.length === 0 ? (
-                                <tr>
-                                    <td className="px-4 py-6 text-center text-gray-500" colSpan={6}>
-                                        No uploads for this date.
-                                    </td>
-                                </tr>
-                            ) : (
-                                dailyRows.map((row) => (
-                                    <tr key={row.userId} className="border-b border-gray-200 hover:bg-gray-50">
-                                        <td className="px-4 py-2 whitespace-nowrap">
-                                            <div className="flex flex-col">
-                                                <span>{row.userName || "-"}</span>
-                                                <span className="text-xs text-gray-500">{row.userEmail || "-"}</span>
-                                                <span className="text-xs text-gray-500">{row.userId}</span>
-                                            </div>
-                                        </td>
-                                        <td className="px-4 py-2 text-right">
-                                            {row.requestCount}/{row.totalQuestions}
-                                        </td>
-                                        <td className="px-4 py-2 text-right flex-shrink-0">
-                                            {`${row.lifetimeRequestCount}/${row.lifetimeTotalQuestions}`}
-                                        </td>
-                                        <td className="px-4 py-2 text-right text-xs">
-                                            {row.lastUploadAt ? timeAgo(row.lastUploadAt) : "-"}
-                                        </td>
-                                    </tr>
-                                ))
-                            )}
-                        </tbody>
-                    </table>
+                {/* === User list === */}
+                <div className="bg-gray-800 divide-y divide-gray-500">
+                    {dailyLoading ? (
+                        <div className="text-center text-gray-500 py-6">Loading…</div>
+                    ) : dailyRows.length === 0 ? (
+                        <div className="text-center text-gray-500 py-6">No uploads for this date.</div>
+                    ) : (
+                        dailyRows.map((row) => (
+                            <UserCell
+                                key={row.userId}
+                                onFilter={goToUploads}
+                                compact={true}
+                                user={{
+                                    _id: row.userId,
+                                    name: row.userName,
+                                    email: row.userEmail,
+                                    profileImageUrl: row.profileImageUrl,
+                                }}
+                                stats={{
+                                    todayUploads: row.requestCount,
+                                    todayQuestions: row.totalQuestions,
+                                    lifetimeUploads: row.lifetimeRequestCount,
+                                    lifetimeQuestions: row.lifetimeTotalQuestions,
+                                    lastAt: row.lastUploadAt,
+                                }}
+                                hideToggle={true}
+                            />
+                        ))
+                    )}
                 </div>
             </div>
         </div>
-    )
-}
+    );
+};
 
-export default AnalyticsUsers
+export default AnalyticsUsers;

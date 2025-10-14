@@ -228,22 +228,19 @@ const Uploads = ({ user, setUser }) => {
     else loadSummary(page);
   }, [page, mode, loadQuestions, loadSummary]);
 
-  // Filters (for cards view) – keep existing userId/guestUUID behavior
   const setFilter = (filter) => {
-    updateParams((np) => {
-      np.set("page", "1");
-      np.set("pageSize", String(PAGE_SIZE));
-      if (filter.userId) {
-        np.set("userId", filter.userId);
-        np.delete("guestUUID");
-      } else if (filter.guestUUID) {
-        np.set("guestUUID", filter.guestUUID);
-        np.delete("userId");
-      }
-      // preserve current mode
-      if (mode !== "cards") np.set("mode", "cards");
-    });
-    setPage(1);
+    const params = new URLSearchParams();
+    params.set("page", "1");
+    params.set("pageSize", String(PAGE_SIZE));
+
+    if (filter.userId) {
+      params.set("userId", filter.userId);
+    } else if (filter.guestUUID) {
+      params.set("guestUUID", filter.guestUUID);
+    }
+
+    const url = `/admin/uploads?${params.toString()}`;
+    window.open(`${window.location.origin}${url}`, "_blank", "noopener,noreferrer");
   };
 
   // Switch mode without losing existing params

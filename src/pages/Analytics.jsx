@@ -42,7 +42,7 @@ export default function Analytics({ user, setUser }) {
                     className={`px-3 h-full w-16 flex items-center justify-center text-xs font-semibold transition-all
             ${mode === "users" ? "bg-indigo-600 text-white" : "text-gray-700 hover:bg-gray-200"}`}
                 >
-                    <FaUsers className="w-5 h-5"/>
+                    <FaUsers className="w-5 h-5" />
                 </button>
             </div>
 

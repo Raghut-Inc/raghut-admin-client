@@ -1,11 +1,9 @@
 import { useEffect, useState, useCallback } from 'react';
-import { useNavigate } from 'react-router';
 import UserCell from '../components/UserCell';
 
-const PAGE_SIZE = 20;
+const PAGE_SIZE = 40;
 
 const Users = ({ user, setUser }) => {
-    const navigate = useNavigate();
 
     const [users, setUsers] = useState([]);
     const [totalCount, setTotalCount] = useState(0);
@@ -60,14 +58,16 @@ const Users = ({ user, setUser }) => {
         [userType]
     );
 
-    // ✅ Navigate to uploads view
+    // ✅ Open uploads view in new tab
     const goToUploads = ({ userId, guestUUID } = {}) => {
         const params = new URLSearchParams();
-        params.set('page', '1');
-        params.set('pageSize', '25');
-        if (userId) params.set('userId', userId);
-        if (guestUUID) params.set('guestUUID', guestUUID);
-        navigate({ pathname: '/admin/uploads', search: `?${params.toString()}` });
+        params.set("page", "1");
+        params.set("pageSize", "25");
+        if (userId) params.set("userId", userId);
+        if (guestUUID) params.set("guestUUID", guestUUID);
+
+        const url = `/admin/uploads?${params.toString()}`;
+        window.open(url, "_blank", "noopener,noreferrer");
     };
 
     // ✅ Reload when filter changes
@@ -139,13 +139,14 @@ const Users = ({ user, setUser }) => {
             </div>
 
             {/* --- USER LIST --- */}
-            <div className="bg-gray-800 divide-y divide-gray-200 max-w-4xl w-full">
+            <div className="bg-gray-800 divide-y divide-gray-500 max-w-4xl w-full">
                 {users.map((user) => (
                     <UserCell
                         key={user._id}
                         user={user}
                         stats={user.uploadStats}
                         onFilter={goToUploads}
+                        compact={true}
                     />
                 ))}
             </div>

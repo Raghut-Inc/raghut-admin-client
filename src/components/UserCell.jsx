@@ -1,7 +1,8 @@
 import React, { useState } from "react";
 import { timeAgo } from "../utils/timeAgo";
 
-const UserCell = ({ user, q, stats = {}, compact = false, onFilter }) => {
+const UserCell = ({ user, q, stats = {}, compact: defaultCompact = false, onFilter, hideToggle = false }) => {
+    const [compact, setCompact] = useState(defaultCompact);
     const [updatingType, setUpdatingType] = useState(false);
     const [updateMsg, setUpdateMsg] = useState("");
 
@@ -35,7 +36,6 @@ const UserCell = ({ user, q, stats = {}, compact = false, onFilter }) => {
             const data = await res.json();
             if (!res.ok) throw new Error(data.error || "Update failed");
 
-            // ✅ Update UI immediately
             u.userType = newType;
             setUpdateMsg("✅ 변경 완료");
         } catch (err) {
@@ -58,30 +58,124 @@ const UserCell = ({ user, q, stats = {}, compact = false, onFilter }) => {
         handleUserTypeChange("other");
     };
 
+    // 🧩 toggle between compact and full
+    const toggleCollapse = (e) => {
+        e.stopPropagation();
+        setCompact(!compact);
+    };
 
-    // ---- FULL CARD STYLE ----
+    // ===================================================================
+    // COMPACT VIEW
+    // ===================================================================
+    if (compact) {
+        return (
+            <div
+                onClick={handleFilter}
+                title="클릭 시 해당 유저로 필터"
+                className="flex items-center justify-between text-xs px-2 py-1.5 bg-white/5 hover:bg-white/10 transition cursor-pointer"
+            >
+                {/* LEFT: Name + Username */}
+                <div className="flex items-center gap-2 min-w-0">
+                    {u?.profileImageUrl && (
+                        <img
+                            src={u.profileImageUrl}
+                            alt=""
+                            className="w-6 h-6 bg-gray-200 rounded-full object-cover flex-shrink-0"
+                        />
+                    )}
+                    <div className="truncate">
+                        <p className="font-semibold text-white truncate">
+                            {!u?.preferredLanguage ? "" : u?.preferredLanguage === "ko" ? "🇰🇷" : "🇺🇸"} {u?.name || "이름없음"}
+                        </p>
+                        {u?.username && (
+                            <p className="text-gray-400">@{u.username}</p>
+                        )}
+                    </div>
+                </div>
+
+                {/* RIGHT: Stats + Times + Toggle */}
+                <div className="flex items-center gap-3 text-right font-mono text-[11px] text-gray-200">
+
+                    {/* 📅 Last Upload + CreatedAt */}
+                    <div className="flex flex-col items-end text-[10px] text-gray-400">
+                        {stats?.lastAt && (
+                            <span>
+                                마지막 {timeAgo(stats.lastAt)}
+                            </span>
+                        )}
+                        {u?.createdAt && (
+                            <span>
+                                가입 {timeAgo(u.createdAt)}
+                            </span>
+                        )}
+                    </div>
+
+                    {hideToggle && (
+                        <>
+                            <div className="flex flex-col items-end">
+                                <span className="text-[10px] text-gray-400">U/Q</span>
+                                <span className="font-semibold text-white">
+                                    {stats?.todayUploads || 0} / {stats?.todayQuestions || 0}
+                                </span>
+                            </div>
+
+                            <div className="flex flex-col items-end">
+                                <span className="text-[10px] text-gray-400">TU/TQ</span>
+                                <span className="font-semibold text-white">
+                                    {stats?.totalUploads || 0} / {stats?.totalQuestions || 0}
+                                </span>
+                            </div>
+                        </>
+                    )}
+
+                    {/* ⬇️ Expand button */}
+                    {!hideToggle && (
+                        <button
+                            onClick={toggleCollapse}
+                            className="ml-2 px-2 py-[1px] text-[10px] rounded-md bg-gray-700 text-white hover:bg-gray-600"
+                        >
+                            ▼
+                        </button>
+                    )}
+                </div>
+            </div>
+        );
+    }
+
+    // ===================================================================
+    // FULL CARD VIEW
+    // ===================================================================
     return (
         <div
             onClick={handleFilter}
-            className="transition text-xs text-white space-y-2 p-2 cursor-pointer"
+            className="transition text-xs text-white space-y-2 p-2 cursor-pointer bg-white/5 rounded-md hover:bg-white/10"
             title="클릭 시 해당 유저로 필터"
         >
             {/* ---- Header ---- */}
-            <div className="flex items-center gap-2">
-                {u?.profileImageUrl && (
-                    <img
-                        src={u.profileImageUrl}
-                        alt=""
-                        className="w-8 h-8 bg-gray-100 rounded-full object-cover"
-                    />
-                )}
-                <span className="font-semibold text-xs flex-shrink-0">
-                    {u?.preferredLanguage === "ko" ? "🇰🇷" : "🇺🇸"}
-                    {u?.name || "이름없음"}
-                </span>
-                {u?.username && (
-                    <span className="text-xs text-gray-400">@{u.username}</span>
-                )}
+            <div className="flex items-center justify-between">
+                <div className="flex items-center gap-2">
+                    {u?.profileImageUrl && (
+                        <img
+                            src={u.profileImageUrl}
+                            alt=""
+                            className="w-8 h-8 bg-gray-100 rounded-full object-cover"
+                        />
+                    )}
+                    <span className="font-semibold text-xs flex-shrink-0">
+                        {u?.preferredLanguage === "ko" ? "🇰🇷" : "🇺🇸"} {u?.name || "이름없음"}
+                    </span>
+                    {u?.username && (
+                        <span className="text-xs text-gray-400">@{u.username}</span>
+                    )}
+                </div>
+
+                {/* ⬆️ Collapse button */}
+                <button
+                    onClick={toggleCollapse}
+                    className="px-2 py-[1px] text-[10px] rounded-md bg-gray-700 text-white hover:bg-gray-600"
+                >
+                    ▲
+                </button>
             </div>
 
             {/* ---- TAGS ---- */}
@@ -121,7 +215,8 @@ const UserCell = ({ user, q, stats = {}, compact = false, onFilter }) => {
                                 {u?.userType === "study"
                                     ? "📖"
                                     : u?.userType === "homework"
-                                        ? "📝" : u?.userType === "half"
+                                        ? "📝"
+                                        : u?.userType === "half"
                                             ? "🌗"
                                             : "🎯"}
                             </span>
@@ -134,7 +229,6 @@ const UserCell = ({ user, q, stats = {}, compact = false, onFilter }) => {
                                         : "기타"}
                         </span>
 
-                        {/* ✅ Reset button */}
                         <button
                             onClick={onResetClick}
                             disabled={updatingType}
@@ -145,7 +239,6 @@ const UserCell = ({ user, q, stats = {}, compact = false, onFilter }) => {
                     </>
                 )}
 
-                {/* Only show select if userType is "other" or missing */}
                 {(u?.userType === "other" || !u?.userType) && (
                     <div onClick={(e) => e.stopPropagation()}>
                         <select
@@ -169,7 +262,7 @@ const UserCell = ({ user, q, stats = {}, compact = false, onFilter }) => {
                 )}
             </div>
 
-            {/* ---- Devices (includes 가입일) ---- */}
+            {/* ---- Devices ---- */}
             {Array.isArray(u?.devices) && u.devices.length > 0 && (
                 <div className="bg-white/10 p-2 rounded-md text-[11px]">
                     {u?.createdAt && (
@@ -182,9 +275,7 @@ const UserCell = ({ user, q, stats = {}, compact = false, onFilter }) => {
                         </div>
                     )}
 
-                    <div className="font-semibold text-gray-300 mt-2 mb-1">
-                        최근 접속 기기
-                    </div>
+                    <div className="font-semibold text-gray-300 mt-2 mb-1">최근 접속 기기</div>
                     {u.devices.map((d, i) => (
                         <div key={i} className="flex flex-col border-white/10 pt-1">
                             <div className="flex justify-between">
@@ -226,13 +317,11 @@ const UserCell = ({ user, q, stats = {}, compact = false, onFilter }) => {
                     {stats?.activeDays ? (
                         <div className="flex justify-between">
                             <span>활동일 수</span>
-                            <span className="font-semibold text-white">
-                                {stats.activeDays}
-                            </span>
+                            <span className="font-semibold text-white">{stats.activeDays}</span>
                         </div>
                     ) : null}
                 </div>
-            ) : <></>}
+            ) : null}
         </div>
     );
 };
