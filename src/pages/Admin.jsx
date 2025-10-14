@@ -10,10 +10,10 @@ import NavBar from "../components/NavBar";
 export default function Admin({ user, setUser }) {
   return (
     <>
-      <div className="min-h-screen pb-14">
+      <div className="min-h-screen">
         <NavBar user={user} setUser={setUser} />
         <Routes>
-          <Route path="/analytics" element={<Analytics user={user} setUser={setUser} />} />
+          <Route path="/analytics/*" element={<Analytics user={user} setUser={setUser} />} />
           <Route path="/user" element={<Users user={user} setUser={setUser} />} />
           <Route path="/uploads" element={<Uploads user={user} setUser={setUser} />} />
           <Route path="/chat" element={<Chats user={user} setUser={setUser} />} />
