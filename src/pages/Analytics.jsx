@@ -3,7 +3,6 @@ import AnalyticsSummary from "../components/analytics/AnalyticsSummary";
 import AnalyticsChart from "../components/analytics/AnalyticsChart";
 import AnalyticsUsers from "../components/analytics/AnalyticsUsers";
 import { BsGraphUp } from "react-icons/bs";
-import { TbCircleNumber0 } from "react-icons/tb";
 import { FaUsers } from "react-icons/fa6";
 
 export default function Analytics({ user, setUser }) {
@@ -28,13 +27,6 @@ export default function Analytics({ user, setUser }) {
                     className={`px-3 h-full w-16 flex items-center justify-center text-xs font-semibold transition-all
             ${mode === "summary" ? "bg-indigo-600 text-white" : "text-gray-700 hover:bg-gray-200"}`}
                 >
-                    <TbCircleNumber0 className="w-6 h-6" />
-                </button>
-                <button
-                    onClick={() => setMode("chart")}
-                    className={`px-3 h-full w-16 flex items-center justify-center text-xs font-semibold transition-all
-            ${mode === "chart" ? "bg-indigo-600 text-white" : "text-gray-700 hover:bg-gray-200"}`}
-                >
                     <BsGraphUp className="w-5 h-5" />
                 </button>
                 <button
@@ -47,8 +39,13 @@ export default function Analytics({ user, setUser }) {
             </div>
 
             {/* --- Conditional Rendering --- */}
-            {mode === "summary" && <AnalyticsSummary user={user} setUser={setUser} />}
-            {mode === "chart" && <AnalyticsChart user={user} setUser={setUser} />}
+            {mode === "summary" &&
+                <>
+                    <AnalyticsSummary user={user} setUser={setUser} />
+                    <AnalyticsChart user={user} setUser={setUser} />
+                </>
+            }
+            {/* {mode === "chart" && <AnalyticsChart user={user} setUser={setUser} />} */}
             {mode === "users" && <AnalyticsUsers user={user} setUser={setUser} />}
         </div>
     );
