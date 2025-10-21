@@ -6,6 +6,7 @@ import Chats from "./Chats";
 import TabBar from "../components/TabBar";
 import Dev from "./Dev";
 import NavBar from "../components/NavBar";
+import DBStats from "./DBStats";
 
 export default function Admin({ user, setUser }) {
   return (
@@ -18,6 +19,7 @@ export default function Admin({ user, setUser }) {
           <Route path="/uploads" element={<Uploads user={user} setUser={setUser} />} />
           <Route path="/chat" element={<Chats user={user} setUser={setUser} />} />
           <Route path="/dev" element={<Dev user={user} setUser={setUser} />} />
+          <Route path="/db-stats" element={<DBStats />} />
         </Routes>
       </div>
       <TabBar user={user} setUser={setUser} animate={true} />
