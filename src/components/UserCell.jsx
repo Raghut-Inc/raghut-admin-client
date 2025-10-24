@@ -1,5 +1,5 @@
 import React, { useState } from "react";
-import { timeAgo } from "../utils/timeAgo";
+import { calcAge, timeAgo } from "../utils/timeAgo";
 
 const UserCell = ({ user, q, stats = {}, compact: defaultCompact = false, onFilter, hideToggle = false }) => {
     const [compact, setCompact] = useState(defaultCompact);
@@ -84,9 +84,20 @@ const UserCell = ({ user, q, stats = {}, compact: defaultCompact = false, onFilt
                         />
                     )}
                     <div className="truncate">
-                        <p className="font-semibold text-white truncate">
-                            {!u?.preferredLanguage ? "" : u?.preferredLanguage === "ko" ? "🇰🇷" : "🇺🇸"} {u?.name || "이름없음"}
-                        </p>
+                        <div className="flex items-center gap-2">
+                            <p className="font-semibold text-white truncate">
+                                {!u?.preferredLanguage ? "" : u?.preferredLanguage === "ko" ? "🇰🇷" : "🇺🇸"} {u?.name || "이름없음"}
+                            </p>
+                            {u?.birthday && (
+                                <div className="flex items-center gap-2 text-[11px] text-gray-300">
+                                    <span>
+                                        🎂 {new Date(u.birthday).getFullYear()}년생 ({calcAge(u.birthday)}세)
+                                    </span>
+                                    {u?.zodiacAnimal && <span>{u.zodiacAnimal}</span>}
+                                </div>
+                            )}
+                        </div>
+
                         {u?.username && (
                             <p className="text-gray-400">@{u.username}</p>
                         )}
@@ -166,6 +177,14 @@ const UserCell = ({ user, q, stats = {}, compact: defaultCompact = false, onFilt
                     </span>
                     {u?.username && (
                         <span className="text-xs text-gray-400">@{u.username}</span>
+                    )}
+                    {u?.birthday && (
+                        <div className="flex items-center gap-2 text-[11px] text-gray-300 mt-1">
+                            <span>
+                                🎂 {new Date(u.birthday).getFullYear()}년생 ({calcAge(u.birthday)}세)
+                            </span>
+                            {u?.zodiacAnimal && <span>{u.zodiacAnimal}</span>}
+                        </div>
                     )}
                 </div>
 

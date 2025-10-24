@@ -22,3 +22,17 @@ export function timeAgo(dateString) {
     const years = Math.floor(months / 12);
     return `${years}년`;
 }
+
+export function calcAge(birthday) {
+    if (!birthday) return null;
+    const birthDate = new Date(birthday);
+    const now = new Date();
+
+    let age = now.getFullYear() - birthDate.getFullYear();
+    const m = now.getMonth() - birthDate.getMonth();
+
+    if (m < 0 || (m === 0 && now.getDate() < birthDate.getDate())) {
+        age--;
+    }
+    return age;
+}

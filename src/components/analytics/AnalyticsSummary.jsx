@@ -19,6 +19,15 @@ const AnalyticsSummary = () => {
     const [calendarUpload, setCalendarUpload] = useState(null);
     const [rollingUpload, setRollingUpload] = useState(null);
 
+    const [userBasicSummary, setUserBasicSummary] = useState({
+        totalUsers: 0,
+        withProfilePic: 0,
+        withBirthday: 0,
+        uploadedAtLeastTwice: 0,
+        ratios: {},
+    });
+    const [n, setN] = useState(2);
+
     const [, setError] = useState(null);
 
     async function fetchJson(url) {
@@ -106,6 +115,19 @@ const AnalyticsSummary = () => {
         fetchUserTypeSummary();
     }, [API_BASE]);
 
+    // Fetch user basic summary — dynamic N
+    useEffect(() => {
+        const fetchUserBasicSummary = async () => {
+            try {
+                const res = await fetchJson(`${API_BASE}/user-basic-summary?n=${n}`);
+                if (res.success) setUserBasicSummary(res);
+            } catch (err) {
+                console.error("Error fetching user-basic-summary:", err);
+            }
+        };
+        fetchUserBasicSummary();
+    }, [API_BASE, n]);
+    
     useEffect(() => {
         const fetchUploadSummary = async () => {
             try {
@@ -330,6 +352,73 @@ const AnalyticsSummary = () => {
                     </div>
                 </div>
             </div>
+
+            {/* ---------- 사용자 기본 요약 ---------- */}
+            <Header title="사용자 기본 요약" subtitle={`기준 N=${n}`} />
+            <div className="flex items-center mb-3 px-2">
+                <label className="text-sm text-gray-600 mr-2">N 설정:</label>
+                <select
+                    value={n}
+                    onChange={(e) => setN(Number(e.target.value))}
+                    className="border border-gray-300 rounded-md px-2 py-1 text-sm"
+                >
+                    {[2, 3, 4, 5, 6, 7].map((v) => <option key={v} value={v}>{v}</option>)}
+                </select>
+                <span className="text-xs text-gray-400 ml-2">N 이상 기준으로 조회</span>
+            </div>
+
+            <div className="mx-2 mb-4 grid grid-cols-1 md:grid-cols-2 gap-2">
+                {/* Counts */}
+                <div className="rounded-lg bg-white p-4">
+                    <Subheader title="👤 기본 사용자 통계" />
+                    <div className="grid grid-cols-2 gap-3">
+                        <div><div className="text-xs text-gray-500 mb-1">총 사용자 수</div>
+                            <div className="text-xl font-semibold">{userBasicSummary.totalUsers?.toLocaleString?.() ?? "–"}</div></div>
+                        <div><div className="text-xs text-gray-500 mb-1">{n}회 이상 업로드</div>
+                            <div className="text-xl font-semibold">{userBasicSummary.uploadedAtLeastNTimes?.toLocaleString?.() ?? "–"}</div></div>
+                    </div>
+                    <div className="grid grid-cols-2 gap-3 mt-3">
+                        <div><div className="text-xs text-gray-500 mb-1">{n}일 이상 업로드</div>
+                            <div className="text-xl font-semibold">{userBasicSummary.uploadedOnAtLeastNDays?.toLocaleString?.() ?? "–"}</div></div>
+                        <div><div className="text-xs text-gray-500 mb-1">{n}명 이상 친구 있음</div>
+                            <div className="text-xl font-semibold">{userBasicSummary.hasAtLeastNFriends?.toLocaleString?.() ?? "–"}</div></div>
+                    </div>
+                    <div className="grid grid-cols-2 gap-3 mt-3">
+                        <div><div className="text-xs text-gray-500 mb-1">{n}회 이상 메시지 전송</div>
+                            <div className="text-xl font-semibold">{userBasicSummary.sentAtLeastNMessages?.toLocaleString?.() ?? "–"}</div></div>
+                        <div><div className="text-xs text-gray-500 mb-1">{n}일 이상 메시지 전송</div>
+                            <div className="text-xl font-semibold">{userBasicSummary.sentOnAtLeastNDays?.toLocaleString?.() ?? "–"}</div></div>
+                    </div>
+                    <div className="grid grid-cols-2 gap-3 mt-3">
+                        <div><div className="text-xs text-gray-500 mb-1">프로필 사진 있음</div>
+                            <div className="text-xl font-semibold">{userBasicSummary.withProfilePic?.toLocaleString?.() ?? "–"}</div></div>
+                        <div><div className="text-xs text-gray-500 mb-1">생일 등록함</div>
+                            <div className="text-xl font-semibold">{userBasicSummary.withBirthday?.toLocaleString?.() ?? "–"}</div></div>
+                    </div>
+                </div>
+
+                {/* Ratios */}
+                <div className="rounded-lg bg-gray-50 px-4 py-2">
+                    <Subheader title="📊 비율 (%)" />
+                    <div className="grid grid-cols-2 gap-3 text-gray-500">
+                        {Object.entries({
+                            withProfilePic: "프로필 사진 있음",
+                            withBirthday: "생일 등록함",
+                            uploadedAtLeastNTimes: `${n}회 이상 업로드`,
+                            uploadedOnAtLeastNDays: `${n}일 이상 업로드`,
+                            hasAtLeastNFriends: `${n}명 이상 친구 있음`,
+                            sentAtLeastNMessages: `${n}회 이상 메시지 전송`,
+                            sentOnAtLeastNDays: `${n}일 이상 메시지 전송`,
+                        }).map(([key, label]) => (
+                            <div key={key}>
+                                <div className="text-xs text-gray-500 mb-1">{label}</div>
+                                <div className="font-semibold">{pct(userBasicSummary.ratios?.[key] || 0)}</div>
+                            </div>
+                        ))}
+                    </div>
+                </div>
+            </div>
+
 
             <Header title="사용자 유형 지표" />
 
