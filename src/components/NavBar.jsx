@@ -1,7 +1,7 @@
 import { Link } from "react-router";
 import UserSettingsButton from "./UserSettingsButton";
 import logo from "../assets/logo.png";
-import { FaDatabase } from "react-icons/fa6";
+import { FaCubesStacked, FaDatabase } from "react-icons/fa6";
 import { MdFileUpload } from "react-icons/md";
 
 const NavBar = ({ user, setUser }) => {
@@ -17,6 +17,11 @@ const NavBar = ({ user, setUser }) => {
 
 
         <div className="flex flex-shrink-0 space-x-4 items-center">
+          <Link to={"https://api.chalcack.com/admin/queues/"} className="w-full flex items-center justify-center">
+            <button className="flex items-center justify-center h-14 w-full text-gray-500">
+              <FaCubesStacked className="w-5 h-5" />
+            </button>
+          </Link>
           <Link to={"/admin/db-stats"} className="w-full flex items-center justify-center">
             <button className="flex items-center justify-center h-14 w-full text-gray-500">
               <FaDatabase className="w-5 h-5" />
