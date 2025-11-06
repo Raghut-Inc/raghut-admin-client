@@ -1,9 +1,9 @@
 import { useEffect, useState, useCallback } from 'react';
-import UserCell from '../components/UserCell';
+import UserCell from '../../components/UserCell';
 
-const PAGE_SIZE = 20;
+const PAGE_SIZE = 30;
 
-const Users = ({ user, setUser }) => {
+const TotalUsers = () => {
 
     const [users, setUsers] = useState([]);
     const [totalCount, setTotalCount] = useState(0);
@@ -165,4 +165,4 @@ const Users = ({ user, setUser }) => {
     );
 };
 
-export default Users;
+export default TotalUsers;

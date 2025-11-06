@@ -1,13 +1,12 @@
-import { useLocation, useNavigate } from "react-router";
+import { useLocation } from "react-router";
 import AnalyticsSummary from "../components/analytics/AnalyticsSummary";
 import AnalyticsChart from "../components/analytics/AnalyticsChart";
-import AnalyticsUsers from "../components/analytics/AnalyticsUsers";
-import { BsGraphUp } from "react-icons/bs";
-import { FaUsers } from "react-icons/fa6";
+// import { BsGraphUp } from "react-icons/bs";
+// import { FaUsers } from "react-icons/fa6";
 
 export default function Analytics({ user, setUser }) {
     const location = useLocation();
-    const navigate = useNavigate();
+    // const navigate = useNavigate();
 
     // derive current mode from pathname
     const path = location.pathname.toLowerCase();
@@ -15,13 +14,13 @@ export default function Analytics({ user, setUser }) {
     if (path.includes("chart")) mode = "chart";
     else if (path.includes("users")) mode = "users";
 
-    const setMode = (m) => navigate(`/admin/analytics/${m}`);
+    // const setMode = (m) => navigate(`/admin/analytics/${m}`);
 
     return (
         <div className="w-full font-sans bg-gray-100 flex flex-col items-center min-h-screen">
 
             {/* --- Bottom Floating Toggle --- */}
-            <div className="flex-shrink-0 flex justify-center z-30 h-12 items-center overflow-hidden fixed bottom-2 shadow-xl border-t rounded-full bg-white/60 backdrop-blur-xl">
+            {/* <div className="flex-shrink-0 flex justify-center z-30 h-12 items-center overflow-hidden fixed bottom-2 shadow-xl border-t rounded-full bg-white/60 backdrop-blur-xl">
                 <button
                     onClick={() => setMode("summary")}
                     className={`px-3 h-full w-16 flex items-center justify-center text-xs font-semibold transition-all
@@ -36,7 +35,7 @@ export default function Analytics({ user, setUser }) {
                 >
                     <FaUsers className="w-5 h-5" />
                 </button>
-            </div>
+            </div> */}
 
             {/* --- Conditional Rendering --- */}
             {mode === "summary" &&
@@ -45,8 +44,6 @@ export default function Analytics({ user, setUser }) {
                     <AnalyticsChart user={user} setUser={setUser} />
                 </>
             }
-            {/* {mode === "chart" && <AnalyticsChart user={user} setUser={setUser} />} */}
-            {mode === "users" && <AnalyticsUsers user={user} setUser={setUser} />}
         </div>
     );
 }

@@ -5,6 +5,7 @@ import {
     FaUserLarge,
     FaCubesStacked,
     FaDatabase,
+    FaClock,
 } from "react-icons/fa6";
 import { FaTimes } from "react-icons/fa";
 import { MdFileUpload } from "react-icons/md";
@@ -98,17 +99,26 @@ const SideMenu = ({ user, setUser }) => {
                                 icon={<IoIosImage className="w-4 h-4" />}
                                 label="Uploads"
                             />
-                            <MenuItem
-                                to="/admin/user"
-                                icon={<FaUserLarge className="w-4 h-4" />}
-                                label="Users"
-                            />
+
                             <MenuItem
                                 to="/admin/chat"
                                 icon={<IoChatbubbleSharp className="w-4 h-4" />}
                                 label="Chat"
                             />
-
+                            {/* Dev Tools */}
+                            <div className="text-xs uppercase font-semibold text-gray-400 px-4 mt-8 mb-1">
+                                유저
+                            </div>
+                            <MenuItem
+                                to="/admin/users/all"
+                                icon={<FaUserLarge className="w-4 h-4" />}
+                                label="모든 유저"
+                            />
+                            <MenuItem
+                                to="/admin/users/daily-active-users"
+                                icon={<FaClock className="w-4 h-4" />}
+                                label="최근 업로드 유저"
+                            />
                             {/* Dev Tools */}
                             <div className="text-xs uppercase font-semibold text-gray-400 px-4 mt-8 mb-1">
                                 Dev Tools

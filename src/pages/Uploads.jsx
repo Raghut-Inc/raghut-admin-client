@@ -1,9 +1,6 @@
 import { useEffect, useState, useCallback, useMemo } from "react";
 import UploadCard from "../components/cards/UploadCard";
-import { useSearchParams } from "react-router"; // keep your existing import
-import UserCell from "../components/UserCell";
-import { PiCardsThree } from "react-icons/pi";
-import { LiaIdCardSolid } from "react-icons/lia";
+import { useSearchParams } from "react-router";
 import { BsThreeDots } from "react-icons/bs";
 import { FaCheck } from "react-icons/fa6";
 
@@ -31,44 +28,34 @@ const SUBJECT_OPTIONS = [
   { label: "Other", value: "other" },
 ];
 
-const Uploads = ({ user, setUser }) => {
+const Uploads = () => {
   const [questions, setQuestions] = useState([]);
   const [totalCount, setTotalCount] = useState(0);
+  const [totalQuestions, setTotalQuestions] = useState(0);
   const [page, setPage] = useState(1);
+  const [loading, setLoading] = useState(false);
   const [loadingMore, setLoadingMore] = useState(false);
   const [hasMore, setHasMore] = useState(true);
-  const [totalQuestions, setTotalQuestions] = useState(0);
-  const [loading, setLoading] = useState(false);
-
-  // SUMMARY STATE
-  const [summaryRows, setSummaryRows] = useState([]);
 
   const [searchParams, setSearchParams] = useSearchParams();
-
   const userIdFilter = searchParams.get("userId") || "";
   const guestUUIDFilter = searchParams.get("guestUUID") || "";
-  const mode = (searchParams.get("mode") || "cards").toLowerCase(); // 'cards' | 'summary'
-  const status = (searchParams.get("status") || "").toLowerCase(); // 'cards' | 'summary'
-
-  // New filters
   const statusFilterRaw = searchParams.get("status") || "";
   const subjectFilterRaw = searchParams.get("subject") || "";
 
-  // Validate enums (ignore unknowns)
   const statusFilter = useMemo(() => {
-    const allowed = new Set(STATUS_OPTIONS.map(o => o.value));
+    const allowed = new Set(STATUS_OPTIONS.map((o) => o.value));
     return allowed.has(statusFilterRaw) ? statusFilterRaw : "";
   }, [statusFilterRaw]);
 
   const subjectFilter = useMemo(() => {
-    const allowed = new Set(SUBJECT_OPTIONS.map(o => o.value));
+    const allowed = new Set(SUBJECT_OPTIONS.map((o) => o.value));
     return allowed.has(subjectFilterRaw) ? subjectFilterRaw : "";
   }, [subjectFilterRaw]);
 
-  // ---------------- CARDS (existing + filters) ----------------
+  // ---------------- LOAD QUESTIONS ----------------
   const loadQuestions = useCallback(
     async (pageToLoad) => {
-      if (mode !== "cards") return; // guard
       try {
         if (pageToLoad === 1) setLoading(true);
         else setLoadingMore(true);
@@ -90,7 +77,6 @@ const Uploads = ({ user, setUser }) => {
         if (data.success) {
           setTotalCount(data.totalCount);
           setTotalQuestions(data.totalQuestions);
-          console.log("✅ Questions:", data.questions);
           if (pageToLoad === 1) setQuestions(data.questions);
           else setQuestions((prev) => [...prev, ...data.questions]);
           setHasMore(data.questions.length === PAGE_SIZE);
@@ -104,64 +90,21 @@ const Uploads = ({ user, setUser }) => {
         else setLoadingMore(false);
       }
     },
-    [userIdFilter, guestUUIDFilter, statusFilter, subjectFilter, mode]
+    [userIdFilter, guestUUIDFilter, statusFilter, subjectFilter]
   );
 
-  // ---------------- SUMMARY (updated) ----------------
-  const loadSummary = useCallback(
-    async (pageToLoad) => {
-      if (mode !== "summary") return; // guard
-      try {
-        if (pageToLoad === 1) setLoading(true);
-        else setLoadingMore(true);
-
-        const params = new URLSearchParams();
-        params.set("page", pageToLoad);
-        params.set("pageSize", PAGE_SIZE);
-
-        const res = await fetch(
-          `${process.env.REACT_APP_API_URL}/solved-questions/admin-panel/summary?${params.toString()}`,
-          { credentials: "include" }
-        );
-        const data = await res.json();
-
-        if (!data.success) {
-          console.error("⚠️ Failed to load summary:", data.error);
-          return;
-        }
-
-        console.log("✅ Summary users:", data.users);
-
-        // 🔹 Update list of users
-        const newUsers = data.users || [];
-
-        if (pageToLoad === 1) {
-          setSummaryRows(newUsers);
-        } else {
-          setSummaryRows((prev) => [...prev, ...newUsers]);
-        }
-
-        // 🔹 Update pagination flags
-        setHasMore(newUsers.length === PAGE_SIZE);
-      } catch (err) {
-        console.error("❌ Summary API error:", err);
-      } finally {
-        if (pageToLoad === 1) setLoading(false);
-        else setLoadingMore(false);
-      }
+  const updateParams = useCallback(
+    (mutate) => {
+      setSearchParams((prev) => {
+        const np = new URLSearchParams(prev);
+        mutate(np);
+        return np;
+      });
     },
-    [mode]
+    [setSearchParams]
   );
 
-  const updateParams = useCallback((mutate) => {
-    setSearchParams((prev) => {
-      const np = new URLSearchParams(prev);
-      mutate(np);
-      return np;
-    });
-  }, [setSearchParams]);
-
-  // Delete handler (cards)
+  // Delete handler
   const handleDelete = async (id) => {
     if (!window.confirm("정말 이 문제를 삭제하시겠습니까?")) return;
     try {
@@ -183,7 +126,7 @@ const Uploads = ({ user, setUser }) => {
     }
   };
 
-  // Apply status/subject changes
+  // Apply status filter
   const applyStatus = useCallback(
     (v) => {
       updateParams((np) => {
@@ -191,23 +134,18 @@ const Uploads = ({ user, setUser }) => {
         else np.delete("status");
         np.set("page", "1");
         np.set("pageSize", String(PAGE_SIZE));
-        if (mode !== "cards") np.set("mode", mode);
       });
       setPage(1);
     },
-    [updateParams, mode, setPage] // ✅ add stable dependencies
+    [updateParams]
   );
 
-  // Initial load & when mode changes
+  // Initial load
   useEffect(() => {
     setPage(1);
     setHasMore(true);
-    if (mode === "cards") {
-      loadQuestions(1);
-    } else {
-      loadSummary(1);
-    }
-  }, [mode, loadQuestions, loadSummary, applyStatus]);
+    loadQuestions(1);
+  }, [loadQuestions, applyStatus]);
 
   // Infinite scroll
   useEffect(() => {
@@ -221,12 +159,23 @@ const Uploads = ({ user, setUser }) => {
     return () => window.removeEventListener("scroll", onScroll);
   }, [hasMore, loadingMore]);
 
-  // Load more when page increments
+  // Load more
   useEffect(() => {
     if (page === 1) return;
-    if (mode === "cards") loadQuestions(page);
-    else loadSummary(page);
-  }, [page, mode, loadQuestions, loadSummary]);
+    loadQuestions(page);
+  }, [page, loadQuestions]);
+
+  const clearUserIdFilter = () => {
+    const np = new URLSearchParams(searchParams.toString());
+    np.delete("userId");
+    setSearchParams(np);
+  };
+
+  const clearGuestUUIDFilter = () => {
+    const np = new URLSearchParams(searchParams.toString());
+    np.delete("guestUUID");
+    setSearchParams(np);
+  };
 
   const setFilter = (filter) => {
     const params = new URLSearchParams();
@@ -243,81 +192,43 @@ const Uploads = ({ user, setUser }) => {
     window.open(`${window.location.origin}${url}`, "_blank", "noopener,noreferrer");
   };
 
-  // Switch mode without losing existing params
-  const setMode = (next) => {
-    updateParams((np) => {
-      if (next === "cards") np.delete("mode");
-      else np.set("mode", "summary");
-      np.set("page", "1");
-      np.set("pageSize", String(PAGE_SIZE));
-    });
-    setPage(1);
-  };
-
-  const clearUserIdFilter = () => {
-    const np = new URLSearchParams(searchParams.toString());
-    np.delete("userId");
-    setSearchParams(np);
-  };
-  const clearGuestUUIDFilter = () => {
-    const np = new URLSearchParams(searchParams.toString());
-    np.delete("guestUUID");
-    setSearchParams(np);
-  };
-
+  // ---------------- RENDER ----------------
   return (
-    <div className="w-full font-sans bg-gray-200 flex flex-col h-full items-center">
+    <div className="w-full font-sans bg-gray-200 flex flex-col h-full items-center min-h-screen">
       <div className="flex space-x-1 p-2 w-full font-semibold items-center">
-        <p className="font-semibold w-full text-gray-500">{mode === "cards" ? "최근 문제" : "최근 유저"}</p>
-        <p className="text-xs text-gray-500 flex-shrink-0">업로드 / 문제수 : </p>
-        <p className="text-xs text-indigo-600 flex-shrink-0">{totalCount} / {totalQuestions}</p>
-      </div>
-      {/* Mode toggle */}
-      <div className="flex-shrink-0 flex justify-center z-30 h-12 items-center overflow-hidden fixed bottom-2 shadow-xl border-t rounded-full bg-white/60 backdrop-blur-xl">
-        <button
-          onClick={() => setMode("cards")}
-          className={`px-3 h-full w-16 flex items-center justify-center text-xs ${mode === "cards" ? "bg-indigo-600 text-white" : "text-gray-700"
-            }`}
-        >
-          <PiCardsThree className="w-6 h-6" />
-        </button>
-        <button
-          onClick={() => setMode("summary")}
-          className={`px-3 h-full w-16 flex items-center justify-center text-xs ${mode === "summary" ? "bg-indigo-600 text-white" : "text-gray-700"
-            }`}
-        >
-          <LiaIdCardSolid className="w-6 h-6" />
-        </button>
+        <p className="font-semibold w-full text-gray-500">최근 문제</p>
+        <p className="text-xs text-gray-500 flex-shrink-0">업로드 / 문제수 :</p>
+        <p className="text-xs text-indigo-600 flex-shrink-0">
+          {totalCount} / {totalQuestions}
+        </p>
       </div>
 
       {/* Status toggle */}
-      {mode === "cards" && (
-        <div className="flex-shrink-0 flex justify-center z-30 items-center overflow-hidden fixed bottom-12 space-x-1 p-4">
-          <button
-            onClick={() => applyStatus("")}
-            className={`px-3 h-10 w-10 flex items-center justify-center text-xs rounded-full shadow-xl border-t ${status === "" ? "bg-indigo-600 text-white" : " bg-white/60 backdrop-blur-xl"
-              }`}
-          >
-            ALL
-          </button>
-          <button
-            onClick={() => applyStatus("done")}
-            className={`px-3 h-10 w-10 flex items-center justify-center text-xs rounded-full shadow-xl border-t ${status === "done" ? "bg-indigo-600 text-white" : " bg-white/60 backdrop-blur-xl"
-              }`}
-          >
-            <FaCheck />
-          </button>
-          <button
-            onClick={() => applyStatus("processing")}
-            className={`px-3 h-10 w-10 flex items-center justify-center text-xs rounded-full shadow-xl border-t ${status === "processing" ? "bg-indigo-600 text-white" : "bg-white/60 backdrop-blur-xl"
-              }`}
-          >
-            <BsThreeDots />
-          </button>
-        </div>
-      )}
+      <div className="flex-shrink-0 flex justify-center z-30 items-center overflow-hidden fixed bottom-0 space-x-1 p-4">
+        <button
+          onClick={() => applyStatus("")}
+          className={`px-3 h-10 w-10 flex items-center justify-center text-xs rounded-full shadow-xl border-t ${statusFilter === "" ? "bg-indigo-600 text-white" : " bg-white/60 backdrop-blur-xl"
+            }`}
+        >
+          ALL
+        </button>
+        <button
+          onClick={() => applyStatus("done")}
+          className={`px-3 h-10 w-10 flex items-center justify-center text-xs rounded-full shadow-xl border-t ${statusFilter === "done" ? "bg-indigo-600 text-white" : " bg-white/60 backdrop-blur-xl"
+            }`}
+        >
+          <FaCheck />
+        </button>
+        <button
+          onClick={() => applyStatus("processing")}
+          className={`px-3 h-10 w-10 flex items-center justify-center text-xs rounded-full shadow-xl border-t ${statusFilter === "processing" ? "bg-indigo-600 text-white" : "bg-white/60 backdrop-blur-xl"
+            }`}
+        >
+          <BsThreeDots />
+        </button>
+      </div>
 
-      {/* Controls row */}
+      {/* Filters */}
       {(userIdFilter || guestUUIDFilter) && (
         <div className="flex h-12 items-center justify-center px-2 fixed top-0 z-30">
           {userIdFilter && (
@@ -350,47 +261,13 @@ const Uploads = ({ user, setUser }) => {
         </div>
       ) : (
         <div className="w-full max-w-4xl flex flex-col items-center">
-          {mode === "summary" ? (
-            <>
-              {summaryRows.map((row) => (
-                <div key={row.user._id} className="bg-gray-800 w-full mb-px">
-                  <UserCell
-                    user={row.user}
-                    compact={true}
-                    stats={{
-                      totalUploads: row.uploads,
-                      totalQuestions: row.totalQuestions,
-                      todayUploads: row.todayUploads,
-                      todayQuestions: row.todayQuestions,
-                      activeDays: row.activeDays,
-                      firstAt: row.firstAt,
-                      lastAt: row.lastAt,
-                      avgProcessingTimeMs: row.avgProcessingTimeMs,
-                    }}
-                    onFilter={setFilter}
-                  />
-                </div>
-              ))}
-              {loadingMore && <p className="text-center py-4 text-gray-600">Loading more...</p>}
-              {!hasMore && <p className="text-center text-sm py-4 text-gray-600">🔚🔚🔚 No more results 🔚🔚🔚</p>}
-            </>
-          ) : (
-            <div className="w-full flex flex-col items-center">
-              <div className="divide-y w-full flex flex-col items-center">
-                {questions.map((q, qIndex) => (
-                  <UploadCard
-                    key={q._id || qIndex}
-                    q={q}
-                    qIndex={qIndex}
-                    onDelete={handleDelete}
-                    setFilter={setFilter}
-                  />
-                ))}
-              </div>
-              {loadingMore && <p className="text-center py-4 text-gray-600">Loading more...</p>}
-              {!hasMore && <p className="text-center text-sm py-4 text-gray-600">🔚🔚🔚 No more results 🔚🔚🔚</p>}
-            </div>
-          )}
+          <div className="divide-y w-full flex flex-col items-center">
+            {questions.map((q, qIndex) => (
+              <UploadCard key={q._id || qIndex} q={q} qIndex={qIndex} onDelete={handleDelete} setFilter={setFilter} />
+            ))}
+          </div>
+          {loadingMore && <p className="text-center py-4 text-gray-600">Loading more...</p>}
+          {!hasMore && <p className="text-center text-sm py-4 text-gray-600">🔚🔚🔚 No more results 🔚🔚🔚</p>}
         </div>
       )}
     </div>

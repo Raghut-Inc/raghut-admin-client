@@ -255,29 +255,40 @@ const UploadCard = ({ q, qIndex, onDelete, setFilter }) => {
                 {!isQuotaLimit && q.status !== "processing" && !showDetails && (
                     <div onClick={() => setShowDetails((v) => !v)} className="text-gray-800 h-10 px-1 flex w-full justify-between items-center bg-gray-700 cursor-pointer">
                         <div className="flex flex-wrap gap-1">
-                            {summaryItems.map((item, idx) => (
+                            {summaryItems.slice(0, 3).map((item, idx) => (
                                 <span
                                     key={idx}
-                                    className={`px-1.5 h-8 items-center flex rounded text-xs font-medium border ${item.valid
-                                        ? "bg-green-100 text-green-700 border-green-300"
-                                        : "bg-red-100 text-red-700 border-red-300"
+                                    className={`px-1.5 h-8 items-center flex rounded text-xs font-medium border overflow-hidden max-w-24 truncate ${item.valid
+                                            ? "bg-green-100 text-green-700 border-green-300"
+                                            : "bg-red-100 text-red-700 border-red-300"
                                         }`}
                                     title={item.valid ? "Valid" : "Invalid"}
                                 >
                                     #{item.num}{" "}
                                     <span className="opacity-75">
-                                        ({item.tokens.length === 0 ? "-" : (
+                                        (
+                                        {item.tokens.length === 0 ? (
+                                            "-"
+                                        ) : (
                                             item.tokens.map((tok, i) => (
                                                 <Fragment key={i}>
                                                     {i > 0 && " / "}
                                                     {renderMixedMath(tok)}
                                                 </Fragment>
                                             ))
-                                        )})
+                                        )}
+                                        )
                                     </span>
                                 </span>
                             ))}
+
+                            {summaryItems.length > 3 && (
+                                <span className="px-2 h-8 flex items-center rounded text-xs font-medium bg-gray-200 text-gray-700 border border-gray-300">
+                                    +{summaryItems.length - 3}
+                                </span>
+                            )}
                         </div>
+
                         <div className="text-white text-xs font-semibold h-6 w-6 flex items-center justify-center flex-shrink-0" >
                             <FaAngleDown />
                         </div>
