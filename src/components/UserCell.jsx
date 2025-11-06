@@ -14,15 +14,13 @@ const UserCell = ({ user, q, stats = {}, compact: defaultCompact = false, onFilt
     const isSubscriptionActive = (user) => {
         if (!user) return false;
 
-        const { subscriptionStatus, subscriptionExpiresAt } = user;
-
-        if (subscriptionStatus !== "active") return false;
+        const { subscriptionExpiresAt } = user;
         if (!subscriptionExpiresAt) return false;
 
         const now = new Date();
         const expiry = new Date(subscriptionExpiresAt);
 
-        // Expired → false, Still valid → true
+        // ✅ Active if not expired yet
         return expiry > now;
     };
 

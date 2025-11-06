@@ -8,6 +8,7 @@ import DBStats from "./DBStats";
 import SideMenu from "../components/Sidebar";
 import DailyActiveUsers from "./users/DailyActiveUsers";
 import TotalUsers from "./users/TotalUsers";
+import SubscribedUsers from "./users/SubscribedUsers";
 
 export default function Admin({ user, setUser }) {
   return (
@@ -20,6 +21,7 @@ export default function Admin({ user, setUser }) {
           <Route path="/uploads" element={<Uploads user={user} setUser={setUser} />} />
           <Route path="/users/all" element={<TotalUsers user={user} setUser={setUser} />} />
           <Route path="/users/daily-active-users" element={<DailyActiveUsers user={user} setUser={setUser} />} />
+          <Route path="/users/subscribed-users" element={<SubscribedUsers user={user} setUser={setUser} />} />
           <Route path="/chat" element={<Chats user={user} setUser={setUser} />} />
           <Route path="/dev" element={<Dev user={user} setUser={setUser} />} />
           <Route path="/db-stats" element={<DBStats />} />

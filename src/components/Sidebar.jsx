@@ -6,6 +6,7 @@ import {
     FaCubesStacked,
     FaDatabase,
     FaClock,
+    FaDollarSign,
 } from "react-icons/fa6";
 import { FaTimes } from "react-icons/fa";
 import { MdFileUpload } from "react-icons/md";
@@ -113,6 +114,11 @@ const SideMenu = ({ user, setUser }) => {
                                 to="/admin/users/all"
                                 icon={<FaUserLarge className="w-4 h-4" />}
                                 label="모든 유저"
+                            />
+                            <MenuItem
+                                to="/admin/users/subscribed-users"
+                                icon={<FaDollarSign className="w-4 h-4" />}
+                                label="구독 유저"
                             />
                             <MenuItem
                                 to="/admin/users/daily-active-users"
