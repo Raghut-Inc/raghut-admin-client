@@ -10,6 +10,7 @@ const DailyActiveUsers = ({ setFilter }) => {
     const [loading, setLoading] = useState(false);
     const [loadingMore, setLoadingMore] = useState(false);
     const [hasMore, setHasMore] = useState(true);
+    const [totalUsers, setTotalUsers] = useState(0);
 
     const [date, setDate] = useState(
         new Intl.DateTimeFormat("en-CA", {
@@ -54,7 +55,7 @@ const DailyActiveUsers = ({ setFilter }) => {
 
                 if (pageToLoad === 1) setDailyRows(data.users || []);
                 else setDailyRows((prev) => [...prev, ...(data.users || [])]);
-
+                setTotalUsers(data.total)
                 setPrevDate(data.prevDate || null);
                 setNextDate(data.nextDate || null);
                 setHasMore((data.users || []).length === PAGE_SIZE);
@@ -132,8 +133,7 @@ const DailyActiveUsers = ({ setFilter }) => {
                 </div>
 
                 {/* Sort controls */}
-                <div className="flex items-center gap-2 mb-2 text-xs text-gray-700 px-2 w-full">
-                    <label>정렬:</label>
+                <div className="flex items-center gap-2 mb-2 text-xs text-gray-700 px-1 w-full">
                     <select
                         className="px-2 py-1 border border-gray-300 rounded text-xs"
                         value={sortBy}
@@ -144,7 +144,7 @@ const DailyActiveUsers = ({ setFilter }) => {
                     >
                         <option value="questions">문제수</option>
                         <option value="uploads">업로드수</option>
-                        <option value="last">최근업로드</option>
+                        <option value="last">최근</option>
                     </select>
                     <select
                         className="px-2 py-1 border border-gray-300 rounded text-xs"
@@ -159,7 +159,7 @@ const DailyActiveUsers = ({ setFilter }) => {
                     </select>
 
                     <div className="ml-auto text-sm text-gray-600">
-                        유저 <b>{dailyRows.length}</b> · 업로드 <b>{pageUploads}</b> · 문제 <b>{pageQuestions}</b>
+                        유 <b>{totalUsers}</b> · 업/문 <b>{pageUploads}/{pageQuestions}</b>
                     </div>
                 </div>
 
