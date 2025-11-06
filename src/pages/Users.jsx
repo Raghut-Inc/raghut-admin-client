@@ -1,7 +1,7 @@
 import { useEffect, useState, useCallback } from 'react';
 import UserCell from '../components/UserCell';
 
-const PAGE_SIZE = 40;
+const PAGE_SIZE = 20;
 
 const Users = ({ user, setUser }) => {
 

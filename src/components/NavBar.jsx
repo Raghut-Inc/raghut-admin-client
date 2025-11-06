@@ -1,8 +1,5 @@
 import { Link } from "react-router";
-import UserSettingsButton from "./UserSettingsButton";
 import logo from "../assets/logo.png";
-import { FaCubesStacked, FaDatabase } from "react-icons/fa6";
-import { MdFileUpload } from "react-icons/md";
 
 const NavBar = ({ user, setUser }) => {
   return (
@@ -12,32 +9,6 @@ const NavBar = ({ user, setUser }) => {
           <Link to="/" className="flex-shrink-0 font-semibold">
             <img src={logo} alt="" className="w-12 h-12" />
           </Link>
-        </div>
-
-
-
-        <div className="flex flex-shrink-0 space-x-4 items-center">
-          <a
-            href="https://api.chalcack.com/admin/queues/"
-            target="_blank"
-            rel="noopener noreferrer"
-            className="w-full flex items-center justify-center"
-          >
-            <button className="flex items-center justify-center h-14 w-full text-gray-500">
-              <FaCubesStacked className="w-5 h-5" />
-            </button>
-          </a>
-          <Link to={"/admin/db-stats"} className="w-full flex items-center justify-center">
-            <button className="flex items-center justify-center h-14 w-full text-gray-500">
-              <FaDatabase className="w-5 h-5" />
-            </button>
-          </Link>
-          <Link to={"/admin/dev"} className="w-full flex items-center justify-center">
-            <button className="flex items-center justify-center h-14 w-full text-gray-500">
-              <MdFileUpload className="w-7 h-7" />
-            </button>
-          </Link>
-          {user && <UserSettingsButton user={user} setUser={setUser} />}
         </div>
       </div>
     </nav>
