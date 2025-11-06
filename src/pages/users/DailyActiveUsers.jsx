@@ -100,8 +100,8 @@ const DailyActiveUsers = ({ setFilter }) => {
     return (
         <div className="w-full font-sans bg-gray-200 min-h-screen flex flex-col h-full items-center">
             <div className="w-full max-w-4xl flex flex-col items-center">
-                <div className="flex flex-col sm:flex-row justify-between w-full items-center px-2 py-3">
-                    <p className="font-bold text-gray-700 text-lg">📅 {date} 업로드 유저</p>
+                <div className="flex flex-row justify-between w-full items-center px-2 py-3">
+                    <p className="font-bold text-gray-700">📅 최근 유저</p>
 
                     <div className="flex items-center gap-2">
                         <button
