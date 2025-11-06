@@ -60,7 +60,7 @@ const SideMenu = ({ user, setUser }) => {
             {/* Floating Hamburger Button */}
             <button
                 onClick={() => setOpen(!open)}
-                className="fixed bottom-4 right-4 z-50 p-3 rounded-full bg-white/70 backdrop-blur-xl shadow-xl border border-gray-200 hover:bg-white transition text-gray-700"
+                className="fixed bottom-4 right-4 z-50 p-3 rounded-full bg-white/70 backdrop-blur-xl shadow-xl border-t border-gray-200 hover:bg-white transition text-gray-700"
             >
                 {open ? <FaTimes className="w-5 h-5" /> : <FaBars className="w-5 h-5" />}
             </button>
@@ -95,7 +95,7 @@ const SideMenu = ({ user, setUser }) => {
                             />
                             <MenuItem
                                 to="/admin/uploads"
-                                icon={<IoIosImage className="w-5 h-5" />}
+                                icon={<IoIosImage className="w-4 h-4" />}
                                 label="Uploads"
                             />
                             <MenuItem
@@ -126,8 +126,8 @@ const SideMenu = ({ user, setUser }) => {
                             />
                             <MenuItem
                                 to="/admin/dev"
-                                icon={<MdFileUpload className="w-5 h-5" />}
-                                label="Upload"
+                                icon={<MdFileUpload className="w-4 h-4" />}
+                                label="Test upload"
                             />
 
                             {/* Account Section */}

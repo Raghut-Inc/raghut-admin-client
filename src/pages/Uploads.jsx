@@ -353,9 +353,10 @@ const Uploads = ({ user, setUser }) => {
           {mode === "summary" ? (
             <>
               {summaryRows.map((row) => (
-                <div key={row.user._id} className="bg-gray-800 w-full mb-1">
+                <div key={row.user._id} className="bg-gray-800 w-full mb-px">
                   <UserCell
                     user={row.user}
+                    compact={true}
                     stats={{
                       totalUploads: row.uploads,
                       totalQuestions: row.totalQuestions,
@@ -375,7 +376,7 @@ const Uploads = ({ user, setUser }) => {
             </>
           ) : (
             <div className="w-full flex flex-col items-center">
-              <div className="space-y-1 w-full flex flex-col items-center">
+              <div className="divide-y w-full flex flex-col items-center">
                 {questions.map((q, qIndex) => (
                   <UploadCard
                     key={q._id || qIndex}

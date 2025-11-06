@@ -1,5 +1,6 @@
 import React, { useState } from "react";
 import { calcAge, timeAgo } from "../utils/timeAgo";
+import { FaSearch } from "react-icons/fa";
 
 const UserCell = ({ user, q, stats = {}, compact: defaultCompact = false, onFilter, hideToggle = false }) => {
     const [compact, setCompact] = useState(defaultCompact);
@@ -70,12 +71,11 @@ const UserCell = ({ user, q, stats = {}, compact: defaultCompact = false, onFilt
     if (compact) {
         return (
             <div
-                onClick={handleFilter}
-                title="클릭 시 해당 유저로 필터"
-                className="flex items-center justify-between text-xs px-2 py-1.5 bg-white/5 hover:bg-white/10 transition cursor-pointer"
+                onClick={toggleCollapse}
+                className="flex items-center justify-between text-xs bg-white/5 hover:bg-white/10 transition cursor-pointer h-10"
             >
                 {/* LEFT: Name + Username */}
-                <div className="flex items-center gap-2 min-w-0">
+                <div className="flex items-center gap-2 min-w-0 px-2">
                     {u?.profileImageUrl && (
                         <img
                             src={u.profileImageUrl}
@@ -87,6 +87,7 @@ const UserCell = ({ user, q, stats = {}, compact: defaultCompact = false, onFilt
                         <div className="flex items-center gap-2">
                             <p className="font-semibold text-white truncate">
                                 {!u?.preferredLanguage ? "" : u?.preferredLanguage === "ko" ? "🇰🇷" : "🇺🇸"} {u?.name || "이름없음"}
+                                <span className="text-gray-400 font-normal text-xs"> @{u.username}</span>
                             </p>
                             {u?.birthday && (
                                 <div className="flex items-center gap-2 text-[11px] text-gray-300">
@@ -97,28 +98,15 @@ const UserCell = ({ user, q, stats = {}, compact: defaultCompact = false, onFilt
                                 </div>
                             )}
                         </div>
-
-                        {u?.username && (
-                            <p className="text-gray-400">@{u.username}</p>
-                        )}
+                        {u?.revenuecatUserId && <p className="text-gray-400">rc: {u.revenuecatUserId}</p>}
                     </div>
                 </div>
 
                 {/* RIGHT: Stats + Times + Toggle */}
                 <div className="flex items-center gap-3 text-right font-mono text-[11px] text-gray-200">
-
-                    {/* 📅 Last Upload + CreatedAt */}
                     <div className="flex flex-col items-end text-[10px] text-gray-400">
-                        {stats?.lastAt && (
-                            <span>
-                                마지막 {timeAgo(stats.lastAt)}
-                            </span>
-                        )}
-                        {u?.createdAt && (
-                            <span>
-                                가입 {timeAgo(u.createdAt)}
-                            </span>
-                        )}
+                        {stats?.lastAt && <span>마지막 {timeAgo(stats.lastAt)}</span>}
+                        {u?.createdAt && <span>가입 {timeAgo(u.createdAt)}</span>}
                     </div>
 
                     {hideToggle && (
@@ -129,7 +117,6 @@ const UserCell = ({ user, q, stats = {}, compact: defaultCompact = false, onFilt
                                     {stats?.todayUploads || 0} / {stats?.todayQuestions || 0}
                                 </span>
                             </div>
-
                             <div className="flex flex-col items-end">
                                 <span className="text-[10px] text-gray-400">TU/TQ</span>
                                 <span className="font-semibold text-white">
@@ -139,13 +126,12 @@ const UserCell = ({ user, q, stats = {}, compact: defaultCompact = false, onFilt
                         </>
                     )}
 
-                    {/* ⬇️ Expand button */}
                     {!hideToggle && (
                         <button
-                            onClick={toggleCollapse}
-                            className="ml-2 px-2 py-[1px] text-[10px] rounded-md bg-gray-700 text-white hover:bg-gray-600"
+                            onClick={handleFilter}
+                            className="h-10 w-9 text-[10px] bg-gray-600 text-white hover:bg-gray-600 flex-shrink-0 flex items-center justify-center"
                         >
-                            ▼
+                            <FaSearch />
                         </button>
                     )}
                 </div>
@@ -158,59 +144,49 @@ const UserCell = ({ user, q, stats = {}, compact: defaultCompact = false, onFilt
     // ===================================================================
     return (
         <div
-            onClick={handleFilter}
-            className="transition text-xs text-white space-y-2 p-2 cursor-pointer bg-white/5 rounded-md hover:bg-white/10"
-            title="클릭 시 해당 유저로 필터"
+            onClick={toggleCollapse}
+            className="transition text-xs text-white space-y-1 cursor-pointer bg-white/5 hover:bg-white/10"
         >
             {/* ---- Header ---- */}
-            <div className="flex items-center justify-between">
-                <div className="flex items-center gap-2">
-                    {u?.profileImageUrl && (
-                        <img
-                            src={u.profileImageUrl}
-                            alt=""
-                            className="w-8 h-8 bg-gray-100 rounded-full object-cover"
-                        />
-                    )}
-                    <span className="font-semibold text-xs flex-shrink-0">
-                        {u?.preferredLanguage === "ko" ? "🇰🇷" : "🇺🇸"} {u?.name || "이름없음"}
-                    </span>
-                    {u?.username && (
-                        <span className="text-xs text-gray-400">@{u.username}</span>
-                    )}
-                    {u?.birthday && (
-                        <div className="flex items-center gap-2 text-[11px] text-gray-300 mt-1">
-                            <span>
-                                🎂 {new Date(u.birthday).getFullYear()}년생 ({calcAge(u.birthday)}세)
-                            </span>
-                            {u?.zodiacAnimal && <span>{u.zodiacAnimal}</span>}
-                        </div>
-                    )}
-                </div>
+            <div className="flex items-center gap-2 min-w-0 px-2 h-10">
+                {u?.profileImageUrl && (
+                    <img
+                        src={u.profileImageUrl}
+                        alt=""
+                        className="w-6 h-6 bg-gray-200 rounded-full object-cover flex-shrink-0"
+                    />
+                )}
+                <div className="truncate">
+                    <div className="flex items-center gap-2">
+                        <p className="font-semibold text-white truncate">
+                            {!u?.preferredLanguage ? "" : u?.preferredLanguage === "ko" ? "🇰🇷" : "🇺🇸"} {u?.name || "이름없음"}
+                        </p>
+                        {u?.birthday && (
+                            <div className="flex items-center gap-2 text-[11px] text-gray-300">
+                                <span>
+                                    🎂 {new Date(u.birthday).getFullYear()}년생 ({calcAge(u.birthday)}세)
+                                </span>
+                                {u?.zodiacAnimal && <span>{u.zodiacAnimal}</span>}
+                            </div>
+                        )}
+                    </div>
 
-                {/* ⬆️ Collapse button */}
-                <button
-                    onClick={toggleCollapse}
-                    className="px-2 py-[1px] text-[10px] rounded-md bg-gray-700 text-white hover:bg-gray-600"
-                >
-                    ▲
-                </button>
+                    {u?.username && <p className="text-gray-400">@{u.username}</p>}
+                </div>
             </div>
 
             {/* ---- TAGS ---- */}
-            <div className="flex flex-wrap gap-1.5 mt-2 items-center">
+            <div className="flex flex-wrap gap-1.5 mt-2 items-center p-1">
                 {stats?.totalUploads >= 2 && (
                     <span className="inline-flex items-center gap-1 px-2 py-[2px] text-[10px] font-semibold rounded-lg bg-green-500/80 text-white shadow-sm">
                         <span className="text-xs">📸</span>업로드 2번+
                     </span>
                 )}
-
                 {stats?.activeDays >= 2 && (
                     <span className="inline-flex items-center gap-1 px-2 py-[2px] text-[10px] font-semibold rounded-lg bg-blue-500/80 text-white shadow-sm">
                         <span className="text-xs">📅</span>이용 2일+
                     </span>
                 )}
-
                 {stats?.totalUploads === 0 && (
                     <span className="inline-flex items-center gap-1 px-2 py-[2px] text-[10px] font-semibold rounded-lg bg-red-500/80 text-white shadow-sm">
                         X 사용안해봄
@@ -247,7 +223,6 @@ const UserCell = ({ user, q, stats = {}, compact: defaultCompact = false, onFilt
                                         ? "반반"
                                         : "기타"}
                         </span>
-
                         <button
                             onClick={onResetClick}
                             disabled={updatingType}
@@ -266,9 +241,7 @@ const UserCell = ({ user, q, stats = {}, compact: defaultCompact = false, onFilt
                             defaultValue=""
                             className="text-[10px] px-2 py-[2px] rounded-lg bg-white/20 text-white font-semibold outline-none cursor-pointer border border-white/10 hover:bg-white/30"
                         >
-                            <option value="" disabled>
-                                🔧 유저 유형
-                            </option>
+                            <option value="" disabled>🔧 유저 유형</option>
                             <option value="study">📘 공부러</option>
                             <option value="homework">📚 숙제러</option>
                             <option value="half">🌗 반반</option>
@@ -276,24 +249,20 @@ const UserCell = ({ user, q, stats = {}, compact: defaultCompact = false, onFilt
                     </div>
                 )}
 
-                {updateMsg && (
-                    <span className="text-[10px] text-gray-300 ml-1">{updateMsg}</span>
-                )}
+                {updateMsg && <span className="text-[10px] text-gray-300 ml-1">{updateMsg}</span>}
             </div>
 
             {/* ---- Devices ---- */}
             {Array.isArray(u?.devices) && u.devices.length > 0 && (
-                <div className="bg-white/10 p-2 rounded-md text-[11px]">
+                <div className="bg-white/10 p-2 text-[11px]">
                     {u?.createdAt && (
                         <div className="flex justify-between text-gray-400 font-mono border-b border-white/10">
                             <div className="font-semibold text-gray-300 mb-1">가입일</div>
                             <span>
-                                {new Date(u.createdAt).toLocaleDateString()} (
-                                {timeAgo(u.createdAt)}) · {u.provider || "UNKNOWN"}
+                                {new Date(u.createdAt).toLocaleDateString()} ({timeAgo(u.createdAt)}) · {u.provider || "UNKNOWN"}
                             </span>
                         </div>
                     )}
-
                     <div className="font-semibold text-gray-300 mt-2 mb-1">최근 접속 기기</div>
                     {u.devices.map((d, i) => (
                         <div key={i} className="flex flex-col border-white/10 pt-1">
@@ -310,9 +279,53 @@ const UserCell = ({ user, q, stats = {}, compact: defaultCompact = false, onFilt
                 </div>
             )}
 
+            {/* ---- Subscription Info ---- */}
+            {(u?.revenuecatUserId || u?.subscriptionStatus !== "none") && (
+                <div className="bg-white/10 p-2 text-[11px] space-y-1 border-t border-white/10">
+                    <div className="flex justify-between">
+                        <span className="font-semibold text-gray-300">RevenueCat ID</span>
+                        <span className="text-gray-400 font-mono truncate max-w-[180px]">
+                            {u.revenuecatUserId || "—"}
+                        </span>
+                    </div>
+                    <div className="flex justify-between">
+                        <span className="font-semibold text-gray-300">Status</span>
+                        <span
+                            className={
+                                u.subscriptionStatus === "active"
+                                    ? "text-green-400 font-semibold"
+                                    : u.subscriptionStatus === "canceled"
+                                        ? "text-yellow-400"
+                                        : u.subscriptionStatus === "expired"
+                                            ? "text-red-400"
+                                            : "text-gray-400"
+                            }
+                        >
+                            {u.subscriptionStatus || "none"}
+                        </span>
+                    </div>
+                    <div className="flex justify-between">
+                        <span className="font-semibold text-gray-300">Plan</span>
+                        <span className="text-gray-300">{u.subscriptionType || "—"}</span>
+                    </div>
+                    {u.subscriptionExpiresAt && (
+                        <div className="flex justify-between">
+                            <span className="font-semibold text-gray-300">Expires</span>
+                            <span className="text-gray-300">
+                                {new Date(u.subscriptionExpiresAt).toLocaleDateString("ko-KR", {
+                                    month: "short",
+                                    day: "numeric",
+                                })}{" "}
+                                ({timeAgo(u.subscriptionExpiresAt)})
+                            </span>
+                        </div>
+                    )}
+                </div>
+            )}
+
             {/* ---- Upload Stats ---- */}
             {(stats?.totalUploads || stats?.todayUploads) ? (
-                <div className="bg-white/5 p-2 rounded-md space-y-1 text-[11px]">
+                <div className="bg-white/5 p-2 space-y-1 text-[11px]">
                     <div className="flex justify-between">
                         <span>오늘 업로드 / 문제</span>
                         <span className="font-semibold text-white">
