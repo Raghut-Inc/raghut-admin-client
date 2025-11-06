@@ -176,16 +176,6 @@ const SubscribedUsers = ({ setFilter }) => {
                                 compact={true}
                                 onFilter={setFilter}
                                 user={user}
-                                stats={{
-                                    totalUploads: user.uploads,
-                                    totalQuestions: user.totalQuestions,
-                                    todayUploads: user.todayUploads,
-                                    todayQuestions: user.todayQuestions,
-                                    activeDays: user.activeDays,
-                                    firstAt: user.firstAt,
-                                    lastAt: user.lastAt,
-                                    avgProcessingTimeMs: user.avgProcessingTimeMs,
-                                }}
                             />
                         ))
                     )}

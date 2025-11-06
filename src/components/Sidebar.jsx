@@ -93,12 +93,12 @@ const SideMenu = ({ user, setUser }) => {
                             <MenuItem
                                 to="/admin/analytics"
                                 icon={<SiGoogleanalytics className="w-4 h-4" />}
-                                label="Analytics"
+                                label="애널리틱스"
                             />
                             <MenuItem
                                 to="/admin/uploads"
                                 icon={<IoIosImage className="w-4 h-4" />}
-                                label="Uploads"
+                                label="전체 업로드"
                             />
 
                             <MenuItem

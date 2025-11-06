@@ -27,7 +27,7 @@ const TotalUsers = () => {
                 if (userType && userType !== 'all') params.set('userType', userType);
 
                 const res = await fetch(
-                    `${process.env.REACT_APP_API_URL}/users?${params.toString()}`,
+                    `${process.env.REACT_APP_API_URL}/analytics/total-users?${params.toString()}`,
                     {
                         credentials: 'include',
                         headers: { 'Content-Type': 'application/json' },
@@ -144,7 +144,6 @@ const TotalUsers = () => {
                     <UserCell
                         key={user._id}
                         user={user}
-                        stats={user.uploadStats}
                         onFilter={goToUploads}
                         compact={true}
                     />

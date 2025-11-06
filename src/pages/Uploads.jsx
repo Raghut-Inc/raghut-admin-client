@@ -69,11 +69,11 @@ const Uploads = () => {
         if (subjectFilter) params.set("subject", subjectFilter);
 
         const res = await fetch(
-          `${process.env.REACT_APP_API_URL}/solved-questions/admin-panel?${params.toString()}&includeUserStats=true`,
+          `${process.env.REACT_APP_API_URL}/analytics/total-solved-questions?${params.toString()}&includeUserStats=true`,
           { credentials: "include" }
         );
         const data = await res.json();
-
+        console.log(data.questions)
         if (data.success) {
           setTotalCount(data.totalCount);
           setTotalQuestions(data.totalQuestions);

@@ -247,7 +247,7 @@ const UploadCard = ({ q, qIndex, onDelete, setFilter }) => {
                 </div>
 
                 <div className="bg-gray-800">
-                    <UserCell compact={true} user={q.userId} onFilter={setFilter} stats={q.userId?.stats || {}} />
+                    <UserCell compact={true} user={q.userId} onFilter={setFilter} />
                 </div>
 
 
@@ -259,8 +259,8 @@ const UploadCard = ({ q, qIndex, onDelete, setFilter }) => {
                                 <span
                                     key={idx}
                                     className={`px-1.5 h-8 items-center flex rounded text-xs font-medium border overflow-hidden max-w-24 truncate ${item.valid
-                                            ? "bg-green-100 text-green-700 border-green-300"
-                                            : "bg-red-100 text-red-700 border-red-300"
+                                        ? "bg-green-100 text-green-700 border-green-300"
+                                        : "bg-red-100 text-red-700 border-red-300"
                                         }`}
                                     title={item.valid ? "Valid" : "Invalid"}
                                 >

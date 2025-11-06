@@ -2,7 +2,7 @@ import React, { useEffect, useState, useCallback } from "react";
 import UserCell from "../../components/UserCell";
 
 const PAGE_SIZE = 25;
-const TZ = "Asia/Seoul";
+const TZ = "UCT";
 
 const DailyActiveUsers = ({ setFilter }) => {
     const [dailyRows, setDailyRows] = useState([]);
@@ -47,7 +47,7 @@ const DailyActiveUsers = ({ setFilter }) => {
                     { credentials: "include" }
                 );
                 const data = await res.json();
-
+                console.log(data)
                 if (!data.success) {
                     console.error("⚠️ Failed to load daily uploaders:", data.error);
                     return;
@@ -175,20 +175,7 @@ const DailyActiveUsers = ({ setFilter }) => {
                                 key={row.userId}
                                 compact={true}
                                 onFilter={setFilter}
-                                user={{
-                                    ...row.user,
-                                    _id: row.userId,
-                                }}
-                                stats={{
-                                    totalUploads: row.uploads,
-                                    totalQuestions: row.totalQuestions,
-                                    todayUploads: row.todayUploads,
-                                    todayQuestions: row.todayQuestions,
-                                    activeDays: row.activeDays,
-                                    firstAt: row.firstAt,
-                                    lastAt: row.lastAt,
-                                    avgProcessingTimeMs: row.avgProcessingTimeMs,
-                                }}
+                                user={row}
                             />
                         ))
                     )}
