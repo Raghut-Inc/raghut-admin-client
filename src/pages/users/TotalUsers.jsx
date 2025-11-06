@@ -58,18 +58,6 @@ const TotalUsers = () => {
         [userType]
     );
 
-    // ✅ Open uploads view in new tab
-    const goToUploads = ({ userId, guestUUID } = {}) => {
-        const params = new URLSearchParams();
-        params.set("page", "1");
-        params.set("pageSize", "25");
-        if (userId) params.set("userId", userId);
-        if (guestUUID) params.set("guestUUID", guestUUID);
-
-        const url = `/admin/uploads?${params.toString()}`;
-        window.open(url, "_blank", "noopener,noreferrer");
-    };
-
     // ✅ Reload when filter changes
     useEffect(() => {
         setPage(1);
@@ -144,7 +132,6 @@ const TotalUsers = () => {
                     <UserCell
                         key={user._id}
                         user={user}
-                        onFilter={goToUploads}
                         compact={true}
                     />
                 ))}

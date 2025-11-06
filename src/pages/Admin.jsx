@@ -9,6 +9,7 @@ import SideMenu from "../components/Sidebar";
 import DailyActiveUsers from "./users/DailyActiveUsers";
 import TotalUsers from "./users/TotalUsers";
 import SubscribedUsers from "./users/SubscribedUsers";
+import SearchResult from "./SearchResult";
 
 export default function Admin({ user, setUser }) {
   return (
@@ -25,6 +26,7 @@ export default function Admin({ user, setUser }) {
           <Route path="/chat" element={<Chats user={user} setUser={setUser} />} />
           <Route path="/dev" element={<Dev user={user} setUser={setUser} />} />
           <Route path="/db-stats" element={<DBStats />} />
+          <Route path="/search" element={<SearchResult user={user} setUser={setUser} />} />
         </Routes>
       </div>
     </>

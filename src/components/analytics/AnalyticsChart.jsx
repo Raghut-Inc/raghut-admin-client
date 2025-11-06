@@ -353,7 +353,7 @@ const ChartBlock = ({ title, data, series, xAxisKey = "_id", timeScale, tickNum 
             height={300}
             margin={{ top: 8, bottom: 16, left: -4 }}
             slotProps={{
-                legend: { direction: "row", position: { vertical: "top", horizontal: "right" } },
+                legend: { direction: "horizontal", position: { vertical: "top", horizontal: "end" } },
                 tooltip: { formatter: (i) => fmtShort(i.value) },
             }}
         />

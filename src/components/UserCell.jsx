@@ -1,9 +1,9 @@
-import React, { useState } from "react";
+import React, { useEffect, useState } from "react";
 import { calcAge, timeAgo } from "../utils/timeAgo";
 import { FaSearch } from "react-icons/fa";
 import { FiCheck, FiCopy } from "react-icons/fi";
 
-const UserCell = ({ user, q, compact: defaultCompact = false, onFilter }) => {
+const UserCell = ({ user, q, compact: defaultCompact = false }) => {
     const [compact, setCompact] = useState(defaultCompact);
     const [updatingType, setUpdatingType] = useState(false);
     const [updateMsg, setUpdateMsg] = useState("");
@@ -27,7 +27,9 @@ const UserCell = ({ user, q, compact: defaultCompact = false, onFilter }) => {
 
     const handleFilter = (e) => {
         e.stopPropagation();
-        if (u?._id && onFilter) onFilter({ userId: u._id });
+        if (!u?.revenuecatUserId) return;
+        const url = `/admin/search?revenuecatUserId=${u.revenuecatUserId}`;
+        window.open(url, "_blank", "noopener,noreferrer");
     };
 
     const formatDeviceLabel = (ua = "") => {
@@ -89,24 +91,29 @@ const UserCell = ({ user, q, compact: defaultCompact = false, onFilter }) => {
         handleUserTypeChange("other");
     };
 
-    const loadUserDetail = async () => {
-        if (detail || !u?._id) return;
-        try {
-            const res = await fetch(`${process.env.REACT_APP_API_URL}/analytics/user/${u._id}/detail`, {
-                credentials: "include",
-            });
-            const data = await res.json();
-            if (data.success) setDetail(data.stats);
-        } catch (err) {
-            console.error("❌ Failed to load user detail:", err);
-        }
-    };
-
     const toggleCollapse = async (e) => {
         e.stopPropagation();
         setCompact(!compact);
-        if (compact) await loadUserDetail();
     };
+
+    useEffect(() => {
+        const loadUserDetail = async () => {
+            if (detail || !u?._id) return;
+            try {
+                const res = await fetch(`${process.env.REACT_APP_API_URL}/analytics/user/${u._id}/detail`, {
+                    credentials: "include",
+                });
+                const data = await res.json();
+                if (data.success) setDetail(data.stats);
+            } catch (err) {
+                console.error("❌ Failed to load user detail:", err);
+            }
+        };
+        if (!compact) {
+            loadUserDetail()
+        }
+        return () => { }
+    }, [compact, detail, u._id])
 
     return (
         <>

@@ -11,7 +11,7 @@ import { FiCopy } from "react-icons/fi";
 import UserCell from "../UserCell";
 import clsx from "clsx";
 
-const UploadCard = ({ q, qIndex, onDelete, setFilter }) => {
+const UploadCard = ({ q, qIndex, onDelete }) => {
     const [showDetails, setShowDetails] = useState(false);
     const [copied, setCopied] = useState(false);
     const isQuotaLimit = !!q.errorMessage?.includes("요즘 이용자가 많아져서");
@@ -247,7 +247,7 @@ const UploadCard = ({ q, qIndex, onDelete, setFilter }) => {
                 </div>
 
                 <div className="bg-gray-800">
-                    <UserCell compact={true} user={q.userId} onFilter={setFilter} />
+                    <UserCell compact={true} user={q.userId} />
                 </div>
 
 

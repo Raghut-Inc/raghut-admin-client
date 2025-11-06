@@ -4,7 +4,7 @@ import UserCell from "../../components/UserCell";
 const PAGE_SIZE = 25;
 const TZ = "UCT";
 
-const DailyActiveUsers = ({ setFilter }) => {
+const DailyActiveUsers = () => {
     const [dailyRows, setDailyRows] = useState([]);
     const [page, setPage] = useState(1);
     const [loading, setLoading] = useState(false);
@@ -174,7 +174,6 @@ const DailyActiveUsers = ({ setFilter }) => {
                             <UserCell
                                 key={row.userId}
                                 compact={true}
-                                onFilter={setFilter}
                                 user={row}
                             />
                         ))

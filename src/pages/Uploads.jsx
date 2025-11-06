@@ -177,21 +177,6 @@ const Uploads = () => {
     setSearchParams(np);
   };
 
-  const setFilter = (filter) => {
-    const params = new URLSearchParams();
-    params.set("page", "1");
-    params.set("pageSize", String(PAGE_SIZE));
-
-    if (filter.userId) {
-      params.set("userId", filter.userId);
-    } else if (filter.guestUUID) {
-      params.set("guestUUID", filter.guestUUID);
-    }
-
-    const url = `/admin/uploads?${params.toString()}`;
-    window.open(`${window.location.origin}${url}`, "_blank", "noopener,noreferrer");
-  };
-
   // ---------------- RENDER ----------------
   return (
     <div className="w-full font-sans bg-gray-200 flex flex-col h-full items-center min-h-screen">
@@ -263,7 +248,7 @@ const Uploads = () => {
         <div className="w-full max-w-4xl flex flex-col items-center">
           <div className="divide-y w-full flex flex-col items-center">
             {questions.map((q, qIndex) => (
-              <UploadCard key={q._id || qIndex} q={q} qIndex={qIndex} onDelete={handleDelete} setFilter={setFilter} />
+              <UploadCard key={q._id || qIndex} q={q} qIndex={qIndex} onDelete={handleDelete} />
             ))}
           </div>
           {loadingMore && <p className="text-center py-4 text-gray-600">Loading more...</p>}

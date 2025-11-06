@@ -17,7 +17,7 @@ const SORT_OPTIONS = [
     { label: "만료일", value: "subscriptionExpiresAt" },
 ];
 
-const SubscribedUsers = ({ setFilter }) => {
+const SubscribedUsers = () => {
     const [users, setUsers] = useState([]);
     const [status, setStatus] = useState("active");
     const [sortBy, setSortBy] = useState("subscriptionExpiresAt");
@@ -174,7 +174,6 @@ const SubscribedUsers = ({ setFilter }) => {
                             <UserCell
                                 key={user._id}
                                 compact={true}
-                                onFilter={setFilter}
                                 user={user}
                             />
                         ))
