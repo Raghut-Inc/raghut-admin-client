@@ -45,7 +45,7 @@ const UserCell = ({ user, q, compact: defaultCompact = false }) => {
         setUpdateMsg("");
 
         try {
-            const res = await fetch(`${process.env.REACT_APP_API_URL}/admin/users/${u._id}`, {
+            const res = await fetch(`${process.env.REACT_APP_API_URL}/admin/users/${u?._id}`, {
                 method: "PATCH",
                 headers: { "Content-Type": "application/json" },
                 body: JSON.stringify({ userType: newType }),
@@ -100,7 +100,7 @@ const UserCell = ({ user, q, compact: defaultCompact = false }) => {
         const loadUserDetail = async () => {
             if (detail || !u?._id) return;
             try {
-                const res = await fetch(`${process.env.REACT_APP_API_URL}/analytics/user/${u._id}/detail`, {
+                const res = await fetch(`${process.env.REACT_APP_API_URL}/analytics/user/${u?._id}/detail`, {
                     credentials: "include",
                 });
                 const data = await res.json();
@@ -113,7 +113,7 @@ const UserCell = ({ user, q, compact: defaultCompact = false }) => {
             loadUserDetail()
         }
         return () => { }
-    }, [compact, detail, u._id])
+    }, [compact, detail, u?._id])
 
     return (
         <>
