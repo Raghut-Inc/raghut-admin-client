@@ -119,7 +119,7 @@ const UserCell = ({ user, q, compact: defaultCompact = false }) => {
         <>
             <div
                 onClick={toggleCollapse}
-                className={`${isSubscriptionActive(u) ? "bg-purple-800" : "bg-white/5 hover:bg-white/10"} flex items-center justify-between text-xs transition cursor-pointer h-10`}
+                className={`${isSubscriptionActive(u) ? "bg-purple-800" : "bg-white/5 hover:bg-white/10"} flex items-center justify-between text-xs transition cursor-pointer h-14`}
             >
                 {/* LEFT: Name + Username */}
                 <div className="flex items-center gap-2 min-w-0 px-2 overflow-hidden">
@@ -145,6 +145,7 @@ const UserCell = ({ user, q, compact: defaultCompact = false }) => {
                                 </div>
                             )}
                         </div>
+                        {u?.email && <p className="text-gray-400">{u.email}</p>}
                         {u?.revenuecatUserId && <p className="text-gray-400">rc: {u.revenuecatUserId}</p>}
                     </div>
                 </div>
@@ -158,14 +159,14 @@ const UserCell = ({ user, q, compact: defaultCompact = false }) => {
                     <div className="flex divide-x divide-gray-500">
                         <button
                             onClick={handleFilter}
-                            className="h-10 w-9 text-[10px] bg-gray-600 text-white hover:bg-gray-600 flex-shrink-0 flex items-center justify-center"
+                            className="h-14 w-9 text-[10px] bg-gray-600 text-white hover:bg-gray-600 flex-shrink-0 flex items-center justify-center"
                         >
                             <FaSearch />
                         </button>
 
                         <button
                             onClick={handleCopy}
-                            className="h-10 w-9 text-[10px] bg-gray-600 text-white hover:bg-gray-600 flex-shrink-0 flex items-center justify-center"
+                            className="h-14 w-9 text-[10px] bg-gray-600 text-white hover:bg-gray-600 flex-shrink-0 flex items-center justify-center"
                             title="Copy RevenueCat ID"
                         >
 
