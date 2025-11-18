@@ -7,7 +7,8 @@ const PAGE_SIZE = 25;
 
 export default function SearchResult() {
     const [searchParams] = useSearchParams();
-    const revenuecatUserId = searchParams.get("revenuecatUserId") || "";
+    // Still using the same query param, but we’ll interpret it
+    const rawQuery = searchParams.get("revenuecatUserId") || "";
 
     const [user, setUser] = useState(null);
     const [uploads, setUploads] = useState([]);
@@ -17,24 +18,38 @@ export default function SearchResult() {
     const [loadingMore, setLoadingMore] = useState(false);
     const [hasMore, setHasMore] = useState(true);
 
-    // ✅ Core fetch (same structure as TotalUsers)
+    // Helper: decide if this is a RevenueCat userId or a username
+    const isRevenuecatId = /^kakao_|^google_|^apple_/i.test(rawQuery);
+
+    // ✅ Core fetch (same structure as before, but chooses endpoint)
     const fetchUploads = useCallback(
         async (pageToLoad, reset = false) => {
-            if (!revenuecatUserId) return;
+            if (!rawQuery) return;
+
             try {
                 if (pageToLoad === 1) setLoading(true);
                 else setLoadingMore(true);
 
                 const params = new URLSearchParams({
-                    revenuecatUserId,
-                    page: pageToLoad,
-                    pageSize: PAGE_SIZE,
+                    page: pageToLoad.toString(),
+                    pageSize: PAGE_SIZE.toString(),
                 });
 
-                const res = await fetch(
-                    `${process.env.REACT_APP_API_URL}/analytics/search-user-by-revenuecat?${params.toString()}`,
-                    { credentials: "include" }
-                );
+                let endpoint = "";
+
+                if (isRevenuecatId) {
+                    // Search by RevenueCat userId
+                    params.set("revenuecatUserId", rawQuery);
+                    endpoint = `${process.env.REACT_APP_API_URL}/analytics/search-user-by-revenuecat?${params.toString()}`;
+                } else {
+                    // Search by username
+                    params.set("username", rawQuery);
+                    endpoint = `${process.env.REACT_APP_API_URL}/analytics/search-user-by-username?${params.toString()}`;
+                }
+
+                const res = await fetch(endpoint, {
+                    credentials: "include",
+                });
                 const data = await res.json();
 
                 if (data.success) {
@@ -50,6 +65,8 @@ export default function SearchResult() {
                     setHasMore((data.uploads?.length || 0) === PAGE_SIZE);
                 } else {
                     alert("User not found");
+                    setUser(null);
+                    setUploads([]);
                     setHasMore(false);
                 }
             } catch (err) {
@@ -60,15 +77,19 @@ export default function SearchResult() {
                 setLoadingMore(false);
             }
         },
-        [revenuecatUserId]
+        [rawQuery, isRevenuecatId]
     );
 
-    // ✅ Initial load
+    // ✅ Initial load when query changes
     useEffect(() => {
         setPage(1);
         setHasMore(true);
-        fetchUploads(1, true);
-    }, [revenuecatUserId, fetchUploads]);
+        setUser(null);
+        setUploads([]);
+        if (rawQuery) {
+            fetchUploads(1, true);
+        }
+    }, [rawQuery, fetchUploads]);
 
     // ✅ Load more when `page` changes
     useEffect(() => {
@@ -79,6 +100,7 @@ export default function SearchResult() {
     // ✅ Infinite scroll
     useEffect(() => {
         if (!hasMore || loadingMore) return;
+
         const onScroll = () => {
             if (
                 window.innerHeight + window.scrollY >=
@@ -87,20 +109,35 @@ export default function SearchResult() {
                 setPage((prev) => prev + 1);
             }
         };
+
         window.addEventListener("scroll", onScroll);
         return () => window.removeEventListener("scroll", onScroll);
     }, [hasMore, loadingMore]);
 
     // ✅ Render states
-    if (loading && page === 1)
-        return <div className="text-center mt-20 text-gray-500">Loading...</div>;
-
-    if (!user)
+    if (!rawQuery) {
         return (
             <div className="text-center mt-20 text-gray-500">
-                No user found for revenuecatUserId: {revenuecatUserId}
+                검색할 ID 또는 username을 입력해주세요.
             </div>
         );
+    }
+
+    if (loading && page === 1) {
+        return (
+            <div className="text-center mt-20 text-gray-500">
+                Loading...
+            </div>
+        );
+    }
+
+    if (!user) {
+        return (
+            <div className="text-center mt-20 text-gray-500">
+                No user found for: {rawQuery}
+            </div>
+        );
+    }
 
     return (
         <div className="font-sans bg-gray-200 flex flex-col items-center min-h-screen">
@@ -124,7 +161,9 @@ export default function SearchResult() {
                 </div>
 
                 {uploads.length === 0 && (
-                    <div className="text-gray-500 text-center py-6">No uploads found.</div>
+                    <div className="text-gray-500 text-center py-6">
+                        No uploads found.
+                    </div>
                 )}
 
                 {loadingMore && (
