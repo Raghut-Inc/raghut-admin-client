@@ -30,8 +30,6 @@ const SUBJECT_OPTIONS = [
 
 const Uploads = () => {
   const [questions, setQuestions] = useState([]);
-  const [totalCount, setTotalCount] = useState(0);
-  const [totalQuestions, setTotalQuestions] = useState(0);
   const [page, setPage] = useState(1);
   const [loading, setLoading] = useState(false);
   const [loadingMore, setLoadingMore] = useState(false);
@@ -75,8 +73,6 @@ const Uploads = () => {
         const data = await res.json();
         console.log(data.questions)
         if (data.success) {
-          setTotalCount(data.totalCount);
-          setTotalQuestions(data.totalQuestions);
           if (pageToLoad === 1) setQuestions(data.questions);
           else setQuestions((prev) => [...prev, ...data.questions]);
           setHasMore(data.questions.length === PAGE_SIZE);
@@ -115,7 +111,6 @@ const Uploads = () => {
       const data = await res.json();
       if (data.success) {
         setQuestions((prev) => prev.filter((q) => q._id !== id));
-        setTotalCount((count) => Math.max(0, count - 1));
       } else {
         alert("삭제에 실패했습니다.");
         console.error("Delete failed:", data.error);
@@ -182,10 +177,6 @@ const Uploads = () => {
     <div className="w-full font-sans bg-gray-200 flex flex-col h-full items-center min-h-screen">
       <div className="flex space-x-1 p-2 w-full font-semibold items-center">
         <p className="font-semibold w-full text-gray-500">최근 문제</p>
-        <p className="text-xs text-gray-500 flex-shrink-0">업로드 / 문제수 :</p>
-        <p className="text-xs text-indigo-600 flex-shrink-0">
-          {totalCount} / {totalQuestions}
-        </p>
       </div>
 
       {/* Status toggle */}
