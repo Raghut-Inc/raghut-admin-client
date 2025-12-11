@@ -13,6 +13,7 @@ import { MdFileUpload } from "react-icons/md";
 import { SiGoogleanalytics } from "react-icons/si";
 import { IoIosImage } from "react-icons/io";
 import { IoChatbubbleSharp } from "react-icons/io5";
+import { RiKakaoTalkFill } from "react-icons/ri";
 import clsx from "clsx";
 import UserSettingsButton from "./UserSettingsButton";
 
@@ -100,7 +101,11 @@ const SideMenu = ({ user, setUser }) => {
                                 icon={<IoIosImage className="w-4 h-4" />}
                                 label="전체 업로드"
                             />
-
+                            <MenuItem
+                                to="/admin/kakao"
+                                icon={<RiKakaoTalkFill className="w-4 h-4" />}
+                                label="카톡 업로드"
+                            />
                             <MenuItem
                                 to="/admin/chat"
                                 icon={<IoChatbubbleSharp className="w-4 h-4" />}
