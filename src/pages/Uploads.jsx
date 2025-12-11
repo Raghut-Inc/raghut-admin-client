@@ -34,6 +34,7 @@ const Uploads = () => {
   const [loading, setLoading] = useState(false);
   const [loadingMore, setLoadingMore] = useState(false);
   const [hasMore, setHasMore] = useState(true);
+  const [totalCount, setTotalCount] = useState();
 
   const [searchParams, setSearchParams] = useSearchParams();
   const userIdFilter = searchParams.get("userId") || "";
@@ -78,6 +79,7 @@ const Uploads = () => {
           if (pageToLoad === 1) setQuestions(data.questions);
           else setQuestions((prev) => [...prev, ...data.questions]);
           setHasMore(data.questions.length === PAGE_SIZE);
+          setTotalCount(data.totalCount)
         } else {
           console.error("Failed to load questions");
         }
@@ -198,7 +200,7 @@ const Uploads = () => {
   return (
     <div className="w-full font-sans bg-gray-200 flex flex-col h-full items-center min-h-screen">
       <div className="flex space-x-1 p-2 w-full font-semibold items-center">
-        <p className="font-semibold w-full text-gray-500">최근 문제</p>
+        <p className="font-semibold w-full text-gray-500">최근 업로드 {totalCount}</p>
       </div>
 
       {/* Status + errorCode toggles */}
