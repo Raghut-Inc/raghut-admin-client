@@ -61,9 +61,10 @@ const KakaoUploads = () => {
                 else setLoadingMore(true);
 
                 const params = new URLSearchParams();
-                params.set("page", pageToLoad);
-                params.set("pageSize", PAGE_SIZE);
-                params.set("source", "kakao")
+                params.set("page", String(pageToLoad));
+                params.set("pageSize", String(PAGE_SIZE));
+                params.set("source", "kakao"); // or "app"
+
                 if (userIdFilter) params.set("userId", userIdFilter);
                 if (statusFilter) params.set("status", statusFilter);
                 if (subjectFilter) params.set("subject", subjectFilter);
@@ -71,18 +72,17 @@ const KakaoUploads = () => {
                 if (errorCodeFilter) params.set("errorCodeFilter", errorCodeFilter);
 
                 const res = await fetch(
-                    `${process.env.REACT_APP_API_URL}/analytics/total-solved-questions?${params.toString()}&includeUserStats=true`,
+                    `${process.env.REACT_APP_API_URL}/analytics/total-solved-questions?${params.toString()}`,
                     { credentials: "include" }
                 );
+
                 const data = await res.json();
-                console.log(data.questions);
+
                 if (data.success) {
                     if (pageToLoad === 1) setQuestions(data.questions);
                     else setQuestions((prev) => [...prev, ...data.questions]);
                     setHasMore(data.questions.length === PAGE_SIZE);
-                    setTotalCount(data.totalCount)
-                } else {
-                    console.error("Failed to load questions");
+                    setTotalCount(data.totalCount);
                 }
             } catch (err) {
                 console.error("❌ API error:", err);

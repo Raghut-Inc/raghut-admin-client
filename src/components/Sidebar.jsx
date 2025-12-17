@@ -10,7 +10,6 @@ import {
 } from "react-icons/fa6";
 import { FaTimes } from "react-icons/fa";
 import { MdFileUpload } from "react-icons/md";
-import { SiGoogleanalytics } from "react-icons/si";
 import { IoIosImage } from "react-icons/io";
 import { IoChatbubbleSharp } from "react-icons/io5";
 import { RiKakaoTalkFill } from "react-icons/ri";
@@ -91,11 +90,6 @@ const SideMenu = ({ user, setUser }) => {
                             <div className="text-xs uppercase font-semibold text-gray-400 px-4 mb-1">
                                 Dashboard
                             </div>
-                            <MenuItem
-                                to="/admin/analytics"
-                                icon={<SiGoogleanalytics className="w-4 h-4" />}
-                                label="애널리틱스"
-                            />
                             <MenuItem
                                 to="/admin/uploads"
                                 icon={<IoIosImage className="w-4 h-4" />}

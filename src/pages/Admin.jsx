@@ -1,6 +1,5 @@
 import { Route, Routes } from "react-router";
 import Uploads from "./Uploads";
-import Analytics from "./Analytics";
 import Chats from "./Chats";
 import Dev from "./Dev";
 import NavBar from "../components/NavBar";
@@ -19,7 +18,6 @@ export default function Admin({ user, setUser }) {
         <NavBar user={user} setUser={setUser} />
         <SideMenu user={user} setUser={setUser} />
         <Routes>
-          <Route path="/analytics/*" element={<Analytics user={user} setUser={setUser} />} />
           <Route path="/uploads" element={<Uploads user={user} setUser={setUser} />} />
           <Route path="/kakao" element={<KakaoUploads user={user} setUser={setUser} />} />
           <Route path="/users/all" element={<TotalUsers user={user} setUser={setUser} />} />

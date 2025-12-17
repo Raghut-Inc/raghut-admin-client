@@ -45,7 +45,7 @@ function App() {
           path="/"
           element={
             user ? (
-              <Navigate to="/admin/analytics" replace />
+              <Navigate to="/admin/uploads" replace />
             ) : (
               <Navigate to="/login" replace />
             )
