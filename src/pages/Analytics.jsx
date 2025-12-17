@@ -1,6 +1,5 @@
 import { useLocation } from "react-router";
 import AnalyticsSummary from "../components/analytics/AnalyticsSummary";
-import AnalyticsChart from "../components/analytics/AnalyticsChart";
 // import { BsGraphUp } from "react-icons/bs";
 // import { FaUsers } from "react-icons/fa6";
 
@@ -41,7 +40,6 @@ export default function Analytics({ user, setUser }) {
             {mode === "summary" &&
                 <>
                     <AnalyticsSummary user={user} setUser={setUser} />
-                    <AnalyticsChart user={user} setUser={setUser} />
                 </>
             }
         </div>
