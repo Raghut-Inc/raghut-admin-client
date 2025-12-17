@@ -63,6 +63,7 @@ const KakaoUploads = () => {
                 const params = new URLSearchParams();
                 params.set("page", pageToLoad);
                 params.set("pageSize", PAGE_SIZE);
+                params.set("source", "kakao")
                 if (userIdFilter) params.set("userId", userIdFilter);
                 if (statusFilter) params.set("status", statusFilter);
                 if (subjectFilter) params.set("subject", subjectFilter);
@@ -70,7 +71,7 @@ const KakaoUploads = () => {
                 if (errorCodeFilter) params.set("errorCodeFilter", errorCodeFilter);
 
                 const res = await fetch(
-                    `${process.env.REACT_APP_API_URL}/analytics/total-solved-kakao-questions?${params.toString()}&includeUserStats=true`,
+                    `${process.env.REACT_APP_API_URL}/analytics/total-solved-questions?${params.toString()}&includeUserStats=true`,
                     { credentials: "include" }
                 );
                 const data = await res.json();

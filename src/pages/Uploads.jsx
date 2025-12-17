@@ -63,6 +63,7 @@ const Uploads = () => {
         const params = new URLSearchParams();
         params.set("page", pageToLoad);
         params.set("pageSize", PAGE_SIZE);
+        params.set("source", "app")
         if (userIdFilter) params.set("userId", userIdFilter);
         if (statusFilter) params.set("status", statusFilter);
         if (subjectFilter) params.set("subject", subjectFilter);

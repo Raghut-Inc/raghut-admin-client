@@ -30,9 +30,15 @@ const AnalyticsSummary = () => {
     const [, setError] = useState(null);
 
     async function fetchJson(url) {
+        const t0 = performance.now();
         const res = await fetch(url, { credentials: "include" });
+        const t1 = performance.now();
+        console.log(`[analytics] ${url} fetch ${(t1 - t0).toFixed(0)}ms`);
         if (!res.ok) throw new Error(`Failed to fetch ${url}: ${res.statusText}`);
-        return res.json();
+        const json = await res.json();
+        const t2 = performance.now();
+        console.log(`[analytics] ${url} json ${(t2 - t1).toFixed(0)}ms total ${(t2 - t0).toFixed(0)}ms`);
+        return json;
     }
 
     // Fetch DAU/WAU/MAU
