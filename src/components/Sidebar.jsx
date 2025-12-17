@@ -13,6 +13,7 @@ import { MdFileUpload } from "react-icons/md";
 import { IoIosImage } from "react-icons/io";
 import { IoChatbubbleSharp } from "react-icons/io5";
 import { RiKakaoTalkFill } from "react-icons/ri";
+import { SiPosthog } from "react-icons/si"; // ✅ add
 import clsx from "clsx";
 import UserSettingsButton from "./UserSettingsButton";
 
@@ -90,6 +91,15 @@ const SideMenu = ({ user, setUser }) => {
                             <div className="text-xs uppercase font-semibold text-gray-400 px-4 mb-1">
                                 Dashboard
                             </div>
+
+                            {/* ✅ PostHog link at top */}
+                            <MenuItem
+                                href="https://us.posthog.com/project/267472/dashboard/890768"
+                                icon={<SiPosthog className="w-4 h-4" />}
+                                label="PostHog"
+                                external
+                            />
+
                             <MenuItem
                                 to="/admin/uploads"
                                 icon={<IoIosImage className="w-4 h-4" />}
@@ -105,7 +115,8 @@ const SideMenu = ({ user, setUser }) => {
                                 icon={<IoChatbubbleSharp className="w-4 h-4" />}
                                 label="Chat"
                             />
-                            {/* Dev Tools */}
+
+                            {/* Users */}
                             <div className="text-xs uppercase font-semibold text-gray-400 px-4 mt-8 mb-1">
                                 유저
                             </div>
@@ -124,6 +135,7 @@ const SideMenu = ({ user, setUser }) => {
                                 icon={<FaClock className="w-4 h-4" />}
                                 label="최근 업로드 유저"
                             />
+
                             {/* Dev Tools */}
                             <div className="text-xs uppercase font-semibold text-gray-400 px-4 mt-8 mb-1">
                                 Dev Tools

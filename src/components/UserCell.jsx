@@ -27,9 +27,15 @@ const UserCell = ({ user, q, compact: defaultCompact = false }) => {
 
     const handleFilter = (e) => {
         e.stopPropagation();
-        if (!u?.revenuecatUserId) return;
-        const url = `/admin/search?revenuecatUserId=${u.revenuecatUserId}`;
-        window.open(url, "_blank", "noopener,noreferrer");
+
+        const revenuecatUserId = u?.revenuecatUserId ?? u?.username;
+        if (!revenuecatUserId) return;
+
+        window.open(
+            `/admin/search?revenuecatUserId=${revenuecatUserId}`,
+            "_blank",
+            "noopener,noreferrer"
+        );
     };
 
     const formatDeviceLabel = (ua = "") => {

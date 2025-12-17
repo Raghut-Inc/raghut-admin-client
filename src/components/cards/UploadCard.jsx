@@ -221,10 +221,15 @@ const UploadCard = ({ q, qIndex, onDelete }) => {
                     </div>
                 </div>
 
-                <div className="bg-gray-800">
-                    <UserCell compact={true} user={q.userId} />
-                </div>
-
+                {q.source === "app" ? (
+                    <div className="bg-gray-800">
+                        <UserCell compact={true} user={q.userId} />
+                    </div>
+                ) : (
+                    <div className="flex items-center justify-between text-xs h-8 bg-white/5 px-3">
+                        <div className="font-semibold text-white">카카오 챗봇 USER</div>
+                    </div>
+                )}
 
                 {/* SUMMARY ROW */}
                 {!isProcessing && !showDetails && (
