@@ -15,7 +15,7 @@ export default function Login({ user, setUser }) {
 
       if (res.data.success) {
         // only allow admins through
-        if (res.data.user.email !== "seong1shin@gmail.com" || res.data.user.email !== "dhj9817@gmail.com") {
+        if (res.data.user.role !== "admin") {
           alert("You are not authorized to access the admin panel.");
           return;
         }
