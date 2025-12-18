@@ -20,6 +20,7 @@ export default function SearchResult() {
 
     // Helper: decide if this is a RevenueCat userId or a username
     const isRevenuecatId = /^kakao_|^google_|^apple_/i.test(rawQuery);
+    const isMongoObjectId = /^[a-f\d]{24}$/i.test(rawQuery);
 
     // ✅ Core fetch (same structure as before, but chooses endpoint)
     const fetchUploads = useCallback(
@@ -37,12 +38,13 @@ export default function SearchResult() {
 
                 let endpoint = "";
 
-                if (isRevenuecatId) {
-                    // Search by RevenueCat userId
+                if (isMongoObjectId) {
+                    params.set("userId", rawQuery);
+                    endpoint = `${process.env.REACT_APP_API_URL}/analytics/search-user-by-id?${params.toString()}`;
+                } else if (isRevenuecatId) {
                     params.set("revenuecatUserId", rawQuery);
                     endpoint = `${process.env.REACT_APP_API_URL}/analytics/search-user-by-revenuecat?${params.toString()}`;
                 } else {
-                    // Search by username
                     params.set("username", rawQuery);
                     endpoint = `${process.env.REACT_APP_API_URL}/analytics/search-user-by-username?${params.toString()}`;
                 }
