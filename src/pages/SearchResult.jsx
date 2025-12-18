@@ -8,7 +8,7 @@ const PAGE_SIZE = 25;
 export default function SearchResult() {
     const [searchParams] = useSearchParams();
     // Still using the same query param, but we’ll interpret it
-    const rawQuery = searchParams.get("revenuecatUserId") || "";
+    const rawQuery = searchParams.get("q") || "";
 
     const [user, setUser] = useState(null);
     const [uploads, setUploads] = useState([]);
@@ -17,10 +17,6 @@ export default function SearchResult() {
     const [loading, setLoading] = useState(false);
     const [loadingMore, setLoadingMore] = useState(false);
     const [hasMore, setHasMore] = useState(true);
-
-    // Helper: decide if this is a RevenueCat userId or a username
-    const isRevenuecatId = /^kakao_|^google_|^apple_/i.test(rawQuery);
-    const isMongoObjectId = /^[a-f\d]{24}$/i.test(rawQuery);
 
     // ✅ Core fetch (same structure as before, but chooses endpoint)
     const fetchUploads = useCallback(
@@ -32,41 +28,26 @@ export default function SearchResult() {
                 else setLoadingMore(true);
 
                 const params = new URLSearchParams({
+                    q: rawQuery,
                     page: pageToLoad.toString(),
                     pageSize: PAGE_SIZE.toString(),
                 });
 
-                let endpoint = "";
+                const endpoint = `${process.env.REACT_APP_API_URL}/analytics/search-user?${params.toString()}`;
 
-                if (isMongoObjectId) {
-                    params.set("userId", rawQuery);
-                    endpoint = `${process.env.REACT_APP_API_URL}/analytics/search-user-by-id?${params.toString()}`;
-                } else if (isRevenuecatId) {
-                    params.set("revenuecatUserId", rawQuery);
-                    endpoint = `${process.env.REACT_APP_API_URL}/analytics/search-user-by-revenuecat?${params.toString()}`;
-                } else {
-                    params.set("username", rawQuery);
-                    endpoint = `${process.env.REACT_APP_API_URL}/analytics/search-user-by-username?${params.toString()}`;
-                }
-
-                const res = await fetch(endpoint, {
-                    credentials: "include",
-                });
+                const res = await fetch(endpoint, { credentials: "include" });
                 const data = await res.json();
 
                 if (data.success) {
                     setUser(data.user);
                     setTotalCount(data.totalCount || 0);
 
-                    if (reset || pageToLoad === 1) {
-                        setUploads(data.uploads || []);
-                    } else {
-                        setUploads((prev) => [...prev, ...(data.uploads || [])]);
-                    }
+                    if (reset || pageToLoad === 1) setUploads(data.uploads || []);
+                    else setUploads((prev) => [...prev, ...(data.uploads || [])]);
 
                     setHasMore((data.uploads?.length || 0) === PAGE_SIZE);
                 } else {
-                    alert("User not found");
+                    alert(data.error || "User not found");
                     setUser(null);
                     setUploads([]);
                     setHasMore(false);
@@ -79,7 +60,7 @@ export default function SearchResult() {
                 setLoadingMore(false);
             }
         },
-        [rawQuery, isRevenuecatId]
+        [rawQuery]
     );
 
     // ✅ Initial load when query changes

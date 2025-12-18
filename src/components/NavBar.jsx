@@ -7,7 +7,7 @@ const NavBar = () => {
   const navigate = useNavigate();
 
   // 🔍 default value from query param
-  const defaultValue = searchParams.get("revenuecatUserId") || "";
+  const defaultValue = searchParams.get("q") || "";
   const [query, setQuery] = useState(defaultValue);
 
   // Keep in sync when param changes (e.g., navigating back)
@@ -17,7 +17,7 @@ const NavBar = () => {
 
   const handleKeyDown = (e) => {
     if (e.key === "Enter" && query.trim()) {
-      navigate(`/admin/search?revenuecatUserId=${encodeURIComponent(query.trim())}`);
+      navigate(`/admin/search?q=${encodeURIComponent(query.trim())}`);
     }
   };
 

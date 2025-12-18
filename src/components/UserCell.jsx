@@ -32,7 +32,7 @@ const UserCell = ({ user, q, compact: defaultCompact = false }) => {
         if (!revenuecatUserId) return;
 
         window.open(
-            `/admin/search?revenuecatUserId=${revenuecatUserId}`,
+            `/admin/search?q=${revenuecatUserId}`,
             "_blank",
             "noopener,noreferrer"
         );
