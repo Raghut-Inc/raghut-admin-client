@@ -126,6 +126,11 @@ const SideMenu = ({ user, setUser }) => {
                                 label="모든 유저"
                             />
                             <MenuItem
+                                to="/admin/users/dropped"
+                                icon={<FaDollarSign className="w-4 h-4" />}
+                                label="유입 실패 유저"
+                            />
+                            <MenuItem
                                 to="/admin/users/subscribed-users"
                                 icon={<FaDollarSign className="w-4 h-4" />}
                                 label="구독 유저"
