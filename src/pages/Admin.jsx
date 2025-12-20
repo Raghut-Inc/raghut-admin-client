@@ -10,7 +10,6 @@ import TotalUsers from "./users/TotalUsers";
 import SubscribedUsers from "./users/SubscribedUsers";
 import SearchResult from "./SearchResult";
 import KakaoUploads from "./KakaoUploads";
-import DroppedUsers from "./users/DroppedUsers";
 
 export default function Admin({ user, setUser }) {
   return (
@@ -24,7 +23,6 @@ export default function Admin({ user, setUser }) {
           <Route path="/users/all" element={<TotalUsers user={user} setUser={setUser} />} />
           <Route path="/users/daily-active-users" element={<DailyActiveUsers user={user} setUser={setUser} />} />
           <Route path="/users/subscribed-users" element={<SubscribedUsers user={user} setUser={setUser} />} />
-          <Route path="/users/dropped" element={<DroppedUsers user={user} setUser={setUser} />} />
           <Route path="/chat" element={<Chats user={user} setUser={setUser} />} />
           <Route path="/dev" element={<Dev user={user} setUser={setUser} />} />
           <Route path="/db-stats" element={<DBStats />} />

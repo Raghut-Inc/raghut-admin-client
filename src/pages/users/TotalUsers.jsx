@@ -17,10 +17,10 @@ const TotalUsers = () => {
 
     // Key new filter: exclude very recent signups
     // Users must be at least N days old (createdAt <= now - N days)
-    const [minAccountAgeDays, setMinAccountAgeDays] = useState("7"); // default 7; change to whatever you want
+    const [minAccountAgeDays, setMinAccountAgeDays] = useState("0"); // default 7; change to whatever you want
 
     // Upload buckets
-    const [uploadBucket, setUploadBucket] = useState("1"); // default show uploaded once
+    const [uploadBucket, setUploadBucket] = useState("all"); // default show uploaded once
     const [uploadsMin, setUploadsMin] = useState("");
     const [uploadsMax, setUploadsMax] = useState("");
 
