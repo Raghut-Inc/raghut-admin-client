@@ -15,18 +15,20 @@ const TotalUsers = () => {
     // Filters
     const [userType, setUserType] = useState(""); // "", "study", "homework", "half", "other"
 
-    // Key new filter: exclude very recent signups
     // Users must be at least N days old (createdAt <= now - N days)
-    const [minAccountAgeDays, setMinAccountAgeDays] = useState("0"); // default 7; change to whatever you want
+    const [minAccountAgeDays, setMinAccountAgeDays] = useState("0");
 
     // Upload buckets
-    const [uploadBucket, setUploadBucket] = useState("all"); // default show uploaded once
+    const [uploadBucket, setUploadBucket] = useState("all");
     const [uploadsMin, setUploadsMin] = useState("");
     const [uploadsMax, setUploadsMax] = useState("");
 
-    // Optional extra: if you want, you can also set a "createdFrom" lower bound (e.g. ignore accounts older than 1 year)
-    // Leave blank unless you need it
-    const [createdFrom, setCreatedFrom] = useState(""); // ISO string or ""
+    // Optional createdFrom
+    const [createdFrom, setCreatedFrom] = useState("");
+
+    // ✅ NEW: age filters
+    const [ageMin, setAgeMin] = useState(""); // e.g. "13"
+    const [ageMax, setAgeMax] = useState(""); // e.g. "18"
 
     const computedUploadRange = useMemo(() => {
         if (uploadBucket === "custom") {
@@ -44,7 +46,6 @@ const TotalUsers = () => {
         return { min: null, max: null };
     }, [uploadBucket, uploadsMin, uploadsMax]);
 
-    // This is the important part:
     // createdTo = now - minAccountAgeDays
     const computedCreatedTo = useMemo(() => {
         const n = parseInt(minAccountAgeDays, 10);
@@ -60,22 +61,24 @@ const TotalUsers = () => {
                 const params = new URLSearchParams({
                     page: String(pageToLoad),
                     limit: String(PAGE_SIZE),
-
-                    // sensible default sort
                     sortBy: "createdAt",
                     order: "desc",
                 });
 
-                // userType filter
+                // userType
                 if (userType && userType !== "all") params.set("userType", userType);
 
-                // created range filter
+                // created range
                 if (createdFrom) params.set("createdFrom", createdFrom);
                 if (computedCreatedTo) params.set("createdTo", computedCreatedTo);
 
-                // upload filters
+                // uploads
                 if (computedUploadRange.min !== null) params.set("uploadsMin", computedUploadRange.min);
                 if (computedUploadRange.max !== null) params.set("uploadsMax", computedUploadRange.max);
+
+                // ✅ age range
+                if (ageMin !== "" && !Number.isNaN(parseInt(ageMin, 10))) params.set("ageMin", String(parseInt(ageMin, 10)));
+                if (ageMax !== "" && !Number.isNaN(parseInt(ageMax, 10))) params.set("ageMax", String(parseInt(ageMax, 10)));
 
                 const res = await fetch(
                     `${process.env.REACT_APP_API_URL}/analytics/users?${params.toString()}`,
@@ -106,14 +109,14 @@ const TotalUsers = () => {
                 setLoadingMore(false);
             }
         },
-        [userType, createdFrom, computedCreatedTo, computedUploadRange]
+        [userType, createdFrom, computedCreatedTo, computedUploadRange, ageMin, ageMax]
     );
 
     // Reload when filters change
     useEffect(() => {
         setPage(1);
         fetchUsers(1, true);
-    }, [userType, minAccountAgeDays, createdFrom, uploadBucket, uploadsMin, uploadsMax, fetchUsers]);
+    }, [userType, minAccountAgeDays, createdFrom, uploadBucket, uploadsMin, uploadsMax, ageMin, ageMax, fetchUsers]);
 
     // Load more when page changes
     useEffect(() => {
@@ -204,7 +207,6 @@ const TotalUsers = () => {
                             value={createdFrom ? dayjs(createdFrom).format("YYYY-MM-DD") : ""}
                             onChange={(e) => {
                                 if (!e.target.value) return setCreatedFrom("");
-                                // start of that day in local time, stored as ISO
                                 setCreatedFrom(dayjs(e.target.value).startOf("day").toISOString());
                             }}
                             className="text-xs px-2 py-1 rounded border"
@@ -218,6 +220,45 @@ const TotalUsers = () => {
                             </button>
                         )}
                     </div>
+                </div>
+
+                {/* ✅ Age filter */}
+                <div className="flex flex-wrap items-center gap-2">
+                    <span className="text-xs text-gray-500">Age</span>
+
+                    <input
+                        type="number"
+                        min="0"
+                        placeholder="min"
+                        value={ageMin}
+                        onChange={(e) => setAgeMin(e.target.value)}
+                        className="text-xs w-20 px-2 py-1 rounded border"
+                    />
+                    <span className="text-xs text-gray-500">to</span>
+                    <input
+                        type="number"
+                        min="0"
+                        placeholder="max"
+                        value={ageMax}
+                        onChange={(e) => setAgeMax(e.target.value)}
+                        className="text-xs w-20 px-2 py-1 rounded border"
+                    />
+
+                    {(ageMin || ageMax) && (
+                        <button
+                            onClick={() => {
+                                setAgeMin("");
+                                setAgeMax("");
+                            }}
+                            className="text-xs px-2 py-1 rounded border bg-white/80"
+                        >
+                            Clear
+                        </button>
+                    )}
+
+                    <span className="text-[11px] text-gray-500">
+                        (Only users with birthday)
+                    </span>
                 </div>
 
                 {/* Upload buckets */}
@@ -263,9 +304,7 @@ const TotalUsers = () => {
             {/* HEADER */}
             <div className="flex space-x-1 p-2 w-full font-semibold items-center max-w-4xl">
                 <p className="font-semibold w-full text-gray-500">유저목록</p>
-                <p className="text-xs text-indigo-600 flex-shrink-0">
-                    {totalCount.toLocaleString()}명
-                </p>
+                <p className="text-xs text-indigo-600 flex-shrink-0">{totalCount.toLocaleString()}명</p>
             </div>
 
             {/* USER LIST */}
@@ -277,9 +316,7 @@ const TotalUsers = () => {
 
             {/* LOADING STATES */}
             {loadingMore && (
-                <div className="text-center py-4 font-semibold text-gray-600">
-                    Loading more users...
-                </div>
+                <div className="text-center py-4 font-semibold text-gray-600">Loading more users...</div>
             )}
 
             {!hasMore && !loadingMore && (
