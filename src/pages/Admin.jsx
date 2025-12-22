@@ -10,6 +10,7 @@ import TotalUsers from "./users/TotalUsers";
 import SubscribedUsers from "./users/SubscribedUsers";
 import SearchResult from "./SearchResult";
 import KakaoUploads from "./KakaoUploads";
+import PlatformUploadBucketsPanel from "./PlatformUploadBucketsPanel";
 
 export default function Admin({ user, setUser }) {
   return (
@@ -18,6 +19,7 @@ export default function Admin({ user, setUser }) {
         <NavBar user={user} setUser={setUser} />
         <SideMenu user={user} setUser={setUser} />
         <Routes>
+          <Route path="/test" element={<PlatformUploadBucketsPanel user={user} setUser={setUser} />} />
           <Route path="/uploads" element={<Uploads user={user} setUser={setUser} />} />
           <Route path="/kakao" element={<KakaoUploads user={user} setUser={setUser} />} />
           <Route path="/users/all" element={<TotalUsers user={user} setUser={setUser} />} />
