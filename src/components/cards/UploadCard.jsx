@@ -1,10 +1,10 @@
-import { Fragment, useCallback, useMemo, useState } from "react";
+import { useState } from "react";
 import { timeAgo } from "../../utils/timeAgo";
 import CardEngShortAnswer from "./CardEngShortAnswer";
 import CardEngMCQ from "./CardEngMCQ";
 import CardMathMCQ from "./CardMathMCQ";
 import CardMathShortAnswer from "./CardMathShortAnswer";
-import { renderMixedMath } from "../../utils/latexUtils";
+
 import { FaAngleDown, FaCircleCheck, FaTrashCan } from "react-icons/fa6";
 import { MdError, MdWarning } from "react-icons/md";
 import { FiCopy } from "react-icons/fi";
@@ -25,47 +25,10 @@ const UploadCard = ({ q, qIndex, onDelete }) => {
         setCopied(true);
         setTimeout(() => setCopied(false), 1000);
     };
-    // ---- helpers: build tokens without joining into one string
-    const shortMathSafe = (s = "", max = 16) => {
-        // don't truncate if looks like math
-        if (/[\\$]/.test(s)) return s;
-        return s.length > max ? s.slice(0, max - 1) + "…" : s;
-    };
 
-    const getCorrectTokens = useCallback((item) => {
-        if (item?.answers && item?.correctAnswers) {
-            const set = new Set(item.correctAnswers.map((c) => c.answerOption));
-            return item.answers
-                .filter((a) => set.has(a.answerOption))
-                .map((a) => a.answerOption);
-        }
-
-        if (item?.choices && item?.correctChoices) {
-            const set = new Set(item.correctChoices.map((c) => c.choiceLabel));
-            return item.choices
-                .filter((c) => set.has(c.choiceLabel))
-                .map((c) => c.choiceLabel);
-        }
-
-        if (item?.expectedAnswer?.length) {
-            return item.expectedAnswer.map((a) => shortMathSafe(String(a.answer)));
-        }
-
-        return [];
-    }, []);
-
-    const summaryItems = useMemo(() => {
-        const items = q.gptAnalyzed || [];
-        return items.map((it) => {
-            const num = it?.questionNumber ?? "?";
-            const tokens = getCorrectTokens(it);
-            return {
-                num,
-                tokens,
-                valid: tokens.length > 0,
-            };
-        });
-    }, [q.gptAnalyzed, getCorrectTokens]);
+    const analyzed = Array.isArray(q?.gptAnalyzed) ? q.gptAnalyzed : [];
+    const validCount = analyzed.filter(i => i.isQuestionValid === true).length;
+    const invalidCount = analyzed.length - validCount;
 
 
     // existing renderQuestionCard stays as-is for the detail view
@@ -73,15 +36,15 @@ const UploadCard = ({ q, qIndex, onDelete }) => {
         const isStem = q.subject === "math" || q.subject === "physics" || q.subject === "biology" || q.subject === "earth_science" || q.subject === "chemistry";
         if (isStem) {
             return item.questionType === "ShortAnswer" ? (
-                <CardMathShortAnswer key={key} questionItem={item} isOpen />
+                <CardMathShortAnswer key={key} questionItem={item} />
             ) : (
-                <CardMathMCQ key={key} questionItem={item} isOpen />
+                <CardMathMCQ key={key} questionItem={item} />
             );
         } else {
             return item.questionType === "ShortAnswer" ? (
-                <CardEngShortAnswer key={key} questionItem={item} isOpen />
+                <CardEngShortAnswer key={key} questionItem={item} />
             ) : (
-                <CardEngMCQ key={key} questionItem={item} isOpen />
+                <CardEngMCQ key={key} questionItem={item} />
             );
         }
     };
@@ -241,38 +204,19 @@ const UploadCard = ({ q, qIndex, onDelete }) => {
                         ) : (
                             <div onClick={() => setShowDetails((v) => !v)} className="cursor-pointer w-full flex justify-between items-center">
                                 <div className="flex flex-wrap gap-1">
-                                    {summaryItems.slice(0, 3).map((item, idx) => (
-                                        <span
-                                            key={idx}
-                                            className={`px-1.5 h-8 items-center flex rounded text-xs font-medium border overflow-hidden max-w-24 truncate ${item.valid
-                                                ? "bg-green-100 text-green-700 border-green-300"
-                                                : "bg-red-100 text-red-700 border-red-300"
-                                                }`}
-                                            title={item.valid ? "Valid" : "Invalid"}
-                                        >
-                                            #{item.num}{" "}
-                                            <span className="opacity-75">
-                                                (
-                                                {item.tokens.length === 0 ? (
-                                                    "-"
-                                                ) : (
-                                                    item.tokens.map((tok, i) => (
-                                                        <Fragment key={i}>
-                                                            {i > 0 && " / "}
-                                                            {renderMixedMath(tok)}
-                                                        </Fragment>
-                                                    ))
-                                                )}
-                                                )
+                                    <div className="flex gap-1 items-center">
+                                        {validCount > 0 && (
+                                            <span className="px-2 h-6 flex items-center rounded-lg text-xs font-medium bg-green-100 text-green-700">
+                                                풀이완료: {validCount}
                                             </span>
-                                        </span>
-                                    ))}
+                                        )}
+                                        {invalidCount > 0 && (
+                                            <span className="px-2 h-6 flex items-center rounded-lg text-xs font-medium bg-red-100 text-red-700 border-red-300">
+                                                풀이오류: {invalidCount}
+                                            </span>
+                                        )}
 
-                                    {summaryItems.length > 3 && (
-                                        <span className="px-2 h-8 flex items-center rounded text-xs font-medium bg-gray-200 text-gray-700 border border-gray-300">
-                                            +{summaryItems.length - 3}
-                                        </span>
-                                    )}
+                                    </div>
                                 </div>
 
                                 <div className="text-white text-xs font-semibold h-6 w-6 flex items-center justify-center flex-shrink-0" >
@@ -286,11 +230,11 @@ const UploadCard = ({ q, qIndex, onDelete }) => {
                 {/* FULL DETAILS (only when toggled) */}
                 {!isProcessing && showDetails && (
                     <div onClick={() => setShowDetails((v) => !v)} className="flex-1 text-xs text-black overflow-hidden cursor-pointer">
-                        <div className="bg-white p-1">
+                        <div className="bg-gray-400 p-2 gap-2">
                             {q.gptAnalyzed?.map((item, i) => {
                                 const key = `${qIndex}-${i}`;
                                 return (
-                                    <div key={key} className="bg-white p-2 relative">
+                                    <div key={key} className="gap-2 mb-2">
                                         {renderQuestionCard(item, key)}
                                     </div>
                                 );

@@ -1,68 +1,103 @@
 import { renderMixedMath } from "../../utils/latexUtils";
 
-const CardEngMCQ = ({ questionItem, isOpen }) => {
+const CardEngMCQ = ({ questionItem }) => {
+    const qn = questionItem?.questionNumber ?? "-";
+    const qt = questionItem?.questionType ?? "mcq";
+    const hasError = !!questionItem?.error;
 
     function formatExplanation(explanation) {
         if (!explanation) return "";
+        if (typeof explanation === "string") return explanation;
 
-        if (typeof explanation === "string") {
-            return explanation;
-        }
-
-        // Explanation is an object — combine keys
         return [
-            explanation.grammarPoint && `${explanation.grammarPoint}`,
-            explanation.sentenceInterpretation && `${explanation.sentenceInterpretation}`,
-            explanation.contextFit && `${explanation.contextFit}`,
-            explanation.collocationOrUsage && `${explanation.collocationOrUsage}`,
-            explanation.takeaway && `${explanation.takeaway}`,
+            explanation.grammarPoint,
+            explanation.sentenceInterpretation,
+            explanation.contextFit,
+            explanation.collocationOrUsage,
+            explanation.takeaway,
         ]
-            .filter(Boolean) // remove undefined/null
+            .filter(Boolean)
             .join("\n");
     }
 
+    const correctSet = new Set(
+        (questionItem?.correctAnswers ?? []).map((x) => x?.answerOption).filter(Boolean)
+    );
 
     return (
-        <div>
-            <div className='relative w-full h-full'>
-                <div className="text-xs">
-                    <div className="flex gap-1">
-                        <span className="text-gray-400">[{questionItem.questionType}]</span>
-                        <span className="font-semibold line-clamp-1">
-                            {questionItem?.questionNumber}. {renderMixedMath(questionItem.questionText)}
-                        </span>
+        <div className="w-full rounded-xl border border-gray-200 bg-white shadow-sm overflow-hidden">
+            {/* Header */}
+            <div className="px-4 py-3 bg-gray-50 border-b border-gray-200">
+                <div className="gap-2 text-xs flex flex-col items-start">
+                    <span className="mt-0.5 inline-flex shrink-0 items-center rounded-full bg-gray-200 px-2 py-0.5 text-[10px] font-semibold text-gray-700">
+                        {String(qt).toUpperCase()}
+                    </span>
+
+                    <div className="min-w-0 flex-1">
+                        <div className="flex items-start gap-2">
+                            <p className="text-xs font-semibold text-gray-800 line-clamp-2">
+                                <span className="mr-1 text-gray-400">{qn}.</span>
+                                {renderMixedMath(questionItem?.questionText)}
+                            </p>
+
+                            {!hasError && questionItem?.isQuestionValid === false && (
+                                <span className="inline-flex shrink-0 items-center rounded-full bg-red-50 px-2 py-0.5 text-[10px] font-semibold text-red-600 border border-red-200">
+                                    Invalid
+                                </span>
+                            )}
+                        </div>
                     </div>
-                    <ul className="pl-4 list-disc">
-                        {questionItem.answers?.map((a, j) => {
-                            const isCorrect = questionItem.correctAnswers?.some(
-                                (correct) => correct.answerOption === a.answerOption
-                            );
-                            return (
-                                <li
-                                    key={j}
-                                    className={`leading-tight ${isCorrect ? 'font-semibold text-green-600' : 'text-gray-600'}`}
-                                >
-                                    {a.answerOption}. {renderMixedMath(a.answerText)}
-                                </li>
-                            );
-                        })}
-                    </ul>
                 </div>
-
-
             </div>
-            {isOpen && !questionItem.error && (
-                <div className="mt-3 text-xs whitespace-pre-line border-t border-gray-300 pt-2">
-                    <p style={{ whiteSpace: 'pre-line' }}>
-                        {renderMixedMath(formatExplanation(questionItem.explanation))}
-                    </p>
-                    {questionItem.wrongChoices?.length > 0 && (
-                        <div className="bg-red-50 border border-red-200 rounded-md p-3 mt-3">
-                            <p className="font-semibold text-red-500 mb-2">오답</p>
+
+            {/* Choices */}
+            <div className="px-4 py-3">
+                <ul className="space-y-1.5">
+                    {(questionItem?.answers ?? []).map((a, idx) => {
+                        const opt = a?.answerOption ?? "?";
+                        const isCorrect = correctSet.has(opt);
+
+                        return (
+                            <li
+                                key={idx}
+                                className={`rounded-lg border px-3 py-2 text-[11px] leading-relaxed ${isCorrect
+                                    ? "border-green-200 bg-green-50 text-green-800 font-semibold"
+                                    : "border-gray-200 bg-white text-gray-700"
+                                    }`}
+                            >
+                                <span className="mr-1 font-semibold">{opt}.</span>{" "}
+                                {renderMixedMath(a?.answerText)}
+                            </li>
+                        );
+                    })}
+                </ul>
+            </div>
+
+            {/* Expanded */}
+            {!hasError && (
+                <div className="px-4 py-4 border-t border-gray-200 space-y-3">
+                    {/* Explanation */}
+                    {questionItem?.explanation && (
+                        <div>
+                            <p className="mb-2 text-[11px] font-semibold text-gray-700">
+                                해설 <span className="text-gray-400">(Explanation)</span>
+                            </p>
+                            <div className="rounded-lg bg-gray-50 p-3 text-[11px] leading-relaxed text-gray-700 whitespace-pre-line">
+                                {renderMixedMath(formatExplanation(questionItem.explanation))}
+                            </div>
+                        </div>
+                    )}
+
+                    {/* Wrong choices */}
+                    {questionItem?.wrongChoices?.length > 0 && (
+                        <div className="rounded-lg border border-red-200 bg-red-50 p-3">
+                            <p className="mb-2 text-[11px] font-semibold text-red-700">오답</p>
                             <ul className="space-y-2">
                                 {questionItem.wrongChoices.map((wc, idx) => (
-                                    <li key={idx}>
-                                        <p><strong>{wc.answerOption}</strong> - {renderMixedMath(wc.reason)}</p>
+                                    <li key={idx} className="text-[11px] text-red-800">
+                                        <span className="font-semibold">{wc?.answerOption}</span>{" "}
+                                        <span className="text-red-700/80">—</span>{" "}
+                                        {renderMixedMath(wc?.reason)}
                                     </li>
                                 ))}
                             </ul>
@@ -71,10 +106,13 @@ const CardEngMCQ = ({ questionItem, isOpen }) => {
                 </div>
             )}
 
-            {isOpen && questionItem.error && (
-                <div className="bg-yellow-50 border border-yellow-300 rounded-md p-3 mt-1">
-                    <p className="font-semibold text-yellow-700">ERROR</p>
-                    <p>{questionItem.error}</p>
+            {/* Error */}
+            {hasError && (
+                <div className="m-4 rounded-lg border border-yellow-200 bg-yellow-50 p-3">
+                    <p className="text-[11px] font-semibold text-yellow-800">ERROR</p>
+                    <p className="mt-1 text-[11px] text-yellow-800/90 whitespace-pre-line">
+                        {questionItem.error}
+                    </p>
                 </div>
             )}
         </div>
