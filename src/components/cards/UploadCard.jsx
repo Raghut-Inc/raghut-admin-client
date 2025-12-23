@@ -70,8 +70,8 @@ const UploadCard = ({ q, qIndex, onDelete }) => {
 
     // existing renderQuestionCard stays as-is for the detail view
     const renderQuestionCard = (item, key) => {
-        const isSci = q.subject === "math" || q.subject === "physics" || q.subject === "chemistry";
-        if (isSci) {
+        const isStem = q.subject === "math" || q.subject === "physics" || q.subject === "biology" || q.subject === "earth_science" || q.subject === "chemistry";
+        if (isStem) {
             return item.questionType === "ShortAnswer" ? (
                 <CardMathShortAnswer key={key} questionItem={item} isOpen />
             ) : (
