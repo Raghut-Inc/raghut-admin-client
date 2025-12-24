@@ -209,21 +209,21 @@ const UploadCard = ({ q, qIndex, onDelete }) => {
                 {!isProcessing && !showDetails && (
                     <div className="text-gray-800 h-10 px-1 flex w-full justify-between items-center bg-gray-700">
                         {isQuotaLimit ? (
-                            <div className="px-2 text-orange-500 bg-white py-1 rounded font-bold">{q.errorCode}</div>
+                            <div className="px-2 text-orange-500 bg-white py-1 rounded-lg font-bold">{q.errorCode}</div>
                         ) : hasError ? (
-                            <div className="px-2 text-red-500 bg-white py-1 rounded font-bold">{q.errorCode}</div>
+                            <div className="px-2 text-red-500 bg-white py-1 rounded-lg font-bold">{q.errorCode}</div>
                         ) : (
                             <div onClick={() => setShowDetails((v) => !v)} className="cursor-pointer w-full flex justify-between items-center">
                                 <div className="flex flex-wrap gap-1">
                                     <div className="flex gap-1 items-center">
                                         {validCount > 0 && (
                                             <span className="px-2 h-6 flex items-center rounded-lg text-xs font-medium bg-green-100 text-green-700">
-                                                풀이완료: {validCount}
+                                                풀이완료: {validCount}개
                                             </span>
                                         )}
                                         {invalidCount > 0 && (
                                             <span className="px-2 h-6 flex items-center rounded-lg text-xs font-medium bg-red-100 text-red-700 border-red-300">
-                                                풀이오류: {invalidCount}
+                                                풀이오류: {invalidCount}개
                                             </span>
                                         )}
 

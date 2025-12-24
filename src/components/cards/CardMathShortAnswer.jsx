@@ -1,20 +1,43 @@
 import { renderMixedMath } from "../../utils/latexUtils";
 
 const CardMathShortAnswer = ({ questionItem }) => {
+    const hasError = !!questionItem?.error;
+    const invalidReason = questionItem?.invalidReason
+
     return (
         <div className="flex-1 rounded-lg bg-white border border-gray-200 shadow-sm overflow-hidden">
             {/* Question Header */}
             <div className="px-3 py-2 bg-gray-50 border-b border-gray-200">
                 <div className="gap-2 text-xs flex flex-col items-start">
-                    <span className="mt-0.5 inline-flex shrink-0 items-center rounded-full bg-gray-200 px-2 py-0.5 text-[9px] font-semibold text-gray-600">
-                        {questionItem.questionType.toUpperCase()}
-                    </span>
+                    <div className="flex space-x-1 items-center">
+                        {!hasError && questionItem?.isQuestionValid === false && (
+                            <span className="inline-flex shrink-0 items-center rounded-full bg-orange-50 px-2 py-0.5 text-[10px] font-semibold text-orange-600 border border-red-200">
+                                Invalid
+                            </span>
+                        )}
+                        <span className="mt-0.5 inline-flex shrink-0 items-center rounded-full bg-gray-200 px-2 py-0.5 text-[10px] font-semibold text-gray-700">
+                            SA
+                        </span>
+                    </div>
+
                     <div className="font-semibold text-gray-800 line-clamp-1">
                         {questionItem.questionNumber}.{" "}
                         {renderMixedMath(questionItem.questionText)}
                     </div>
                 </div>
             </div>
+
+            {/* Invalid Reason */}
+            {!hasError && questionItem?.isQuestionValid === false && invalidReason && (
+                <div className="mx-2 mt-3 rounded-lg border border-orange-200 bg-orange-50 px-3 py-2">
+                    <p className="text-[11px] font-semibold text-orange-700">
+                        문제 무효 사유 <span className="text-orange-500/70">(Invalid Reason)</span>
+                    </p>
+                    <p className="mt-1 text-[11px] text-orange-800/90 whitespace-pre-line">
+                        {invalidReason}
+                    </p>
+                </div>
+            )}
 
             {/* Answer */}
             <div className="px-3 py-2">
@@ -38,7 +61,7 @@ const CardMathShortAnswer = ({ questionItem }) => {
                     </p>
                 </div>
             )}
-            
+
             {/* Expanded Content */}
             {!questionItem.error && (
                 <div className="px-3 py-3 border-t border-gray-200 text-xs space-y-3">

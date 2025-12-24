@@ -5,6 +5,7 @@ const CardMathMCQ = ({ questionItem }) => {
     const qn = questionItem?.questionNumber ?? "-";
     const qt = (questionItem?.questionType ?? "mcq").toString();
     const hasError = !!questionItem?.error;
+    const invalidReason = questionItem?.invalidReason
 
     const correctSet = new Set(
         (questionItem?.correctChoices ?? [])
@@ -17,9 +18,17 @@ const CardMathMCQ = ({ questionItem }) => {
             {/* Header */}
             <div className="px-4 py-3 bg-gray-50 border-b border-gray-200">
                 <div className="gap-2 text-xs flex flex-col items-start">
-                    <span className="mt-0.5 inline-flex shrink-0 items-center rounded-full bg-gray-200 px-2 py-0.5 text-[9px] font-semibold text-gray-600">
-                        {qt.toUpperCase()}
-                    </span>
+                    <div className="flex space-x-1 items-center">
+                        {!hasError && questionItem?.isQuestionValid === false && (
+                            <span className="inline-flex shrink-0 items-center rounded-full bg-orange-50 px-2 py-0.5 text-[10px] font-semibold text-orange-600 border border-orange-200">
+                                Invalid
+                            </span>
+                        )}
+                        <span className="mt-0.5 inline-flex shrink-0 items-center rounded-full bg-gray-200 px-2 py-0.5 text-[10px] font-semibold text-gray-700">
+                            {String(qt).toUpperCase()}
+                        </span>
+                    </div>
+
 
                     <div className="min-w-0 flex-1">
                         <div className="flex items-center gap-2">
@@ -27,39 +36,19 @@ const CardMathMCQ = ({ questionItem }) => {
                                 <span className="mr-1 text-gray-400">{qn}.</span>
                                 {renderMixedMath(questionItem?.questionText)}
                             </p>
-
-                            {!hasError && questionItem?.isQuestionValid === false && (
-                                <span className="inline-flex shrink-0 items-center rounded-full bg-red-50 px-2 py-0.5 text-[10px] font-semibold text-red-600 border border-red-200">
-                                    Invalid
-                                </span>
-                            )}
                         </div>
-
-                        {/* Correct answer badge (optional) */}
-                        {correctSet.size > 0 && (
-                            <div className="mt-2 flex flex-wrap gap-1.5">
-                                {[...correctSet].map((label) => (
-                                    <span
-                                        key={label}
-                                        className="inline-flex items-center rounded-md bg-green-600/10 px-2 py-1 text-[11px] font-semibold text-green-700 border border-green-200"
-                                        title="Correct"
-                                    >
-                                        정답 {label}
-                                    </span>
-                                ))}
-                            </div>
-                        )}
                     </div>
                 </div>
             </div>
 
-            {!questionItem.error && (
-                <div className="px-3 py-3 border-b border-gray-200 text-xs space-y-3">
-                    <p className="font-semibold text-gray-700 mb-2">
-                        풀이 요약
+            {/* Invalid Reason */}
+            {!hasError && questionItem?.isQuestionValid === false && invalidReason && (
+                <div className="mx-2 mt-3 rounded-lg border border-orange-200 bg-orange-50 px-3 py-2">
+                    <p className="text-[11px] font-semibold text-orange-700">
+                        문제 무효 사유 <span className="text-orange-500/70">(Invalid Reason)</span>
                     </p>
-                    <p className="text-gray-700 leading-relaxed">
-                        {questionItem.solutionSummary}
+                    <p className="mt-1 text-[11px] text-orange-800/90 whitespace-pre-line">
+                        {invalidReason}
                     </p>
                 </div>
             )}
@@ -94,6 +83,17 @@ const CardMathMCQ = ({ questionItem }) => {
                     })}
                 </ul>
             </div>
+
+            {!questionItem.error && (
+                <div className="px-3 py-3 border-t border-gray-200 text-xs space-y-3">
+                    <p className="font-semibold text-gray-700 mb-2">
+                        풀이 요약
+                    </p>
+                    <p className="text-gray-700 leading-relaxed">
+                        {questionItem.solutionSummary}
+                    </p>
+                </div>
+            )}
 
             {/* Expanded Content */}
             {!hasError && (

@@ -291,7 +291,7 @@ const Uploads = () => {
         </div>
       ) : (
         <div className="w-full max-w-4xl flex flex-col items-center">
-          <div className="divide-y w-full flex flex-col items-center">
+          <div className="divide-y w-full flex flex-col items-center gap-2">
             {questions.map((q, qIndex) => (
               <UploadCard
                 key={q._id || qIndex}

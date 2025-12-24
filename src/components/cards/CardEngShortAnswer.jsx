@@ -2,18 +2,25 @@ import { renderMixedMath } from "../../utils/latexUtils";
 
 const CardEngShortAnswer = ({ questionItem }) => {
     const qn = questionItem?.questionNumber ?? "-";
-    const qt = questionItem?.questionType ?? "sa";
     const hasError = !!questionItem?.error;
+    const invalidReason = questionItem?.invalidReason
 
     return (
         <div className="w-full rounded-xl border border-gray-200 bg-white shadow-sm overflow-hidden">
             {/* Header */}
             <div className="px-4 py-3 bg-gray-50 border-b border-gray-200">
                 <div className="gap-2 text-xs flex flex-col items-start">
+                    <div className="flex space-x-1 items-center">
+                        {!hasError && questionItem?.isQuestionValid === false && (
+                            <span className="inline-flex shrink-0 items-center rounded-full bg-orange-50 px-2 py-0.5 text-[10px] font-semibold text-orange-600 border border-orange-200">
+                                Invalid
+                            </span>
+                        )}
+                        <span className="mt-0.5 inline-flex shrink-0 items-center rounded-full bg-gray-200 px-2 py-0.5 text-[10px] font-semibold text-gray-700">
+                            SA
+                        </span>
+                    </div>
 
-                    <span className="mt-0.5 inline-flex shrink-0 items-center rounded-full bg-gray-100 px-2 py-0.5 text-[10px] font-semibold text-gray-600">
-                        {String(qt).toUpperCase()}
-                    </span>
 
                     <div className="min-w-0 flex-1">
                         <div className="flex items-start gap-2">
@@ -21,12 +28,6 @@ const CardEngShortAnswer = ({ questionItem }) => {
                                 <span className="mr-1 text-gray-400">{qn}.</span>
                                 {renderMixedMath(questionItem?.questionText)}
                             </p>
-
-                            {!hasError && questionItem?.isQuestionValid === false && (
-                                <span className="inline-flex shrink-0 items-center rounded-full border border-red-200 bg-red-50 px-2 py-0.5 text-[10px] font-semibold text-red-600">
-                                    Invalid
-                                </span>
-                            )}
                         </div>
 
                         {/* Answer chips */}
@@ -45,6 +46,18 @@ const CardEngShortAnswer = ({ questionItem }) => {
                     </div>
                 </div>
             </div>
+
+            {/* Invalid Reason */}
+            {!hasError && questionItem?.isQuestionValid === false && invalidReason && (
+                <div className="mx-2 mt-3 rounded-lg border border-orange-200 bg-orange-50 px-3 py-2">
+                    <p className="text-[11px] font-semibold text-orange-700">
+                        문제 무효 사유 <span className="text-orange-500/70">(Invalid Reason)</span>
+                    </p>
+                    <p className="mt-1 text-[11px] text-orange-800/90 whitespace-pre-line">
+                        {invalidReason}
+                    </p>
+                </div>
+            )}
 
             {/* Expanded */}
             {!hasError && (
