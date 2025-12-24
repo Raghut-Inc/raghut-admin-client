@@ -31,6 +31,16 @@ const UploadCard = ({ q, qIndex, onDelete }) => {
     const invalidCount = analyzed.length - validCount;
 
 
+    const prettyDate = q.uploader?.kakaoLastUploadDate
+        ? new Date(q.uploader.kakaoLastUploadDate).toLocaleString("ko-KR", {
+            month: "2-digit",
+            day: "2-digit",
+            hour: "2-digit",
+            minute: "2-digit",
+        })
+        : "—";
+
+
     // existing renderQuestionCard stays as-is for the detail view
     const renderQuestionCard = (item, key) => {
         const isStem = q.subject === "math" || q.subject === "physics" || q.subject === "biology" || q.subject === "earth_science" || q.subject === "chemistry";
@@ -189,8 +199,9 @@ const UploadCard = ({ q, qIndex, onDelete }) => {
                         <UserCell compact={true} user={q.userId} />
                     </div>
                 ) : (
-                    <div className="flex items-center justify-between text-xs h-8 bg-white/5 px-3">
-                        <div className="font-semibold text-white">카카오 챗봇 USER</div>
+                    <div className="flex items-center text-xs h-8 bg-white/5 px-3 space-x-2">
+                        <div className="font-semibold text-gray-400">챗봇유저</div>
+                        <div className="font-semibold text-white">{q.uploader?.kakaoIdentity} ({q.uploader?.kakaoDailyUploads}개, {prettyDate})</div>
                     </div>
                 )}
 
