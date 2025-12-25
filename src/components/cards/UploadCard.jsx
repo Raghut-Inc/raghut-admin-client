@@ -113,7 +113,7 @@ const UploadCard = ({ q, qIndex, onDelete }) => {
 
                                 {/* Copy/Delete Buttons */}
                                 <div className="flex justify-end space-x-1 items-center">
-                                    <button
+                                    {/* <button
                                         onClick={(e) => {
                                             e.stopPropagation();
                                             window.open(`https://www.chalcack.com/ko/solved/${q._id}`, "_blank");
@@ -124,7 +124,7 @@ const UploadCard = ({ q, qIndex, onDelete }) => {
                                         title="문제 풀이 페이지 열기"
                                     >
                                         ✦
-                                    </button>
+                                    </button> */}
                                     <button
                                         onClick={handleCopy}
                                         className="bg-gray-600 text-white font-semibold w-7 h-7 rounded-full flex items-center justify-center"
