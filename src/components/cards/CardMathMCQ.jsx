@@ -48,7 +48,7 @@ const CardMathMCQ = ({ questionItem }) => {
                         문제 무효 사유 <span className="text-orange-500/70">(Invalid Reason)</span>
                     </p>
                     <p className="mt-1 text-[11px] text-orange-800/90 whitespace-pre-line">
-                        {invalidReason}
+                        {renderMixedMath(invalidReason)}
                     </p>
                 </div>
             )}
@@ -90,7 +90,7 @@ const CardMathMCQ = ({ questionItem }) => {
                         풀이 요약
                     </p>
                     <p className="text-gray-700 leading-relaxed">
-                        {questionItem.solutionSummary}
+                        {renderMixedMath(questionItem.solutionSummary)}
                     </p>
                 </div>
             )}
@@ -109,7 +109,7 @@ const CardMathMCQ = ({ questionItem }) => {
                                 {questionItem.solutionSteps.map((step) => (
                                     <div key={step.stepNumber} className="rounded-lg bg-gray-50 p-3">
                                         <p className="text-[11px] font-semibold text-gray-800">
-                                            {step.stepNumber}. {step.stepTitle}
+                                            {renderMixedMath(`${step.stepNumber}. ${step.stepTitle}`)}
                                         </p>
                                         <p className="mt-1 text-[11px] leading-relaxed text-gray-700 whitespace-pre-line">
                                             {renderMixedMath(step.stepExplanation)}
@@ -119,16 +119,6 @@ const CardMathMCQ = ({ questionItem }) => {
                             </div>
                         </div>
                     )}
-                </div>
-            )}
-
-            {/* Error */}
-            {hasError && (
-                <div className="m-4 rounded-lg border border-yellow-200 bg-yellow-50 p-3 text-xs">
-                    <p className="text-[11px] font-semibold text-yellow-800">⚠ 오류</p>
-                    <p className="mt-1 text-[11px] text-yellow-800/90 whitespace-pre-line">
-                        {questionItem.error}
-                    </p>
                 </div>
             )}
         </div>

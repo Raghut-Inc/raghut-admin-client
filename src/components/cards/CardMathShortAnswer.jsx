@@ -34,7 +34,7 @@ const CardMathShortAnswer = ({ questionItem }) => {
                         문제 무효 사유 <span className="text-orange-500/70">(Invalid Reason)</span>
                     </p>
                     <p className="mt-1 text-[11px] text-orange-800/90 whitespace-pre-line">
-                        {invalidReason}
+                        {renderMixedMath(invalidReason)}
                     </p>
                 </div>
             )}
@@ -57,7 +57,7 @@ const CardMathShortAnswer = ({ questionItem }) => {
                         풀이 요약
                     </p>
                     <p className="text-gray-700 leading-relaxed">
-                        {questionItem.solutionSummary}
+                        {renderMixedMath(questionItem.solutionSummary)}
                     </p>
                 </div>
             )}
@@ -79,7 +79,7 @@ const CardMathShortAnswer = ({ questionItem }) => {
                                         className="rounded-md bg-gray-50 px-2 py-2"
                                     >
                                         <p className="font-semibold text-gray-800 mb-1">
-                                            {step.stepNumber}. {step.stepTitle}
+                                            {renderMixedMath(`${step.stepNumber}. ${step.stepTitle}`)}
                                         </p>
                                         <p className="text-gray-700 leading-relaxed">
                                             {renderMixedMath(step.stepExplanation)}
@@ -100,14 +100,6 @@ const CardMathShortAnswer = ({ questionItem }) => {
                                 </div>
                             )
                     )}
-                </div>
-            )}
-
-            {/* Error */}
-            {questionItem.error && (
-                <div className="m-3 rounded-md border border-yellow-300 bg-yellow-50 p-3 text-xs">
-                    <p className="font-semibold text-yellow-700 mb-1">⚠ 오류</p>
-                    <p className="text-yellow-800">{questionItem.error}</p>
                 </div>
             )}
         </div>
