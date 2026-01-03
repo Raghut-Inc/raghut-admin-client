@@ -108,7 +108,7 @@ const AdminChats = ({ user, setUser }) => {
         const fetchFriends = async () => {
             try {
                 setFriendsLoading(true);
-                const res = await fetch(`${process.env.REACT_APP_API_URL}/friend-activity?limit=50`, {
+                const res = await fetch(`${process.env.REACT_APP_API_URL}/analytics/friend-activity?limit=50`, {
                     credentials: "include",
                 });
                 const data = await res.json();
