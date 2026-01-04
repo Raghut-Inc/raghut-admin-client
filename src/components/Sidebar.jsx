@@ -111,11 +111,15 @@ const SideMenu = ({ user, setUser }) => {
                                 label="카톡 업로드"
                             />
                             <MenuItem
+                                to="/admin/followup"
+                                icon={<IoChatbubbleSharp className="w-4 h-4" />}
+                                label="추가질문"
+                            />
+                            <MenuItem
                                 to="/admin/chat"
                                 icon={<IoChatbubbleSharp className="w-4 h-4" />}
-                                label="Chat"
+                                label="Chat OLD"
                             />
-
                             {/* Users */}
                             <div className="text-xs uppercase font-semibold text-gray-400 px-4 mt-8 mb-1">
                                 유저
