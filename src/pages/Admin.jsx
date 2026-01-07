@@ -1,6 +1,6 @@
 import { Route, Routes } from "react-router";
 import Uploads from "./Uploads";
-import Chats from "./Chats";
+import Friends from "./Friends";
 import Dev from "./Dev";
 import NavBar from "../components/NavBar";
 import DBStats from "./DBStats";
@@ -12,6 +12,7 @@ import SearchResult from "./SearchResult";
 import KakaoUploads from "./KakaoUploads";
 import PlatformUploadBucketsPanel from "./PlatformUploadBucketsPanel";
 import AdminChatAudit from "./AdminChatAudit";
+import GrantEntitlement from "./GrantEntitlement";
 
 export default function Admin({ user, setUser }) {
   return (
@@ -26,11 +27,12 @@ export default function Admin({ user, setUser }) {
           <Route path="/users/all" element={<TotalUsers user={user} setUser={setUser} />} />
           <Route path="/users/daily-active-users" element={<DailyActiveUsers user={user} setUser={setUser} />} />
           <Route path="/users/subscribed-users" element={<SubscribedUsers user={user} setUser={setUser} />} />
-          <Route path="/chat" element={<Chats user={user} setUser={setUser} />} />
+          <Route path="/friends" element={<Friends user={user} setUser={setUser} />} />
           <Route path="/followup" element={<AdminChatAudit user={user} setUser={setUser} />} />
           <Route path="/dev" element={<Dev user={user} setUser={setUser} />} />
           <Route path="/db-stats" element={<DBStats />} />
           <Route path="/search" element={<SearchResult user={user} setUser={setUser} />} />
+          <Route path="/grant" element={<GrantEntitlement user={user} setUser={setUser} />} />
         </Routes>
       </div>
     </>

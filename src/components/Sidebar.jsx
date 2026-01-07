@@ -7,11 +7,12 @@ import {
     FaDatabase,
     FaClock,
     FaDollarSign,
+    FaTicketSimple,
 } from "react-icons/fa6";
 import { FaTimes } from "react-icons/fa";
 import { MdFileUpload } from "react-icons/md";
 import { IoIosImage } from "react-icons/io";
-import { IoChatbubbleSharp } from "react-icons/io5";
+import { IoChatbubbleSharp, IoPeopleCircle } from "react-icons/io5";
 import { RiKakaoTalkFill } from "react-icons/ri";
 import { SiPosthog } from "react-icons/si"; // ✅ add
 import clsx from "clsx";
@@ -103,22 +104,22 @@ const SideMenu = ({ user, setUser }) => {
                             <MenuItem
                                 to="/admin/uploads"
                                 icon={<IoIosImage className="w-4 h-4" />}
-                                label="전체 업로드"
+                                label="찰칵앱 업로드"
                             />
                             <MenuItem
                                 to="/admin/kakao"
                                 icon={<RiKakaoTalkFill className="w-4 h-4" />}
-                                label="카톡 업로드"
+                                label="카톡 챗봇 업로드"
                             />
                             <MenuItem
                                 to="/admin/followup"
                                 icon={<IoChatbubbleSharp className="w-4 h-4" />}
-                                label="추가질문"
+                                label="추가 질문"
                             />
                             <MenuItem
-                                to="/admin/chat"
-                                icon={<IoChatbubbleSharp className="w-4 h-4" />}
-                                label="Chat OLD"
+                                to="/admin/friends"
+                                icon={<IoPeopleCircle className="w-4 h-4" />}
+                                label="친구 추가"
                             />
                             {/* Users */}
                             <div className="text-xs uppercase font-semibold text-gray-400 px-4 mt-8 mb-1">
@@ -139,7 +140,11 @@ const SideMenu = ({ user, setUser }) => {
                                 icon={<FaClock className="w-4 h-4" />}
                                 label="최근 업로드 유저"
                             />
-
+                            <MenuItem
+                                to="/admin/grant"
+                                icon={<FaTicketSimple className="w-4 h-4" />}
+                                label="한달권 증정"
+                            />
                             {/* Dev Tools */}
                             <div className="text-xs uppercase font-semibold text-gray-400 px-4 mt-8 mb-1">
                                 Dev Tools
