@@ -26,7 +26,7 @@ const Friends = () => {
 
     const openAdminSearch = (userId) => {
         if (!userId) return;
-        const url = `http://localhost:3000/admin/search?q=${userId}`;
+        const url = `http://admin.chalcack.com/admin/search?q=${userId}`;
         window.open(url, "_blank", "noopener,noreferrer");
     };
 
