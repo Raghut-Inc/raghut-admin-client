@@ -71,13 +71,12 @@ const UserDetail = ({ userId, onClose }) => {
         });
 
         const agePart = data.age ? `${data.age}세` : "";
-        const zodiacPart = data.zodiacAnimal || "";
         const gradePart = getKoreanSchoolGrade(dateString); // ✅ Added Grade
 
         // Result: "2005년 5월 5일 (19세 / 고3) 🐔"
         return (
             <span>
-                {date} <span className="text-gray-400">({agePart} {gradePart && `/ ${gradePart}`})</span> {zodiacPart}
+                {date} <span className="text-gray-400">({agePart} {gradePart && `/ ${gradePart}`})</span>
             </span>
         );
     };

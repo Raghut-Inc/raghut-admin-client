@@ -77,7 +77,6 @@ const UserCell = ({ user, q }) => {
                                     <span>
                                         🎂 {new Date(u.birthday).getFullYear()}년생 ({calcAge(u.birthday)}세)
                                     </span>
-                                    {u?.zodiacAnimal && <span>{u.zodiacAnimal}</span>}
                                 </div>
                             )}
                         </div>
