@@ -12,6 +12,7 @@ import KakaoUploads from "./KakaoUploads";
 import PlatformUploadBucketsPanel from "./PlatformUploadBucketsPanel";
 import AdminChatAudit from "./AdminChatAudit";
 import GrantEntitlement from "./GrantEntitlement";
+import UserInputsPage from "./UserInputsPage";
 
 export default function Admin({ user, setUser }) {
   return (
@@ -26,6 +27,7 @@ export default function Admin({ user, setUser }) {
           <Route path="/users/all" element={<TotalUsers user={user} setUser={setUser} />} />
           <Route path="/users/daily-active-users" element={<DailyActiveUsers user={user} setUser={setUser} />} />
           <Route path="/users/subscribed-users" element={<SubscribedUsers user={user} setUser={setUser} />} />
+          <Route path="/users/dashboard" element={<UserInputsPage user={user} setUser={setUser} />} />
           <Route path="/followup" element={<AdminChatAudit user={user} setUser={setUser} />} />
           <Route path="/dev" element={<Dev user={user} setUser={setUser} />} />
           <Route path="/db-stats" element={<DBStats />} />

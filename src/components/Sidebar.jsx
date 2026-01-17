@@ -17,6 +17,7 @@ import { RiKakaoTalkFill } from "react-icons/ri";
 import { SiPosthog } from "react-icons/si"; // ✅ add
 import clsx from "clsx";
 import UserSettingsButton from "./UserSettingsButton";
+import { LucideTextCursorInput } from "lucide-react";
 
 const SideMenu = ({ user, setUser }) => {
     const [open, setOpen] = useState(false);
@@ -134,6 +135,11 @@ const SideMenu = ({ user, setUser }) => {
                                 to="/admin/users/daily-active-users"
                                 icon={<FaClock className="w-4 h-4" />}
                                 label="최근 업로드 유저"
+                            />
+                            <MenuItem
+                                to="/admin/users/dashboard"
+                                icon={<LucideTextCursorInput className="w-4 h-4" />}
+                                label="유저 기입 상태"
                             />
                             <MenuItem
                                 to="/admin/grant"
