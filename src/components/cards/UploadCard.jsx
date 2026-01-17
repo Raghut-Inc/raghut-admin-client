@@ -60,8 +60,8 @@ const UploadCard = ({ q, qIndex, onDelete }) => {
     };
 
     return (
-        <div key={qIndex} className="max-w-xl overflow-hidden shadow-sm bg-white w-full">
-            <div className={`${isProcessing ? "opacity-80" : isQuotaLimit ? "border-[6px] border-orange-500" : hasError && "border-[6px] border-red-500"} bg-gray-700 flex flex-col w-full text-white text-xs`}>
+        <div key={qIndex} className="max-w-xl overflow-hidden shadow w-full rounded-lg">
+            <div className={`${isProcessing ? "bg-opacity-80" : isQuotaLimit ? "border-[6px] border-orange-500" : hasError && "border-[6px] border-red-500"} bg-gray-700 flex flex-col w-full text-white text-xs`}>
                 <div className="flex w-full h-full">
                     {/* Image Preview */}
                     <div
@@ -94,7 +94,7 @@ const UploadCard = ({ q, qIndex, onDelete }) => {
 
 
                     {/* Quota limit check */}
-                    <div className="w-full h-full flex flex-col justify-start p-3">
+                    <div className={`${isSmallCard ? "h-28" : "h-full"} w-full flex flex-col justify-start p-3`}>
                         <div className="flex flex-col">
                             <div className="w-full flex justify-between items-center">
                                 <div className="flex space-x-2 items-center">
@@ -113,21 +113,19 @@ const UploadCard = ({ q, qIndex, onDelete }) => {
 
                                 {/* Copy/Delete Buttons */}
                                 <div className="flex justify-end space-x-1 items-center">
-                                    {/* <button
+                                    <button
                                         onClick={(e) => {
                                             e.stopPropagation();
                                             window.open(`https://www.chalcack.com/ko/solved/${q._id}`, "_blank");
                                         }}
-                                        className="bg-gray-200 hover:bg-gray-300 text-gray-700 
-                   font-semibold w-7 h-7 rounded-full 
-                   flex items-center justify-center text-md"
+                                        className="bg-gray-600 hover:bg-gray-500 text-white font-semibold w-7 h-7 rounded-full flex items-center justify-center text-md"
                                         title="문제 풀이 페이지 열기"
                                     >
                                         ✦
-                                    </button> */}
+                                    </button>
                                     <button
                                         onClick={handleCopy}
-                                        className="bg-gray-600 text-white font-semibold w-7 h-7 rounded-full flex items-center justify-center"
+                                        className="bg-gray-600 hover:bg-gray-500 text-white font-semibold w-7 h-7 rounded-full flex items-center justify-center"
                                         title="Copy ID"
                                     >
                                         {copied ? (
@@ -208,7 +206,7 @@ const UploadCard = ({ q, qIndex, onDelete }) => {
 
                 {q.source === "app" ? (
                     <div className="bg-gray-800">
-                        <UserCell compact={true} user={q.userId} />
+                        <UserCell user={q.userId} />
                     </div>
                 ) : (
                     <div className="flex items-center text-xs h-8 bg-white/5 px-3 space-x-2">

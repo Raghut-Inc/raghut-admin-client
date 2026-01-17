@@ -128,7 +128,7 @@ export default function SearchResult() {
             <div className="w-full max-w-xl mt-2">
                 <h2 className="font-semibold text-gray-500 p-2">유저정보</h2>
                 <div className="bg-gray-800">
-                    <UserCell user={user} compact={false} />
+                    <UserCell user={user} />
                 </div>
             </div>
 

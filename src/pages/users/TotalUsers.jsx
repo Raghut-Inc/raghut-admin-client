@@ -310,7 +310,7 @@ const TotalUsers = () => {
             {/* USER LIST */}
             <div className="bg-gray-800 divide-y divide-gray-500 max-w-4xl w-full">
                 {users.map((user) => (
-                    <UserCell key={user._id} user={user} compact={true} />
+                    <UserCell key={user._id} user={user} />
                 ))}
             </div>
 

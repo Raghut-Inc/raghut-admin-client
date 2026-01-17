@@ -12,7 +12,7 @@ import {
 import { FaTimes } from "react-icons/fa";
 import { MdFileUpload } from "react-icons/md";
 import { IoIosImage } from "react-icons/io";
-import { IoChatbubbleSharp, IoPeopleCircle } from "react-icons/io5";
+import { IoChatbubbleSharp } from "react-icons/io5";
 import { RiKakaoTalkFill } from "react-icons/ri";
 import { SiPosthog } from "react-icons/si"; // ✅ add
 import clsx from "clsx";
@@ -115,11 +115,6 @@ const SideMenu = ({ user, setUser }) => {
                                 to="/admin/followup"
                                 icon={<IoChatbubbleSharp className="w-4 h-4" />}
                                 label="추가 질문"
-                            />
-                            <MenuItem
-                                to="/admin/friends"
-                                icon={<IoPeopleCircle className="w-4 h-4" />}
-                                label="친구 추가"
                             />
                             {/* Users */}
                             <div className="text-xs uppercase font-semibold text-gray-400 px-4 mt-8 mb-1">

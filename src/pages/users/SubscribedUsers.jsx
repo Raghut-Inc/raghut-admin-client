@@ -173,7 +173,6 @@ const SubscribedUsers = () => {
                         users.map((user) => (
                             <UserCell
                                 key={user._id}
-                                compact={true}
                                 user={user}
                             />
                         ))

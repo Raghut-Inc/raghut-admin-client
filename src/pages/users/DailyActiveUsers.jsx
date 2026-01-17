@@ -173,7 +173,6 @@ const DailyActiveUsers = () => {
                         dailyRows.map((row) => (
                             <UserCell
                                 key={row.userId}
-                                compact={true}
                                 user={row}
                             />
                         ))
