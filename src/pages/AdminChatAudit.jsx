@@ -10,23 +10,45 @@ const formatTime = (dateStr) => {
 const AdminChatAudit = () => {
     const [interactions, setInteractions] = useState([]);
     const [page, setPage] = useState(1);
-    const [pagination, setPagination] = useState({});
+    const [pagination, setPagination] = useState({ totalPages: 1 });
     const [loadingList, setLoadingList] = useState(false);
 
     const [selectedId, setSelectedId] = useState(null);
     const [detail, setDetail] = useState(null);
     const [loadingDetail, setLoadingDetail] = useState(false);
 
-    // Ref for the chat messages container to handle auto-scroll
     const chatEndRef = useRef(null);
 
+    // --- INFINITE SCROLL LOGIC ---
+    const observer = useRef();
+
+    // This ref is attached to the last item in the list
+    const lastInteractionElementRef = useCallback(node => {
+        if (loadingList) return; // Don't trigger if already loading
+        if (observer.current) observer.current.disconnect();
+
+        observer.current = new IntersectionObserver(entries => {
+            // If the last element is visible and we haven't reached the end
+            if (entries[0].isIntersecting && page < pagination.totalPages) {
+                setPage(prevPage => prevPage + 1);
+            }
+        });
+
+        if (node) observer.current.observe(node);
+    }, [loadingList, page, pagination.totalPages]);
+
+    // Modified fetchList: Appends data unless it's the first page
     const fetchList = useCallback(async (targetPage = 1) => {
         setLoadingList(true);
         try {
             const res = await axios.get(`${process.env.REACT_APP_API_URL}/analytics/chat-recent-usage?page=${targetPage}&limit=20`, { withCredentials: true });
-            setInteractions(res.data.data);
+
+            setInteractions(prev => {
+                // If resetting to page 1, replace. Otherwise, append unique items.
+                return targetPage === 1 ? res.data.data : [...prev, ...res.data.data];
+            });
+
             setPagination(res.data.pagination);
-            setPage(targetPage);
         } catch (err) {
             console.error("List fetch failed", err);
         } finally {
@@ -34,7 +56,13 @@ const AdminChatAudit = () => {
         }
     }, []);
 
-    const fetchHistory = async (userId, questionId, interactionId, resultId) => {
+    // Fetch on mount and when page changes
+    useEffect(() => {
+        fetchList(page);
+    }, [page, fetchList]);
+
+    // --- DETAIL VIEW LOGIC ---
+    const fetchHistory = async (userId, questionId, interactionId) => {
         setSelectedId(interactionId);
         setLoadingDetail(true);
         try {
@@ -52,9 +80,6 @@ const AdminChatAudit = () => {
         alert('ID Copied!');
     };
 
-    useEffect(() => { fetchList(); }, [fetchList]);
-
-    // Scroll to bottom whenever detail history updates
     useEffect(() => {
         if (chatEndRef.current) {
             chatEndRef.current.scrollTop = chatEndRef.current.scrollHeight;
@@ -65,118 +90,105 @@ const AdminChatAudit = () => {
         <div className="flex h-[calc(100svh-3rem)] bg-gray-100 font-sans text-sm overflow-hidden relative">
 
             {/* LEFT SIDE: Interaction List */}
-            {/* Logic: Hidden on mobile if an item is selected */}
             <div className={`${selectedId ? 'hidden' : 'flex'} md:flex w-full md:w-1/3 flex-col border-r bg-white shadow-lg`}>
-                <div className="flex space-x-1 p-2 w-full font-semibold items-center justify-between bg-gray-50 border-b">
-                    <p className="font-semibold w-full text-gray-500">추가질문</p>
-                    <span className="text-xs text-gray-400 flex-shrink-0">Total {pagination.totalCount || 0}</span>
+                <div className="flex space-x-1 p-3 w-full font-semibold items-center justify-between bg-gray-50 border-b">
+                    <p className="font-semibold w-full text-gray-500">추가질문 감사</p>
+                    <span className="text-[10px] bg-gray-200 px-2 py-0.5 rounded-full text-gray-600 flex-shrink-0">
+                        Total {pagination.totalCount || 0}
+                    </span>
                 </div>
 
-                <div className="flex-1 overflow-y-auto divide-y">
-                    {loadingList ? (
-                        <div className="p-3 text-center text-gray-400 italic">Loading interactions...</div>
-                    ) : (
-                        interactions.map((item) => (
+                <div className="flex-1 overflow-y-auto divide-y scrollbar-hide">
+                    {interactions.map((item, index) => {
+                        // Check if this is the last item in the current array
+                        const isLast = interactions.length === index + 1;
+                        return (
                             <div
-                                key={item.id}
-                                onClick={() => fetchHistory(item.userId, item.questionId, item.id, item.resultId)}
-                                className={`p-3 cursor-pointer transition-colors hover:bg-blue-50 ${selectedId === item.id ? 'bg-blue-100 border-l-4 border-l-blue-500' : ''}`}
+                                key={`${item.id}-${index}`}
+                                ref={isLast ? lastInteractionElementRef : null}
+                                onClick={() => fetchHistory(item.userId, item.questionId, item.id)}
+                                className={`p-3 cursor-pointer transition-all hover:bg-blue-50 ${selectedId === item.id ? 'bg-blue-100 border-l-4 border-l-blue-500' : ''}`}
                             >
                                 <div className="flex gap-3 items-center">
                                     {item.questionImage && (
-                                        <img src={item.questionImage} alt="q" className="w-12 h-12 rounded object-cover bg-gray-200" />
+                                        <img src={item.questionImage} alt="q" className="w-12 h-12 rounded border object-cover bg-gray-100" />
                                     )}
                                     <div className="flex-1 min-w-0">
-                                        <div className="flex justify-between">
-                                            <span className="font-semibold truncate">{item.userName}</span>
-                                            <span className="text-[10px] text-gray-400 whitespace-nowrap">{formatTime(item.updatedAt)}</span>
+                                        <div className="flex justify-between items-baseline">
+                                            <span className="font-bold truncate text-gray-800">{item.userName}</span>
+                                            <span className="text-[9px] text-gray-400 whitespace-nowrap ml-2">{formatTime(item.updatedAt)}</span>
                                         </div>
-                                        <p className="text-gray-600 truncate text-xs">{item.questionNumber}번: {item.lastSnippet}</p>
+                                        <p className="text-gray-500 truncate text-xs mt-1">
+                                            <span className="font-medium text-blue-600 mr-1">#{item.questionNumber}</span>
+                                            {item.lastSnippet}
+                                        </p>
                                     </div>
                                 </div>
                             </div>
-                        ))
-                    )}
-                </div>
+                        );
+                    })}
 
-                <div className="p-3 border-t bg-gray-50 flex justify-between items-center">
-                    <button
-                        disabled={!pagination.hasPrevPage}
-                        onClick={() => fetchList(page - 1)}
-                        className="px-3 py-1 bg-white border rounded shadow-sm disabled:opacity-30 text-xs"
-                    >Prev</button>
-                    <span className="text-gray-500 text-xs">Page {page} of {pagination.totalPages}</span>
-                    <button
-                        disabled={!pagination.hasNextPage}
-                        onClick={() => fetchList(page + 1)}
-                        className="px-3 py-1 bg-white border rounded shadow-sm disabled:opacity-30 text-xs"
-                    >Next</button>
+                    {loadingList && (
+                        <div className="p-4 text-center text-gray-400 text-xs italic animate-pulse">
+                            Loading more interactions...
+                        </div>
+                    )}
                 </div>
             </div>
 
             {/* RIGHT SIDE: Detail View */}
-            {/* Logic: Hidden on mobile if no item is selected */}
             <div className={`${selectedId ? 'flex' : 'hidden'} md:flex flex-1 flex flex-col bg-gray-50 overflow-hidden`}>
                 {loadingDetail ? (
-                    <div className="m-auto text-gray-400 italic">Loading thread context...</div>
+                    <div className="m-auto flex flex-col items-center gap-2">
+                        <div className="w-6 h-6 border-2 border-blue-500 border-t-transparent rounded-full animate-spin"></div>
+                        <span className="text-gray-400 italic">Fetching thread...</span>
+                    </div>
                 ) : detail ? (
                     <>
-                        {/* ID & Info Header */}
-                        <div className="bg-white border-b p-1.5 shadow-sm">
+                        {/* Header */}
+                        <div className="bg-white border-b p-2 shadow-sm flex items-center justify-between">
                             <div className="flex items-center gap-2">
-                                {/* Mobile Back Button */}
-                                <button
-                                    onClick={() => setSelectedId(null)}
-                                    className="md:hidden p-2 mr-1 text-gray-600 hover:bg-gray-100 rounded"
-                                >
+                                <button onClick={() => setSelectedId(null)} className="md:hidden p-2 text-gray-600 hover:bg-gray-100 rounded">
                                     <svg xmlns="http://www.w3.org/2000/svg" className="h-5 w-5" fill="none" viewBox="0 0 24 24" stroke="currentColor">
                                         <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M15 19l-7-7 7-7" />
                                     </svg>
                                 </button>
-
-                                {/* IDs Toolbar */}
-                                <div className="flex flex-wrap gap-2">
-                                    <div onClick={() => copyToClipboard(interactions.find(i => i.id === selectedId)?.userId)} className="flex items-center bg-gray-100 rounded px-2 border border-gray-200 cursor-pointer">
-                                        <span className="text-[10px] font-bold text-gray-500 mr-2">USER_ID:</span>
-                                        <code className="text-[10px] text-indigo-600 font-mono truncate max-w-[80px] md:max-w-none">{selectedId ? interactions.find(i => i.id === selectedId)?.userId : 'N/A'}</code>
-                                        <button className="ml-2 text-gray-400 hover:text-blue-500">📋</button>
+                                <div className="hidden sm:flex gap-2">
+                                    <div onClick={() => copyToClipboard(detail.userId)} className="cursor-pointer bg-gray-100 px-2 py-1 rounded border text-[10px] font-mono text-gray-600 hover:bg-gray-200">
+                                        USER: {detail.userId?.substring(0, 8)}... 📋
                                     </div>
-                                    <div onClick={() => copyToClipboard(detail.resultId)} className="flex items-center bg-gray-100 rounded px-2 border border-gray-200 cursor-pointer">
-                                        <span className="text-[10px] font-bold text-gray-500 mr-2">RESULT_ID:</span>
-                                        <code className="text-[10px] text-indigo-600 font-mono truncate max-w-[80px] md:max-w-none">{detail.resultId}</code>
-                                        <button className="ml-2 text-gray-400 hover:text-blue-500">📋</button>
+                                    <div onClick={() => copyToClipboard(detail.resultId)} className="cursor-pointer bg-gray-100 px-2 py-1 rounded border text-[10px] font-mono text-gray-600 hover:bg-gray-200">
+                                        RESULT: {detail.resultId?.substring(0, 8)}... 📋
                                     </div>
                                 </div>
                             </div>
+                            <div className="text-[11px] font-medium text-gray-400 uppercase tracking-wider px-3">
+                                Thread Context
+                            </div>
                         </div>
 
-                        {/* Chat History Thread */}
-                        <div
-                            ref={chatEndRef}
-                            className="flex-1 overflow-y-auto p-4 md:p-6 space-y-4 bg-gray-50 scroll-smooth"
-                        >
+                        {/* Chat Thread */}
+                        <div ref={chatEndRef} className="flex-1 overflow-y-auto p-4 md:p-8 space-y-6 scroll-smooth">
                             {detail.thread.map((msg, idx) => (
                                 <div key={idx} className={`flex ${msg.sender === 'user' ? 'justify-end' : 'justify-start'}`}>
-                                    <div className={`max-w-[85%] md:max-w-[75%] p-3 rounded-2xl shadow-sm ${msg.sender === 'user'
-                                        ? 'bg-blue-600 text-white rounded-tr-none'
-                                        : 'bg-white text-gray-800 border border-gray-200 rounded-tl-none'
+                                    <div className={`max-w-[85%] md:max-w-[70%] p-4 rounded-2xl shadow-sm ${msg.sender === 'user'
+                                            ? 'bg-blue-600 text-white rounded-tr-none'
+                                            : 'bg-white text-gray-800 border border-gray-100 rounded-tl-none'
                                         }`}>
-                                        <div className="flex justify-between items-center gap-4 mb-1">
-                                            <p className="text-[9px] font-black uppercase tracking-widest opacity-60">{msg.sender}</p>
-                                            <p className="text-[9px] opacity-50">{formatTime(msg.time)}</p>
+                                        <div className="flex justify-between items-center mb-1.5 border-b border-black/10 pb-1">
+                                            <span className="text-[9px] font-bold uppercase tracking-widest opacity-70">{msg.sender}</span>
+                                            <span className="text-[9px] opacity-60">{formatTime(msg.time)}</span>
                                         </div>
-                                        <p className="text-xs whitespace-pre-wrap leading-relaxed">{msg.text}</p>
+                                        <p className="text-xs leading-relaxed whitespace-pre-wrap">{msg.text}</p>
                                     </div>
                                 </div>
                             ))}
                         </div>
                     </>
                 ) : (
-                    <div className="m-auto text-gray-400 flex flex-col items-center p-6 text-center">
-                        <div className="w-16 h-16 bg-gray-200 rounded-full flex items-center justify-center mb-4">
-                            <span className="text-2xl">🔍</span>
-                        </div>
-                        <p className="font-medium">Select a conversation to audit AI responses</p>
+                    <div className="m-auto text-center opacity-40">
+                        <div className="text-4xl mb-2">💬</div>
+                        <p className="text-sm font-medium">Select a conversation to audit</p>
                     </div>
                 )}
             </div>
