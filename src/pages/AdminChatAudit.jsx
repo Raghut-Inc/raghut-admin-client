@@ -67,7 +67,11 @@ const AdminChatAudit = () => {
         setLoadingDetail(true);
         try {
             const res = await axios.get(`${process.env.REACT_APP_API_URL}/analytics/chat-history/${userId}/${questionId}`, { withCredentials: true });
-            setDetail(res.data);
+            setDetail({
+                ...res.data,
+                userId: userId,
+                questionId: questionId
+            });
         } catch (err) {
             console.error("Detail fetch failed", err);
         } finally {
@@ -154,6 +158,9 @@ const AdminChatAudit = () => {
                                     </svg>
                                 </button>
                                 <div className="hidden sm:flex gap-2">
+                                    <div onClick={() => copyToClipboard(detail.questionId)} className="cursor-pointer bg-gray-100 px-2 py-1 rounded border text-[10px] font-mono text-gray-600 hover:bg-gray-200">
+                                        QId: {detail.questionId?.substring(0, 8)}... 📋
+                                    </div>
                                     <div onClick={() => copyToClipboard(detail.userId)} className="cursor-pointer bg-gray-100 px-2 py-1 rounded border text-[10px] font-mono text-gray-600 hover:bg-gray-200">
                                         USER: {detail.userId?.substring(0, 8)}... 📋
                                     </div>
@@ -172,8 +179,8 @@ const AdminChatAudit = () => {
                             {detail.thread.map((msg, idx) => (
                                 <div key={idx} className={`flex ${msg.sender === 'user' ? 'justify-end' : 'justify-start'}`}>
                                     <div className={`max-w-[85%] md:max-w-[70%] p-4 rounded-2xl shadow-sm ${msg.sender === 'user'
-                                            ? 'bg-blue-600 text-white rounded-tr-none'
-                                            : 'bg-white text-gray-800 border border-gray-100 rounded-tl-none'
+                                        ? 'bg-blue-600 text-white rounded-tr-none'
+                                        : 'bg-white text-gray-800 border border-gray-100 rounded-tl-none'
                                         }`}>
                                         <div className="flex justify-between items-center mb-1.5 border-b border-black/10 pb-1">
                                             <span className="text-[9px] font-bold uppercase tracking-widest opacity-70">{msg.sender}</span>
