@@ -1,5 +1,5 @@
 import { useEffect, useState, useRef } from "react";
-import { FaPlus, FaTrash, FaPen, FaLink, FaImage, FaSort } from "react-icons/fa6";
+import { FaPlus, FaTrash, FaPen, FaLink, FaImage, FaSort, FaCheckCircle } from "react-icons/fa6";
 import { BiLoader, BiX } from "react-icons/bi";
 
 // Reusable Switch Component
@@ -33,7 +33,8 @@ const AdsPage = () => {
     title: "",
     badgeText: "",
     redirectUrl: "",
-    priority: 0, // 🆕 Added priority
+    priority: 0,
+    isOfficial: false, // 🆕 Added isOfficial
     isActive: true,
   });
   const [selectedFile, setSelectedFile] = useState(null);
@@ -97,7 +98,7 @@ const AdsPage = () => {
             prev.map((ad) => ((ad.id === editingAd.id || ad._id === editingAd._id) ? data.ad : ad))
           );
           closeModal();
-          loadAds(); // Reload to reflect sort order changes
+          loadAds();
         } else {
           alert(data.error);
         }
@@ -110,7 +111,8 @@ const AdsPage = () => {
         payload.append("title", formData.title);
         payload.append("badgeText", formData.badgeText);
         payload.append("redirectUrl", formData.redirectUrl);
-        payload.append("priority", formData.priority); // 🆕 Append priority
+        payload.append("priority", formData.priority);
+        payload.append("isOfficial", formData.isOfficial); // 🆕 Append isOfficial
 
         const res = await fetch(`${process.env.REACT_APP_API_URL}/ads/promotions`, {
           method: "POST",
@@ -121,7 +123,7 @@ const AdsPage = () => {
         if (data.success) {
           setAds((prev) => [data.ad, ...prev]);
           closeModal();
-          loadAds(); // Reload to fix sort order
+          loadAds();
         } else {
           alert(data.error);
         }
@@ -142,7 +144,7 @@ const AdsPage = () => {
 
   const openCreateModal = () => {
     setEditingAd(null);
-    setFormData({ title: "", badgeText: "", redirectUrl: "", priority: 0, isActive: true });
+    setFormData({ title: "", badgeText: "", redirectUrl: "", priority: 0, isOfficial: false, isActive: true });
     setSelectedFile(null);
     setPreviewUrl(null);
     setIsModalOpen(true);
@@ -154,7 +156,8 @@ const AdsPage = () => {
       title: ad.title,
       badgeText: ad.badgeText,
       redirectUrl: ad.redirectUrl,
-      priority: ad.priority || 0, // 🆕 Load existing priority
+      priority: ad.priority || 0,
+      isOfficial: ad.isOfficial || false, // 🆕 Load existing
       isActive: ad.isActive,
     });
     setSelectedFile(null);
@@ -214,11 +217,18 @@ const AdsPage = () => {
                 />
                 <div className="absolute inset-0 bg-gradient-to-t from-black/60 to-transparent opacity-60" />
 
-                {/* Priority Badge (Top Left) */}
-                <div className="absolute top-2 left-2">
+                {/* Left Badges Stack: Priority & Official */}
+                <div className="absolute top-2 left-2 flex flex-col gap-1 items-start">
+                  {/* Priority */}
                   <span className="bg-black/50 backdrop-blur text-white px-2 py-0.5 rounded text-[10px] font-mono flex items-center gap-1">
                     <FaSort /> {ad.priority || 0}
                   </span>
+                  {/* 🆕 Official Badge */}
+                  {ad.isOfficial && (
+                    <span className="bg-blue-600 text-white px-2 py-0.5 rounded text-[10px] font-bold shadow-sm flex items-center gap-1">
+                      <FaCheckCircle size={10} /> OFFICIAL
+                    </span>
+                  )}
                 </div>
 
                 {/* Overlay Text Preview */}
@@ -377,6 +387,18 @@ const AdsPage = () => {
                   className="w-full mt-1 p-2 border rounded-lg focus:ring-2 focus:ring-indigo-500 outline-none font-mono text-sm text-gray-600"
                   value={formData.redirectUrl}
                   onChange={(e) => setFormData({ ...formData, redirectUrl: e.target.value })}
+                />
+              </div>
+
+              {/* 🆕 Official Toggle */}
+              <div className="flex items-center justify-between bg-blue-50 p-3 rounded-lg border border-blue-100">
+                <div className="flex items-center gap-2">
+                  <FaCheckCircle className="text-blue-600" />
+                  <span className="text-sm font-medium text-blue-900">Official Ad</span>
+                </div>
+                <Switch
+                  checked={formData.isOfficial}
+                  onChange={() => setFormData(prev => ({ ...prev, isOfficial: !prev.isOfficial }))}
                 />
               </div>
 
