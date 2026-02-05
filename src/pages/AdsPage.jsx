@@ -1,6 +1,7 @@
 import { useEffect, useState, useRef } from "react";
-import { FaPlus, FaTrash, FaPen, FaLink, FaImage, FaSort, FaCheckCircle } from "react-icons/fa6";
+import { FaPlus, FaTrash, FaPen, FaLink, FaImage, FaSort } from "react-icons/fa6";
 import { BiLoader, BiX } from "react-icons/bi";
+import { FaCheckCircle } from "react-icons/fa";
 
 // Reusable Switch Component
 const Switch = ({ checked, onChange }) => (
