@@ -1,5 +1,5 @@
 import { useEffect, useState, useRef } from "react";
-import { FaPlus, FaTrash, FaPen, FaLink, FaImage } from "react-icons/fa6";
+import { FaPlus, FaTrash, FaPen, FaLink, FaImage, FaSort } from "react-icons/fa6";
 import { BiLoader, BiX } from "react-icons/bi";
 
 // Reusable Switch Component
@@ -33,6 +33,7 @@ const AdsPage = () => {
     title: "",
     badgeText: "",
     redirectUrl: "",
+    priority: 0, // 🆕 Added priority
     isActive: true,
   });
   const [selectedFile, setSelectedFile] = useState(null);
@@ -45,15 +46,10 @@ const AdsPage = () => {
   const loadAds = async () => {
     try {
       setLoading(true);
-      // Note: Endpoint changed to public GET which returns active only? 
-      // Ideally admin needs a separate endpoint or param to see inactive ones too.
-      // If your backend filters `isActive: true` by default, you might need to tweak backend 
-      // to allow admins to see all. Assuming current backend returns all for now or we update it.
       const res = await fetch(`${process.env.REACT_APP_API_URL}/ads/promotions`, {
         credentials: "include",
       });
       const data = await res.json();
-      // If data is array, set it. API might return {success: true, ads: []} or just []
       setAds(Array.isArray(data) ? data : []);
     } catch (err) {
       console.error("Failed to load ads:", err);
@@ -88,7 +84,7 @@ const AdsPage = () => {
       if (editingAd) {
         // --- UPDATE (PATCH) ---
         const body = { ...formData };
-        // Clean undefined/nulls if needed
+
         const res = await fetch(`${process.env.REACT_APP_API_URL}/ads/promotions/${editingAd.id || editingAd._id}`, {
           method: "PATCH",
           headers: { "Content-Type": "application/json" },
@@ -101,6 +97,7 @@ const AdsPage = () => {
             prev.map((ad) => ((ad.id === editingAd.id || ad._id === editingAd._id) ? data.ad : ad))
           );
           closeModal();
+          loadAds(); // Reload to reflect sort order changes
         } else {
           alert(data.error);
         }
@@ -113,17 +110,18 @@ const AdsPage = () => {
         payload.append("title", formData.title);
         payload.append("badgeText", formData.badgeText);
         payload.append("redirectUrl", formData.redirectUrl);
-        // isActive defaults to true on server if omitted
+        payload.append("priority", formData.priority); // 🆕 Append priority
 
         const res = await fetch(`${process.env.REACT_APP_API_URL}/ads/promotions`, {
           method: "POST",
-          body: payload, // No Content-Type header (browser sets boundary)
+          body: payload,
           credentials: "include",
         });
         const data = await res.json();
         if (data.success) {
           setAds((prev) => [data.ad, ...prev]);
           closeModal();
+          loadAds(); // Reload to fix sort order
         } else {
           alert(data.error);
         }
@@ -144,7 +142,7 @@ const AdsPage = () => {
 
   const openCreateModal = () => {
     setEditingAd(null);
-    setFormData({ title: "", badgeText: "", redirectUrl: "", isActive: true });
+    setFormData({ title: "", badgeText: "", redirectUrl: "", priority: 0, isActive: true });
     setSelectedFile(null);
     setPreviewUrl(null);
     setIsModalOpen(true);
@@ -156,10 +154,11 @@ const AdsPage = () => {
       title: ad.title,
       badgeText: ad.badgeText,
       redirectUrl: ad.redirectUrl,
+      priority: ad.priority || 0, // 🆕 Load existing priority
       isActive: ad.isActive,
     });
     setSelectedFile(null);
-    setPreviewUrl(ad.imageUrl); // Show current image
+    setPreviewUrl(ad.imageUrl);
     setIsModalOpen(true);
   };
 
@@ -206,7 +205,7 @@ const AdsPage = () => {
               className={`bg-white rounded-xl shadow-sm border overflow-hidden flex flex-col relative group transition-all hover:shadow-md ${!ad.isActive ? "opacity-60 grayscale" : ""
                 }`}
             >
-              {/* IMAGE AREA (6:7 Aspect Ratio to match app, or just cover) */}
+              {/* IMAGE AREA */}
               <div className="relative w-full aspect-[6/7] bg-gray-100">
                 <img
                   src={ad.imageUrl}
@@ -214,6 +213,13 @@ const AdsPage = () => {
                   className="w-full h-full object-cover"
                 />
                 <div className="absolute inset-0 bg-gradient-to-t from-black/60 to-transparent opacity-60" />
+
+                {/* Priority Badge (Top Left) */}
+                <div className="absolute top-2 left-2">
+                  <span className="bg-black/50 backdrop-blur text-white px-2 py-0.5 rounded text-[10px] font-mono flex items-center gap-1">
+                    <FaSort /> {ad.priority || 0}
+                  </span>
+                </div>
 
                 {/* Overlay Text Preview */}
                 <div className="absolute bottom-0 left-0 p-4 w-full">
@@ -321,17 +327,30 @@ const AdsPage = () => {
                 )}
               </div>
 
-              {/* Title */}
-              <div>
-                <label className="text-xs font-bold text-gray-500 uppercase">Title</label>
-                <input
-                  type="text"
-                  required
-                  placeholder="e.g. Winter Sale"
-                  className="w-full mt-1 p-2 border rounded-lg focus:ring-2 focus:ring-indigo-500 outline-none"
-                  value={formData.title}
-                  onChange={(e) => setFormData({ ...formData, title: e.target.value })}
-                />
+              {/* Title & Priority Row */}
+              <div className="flex space-x-4">
+                <div className="flex-1">
+                  <label className="text-xs font-bold text-gray-500 uppercase">Title</label>
+                  <input
+                    type="text"
+                    required
+                    placeholder="e.g. Winter Sale"
+                    className="w-full mt-1 p-2 border rounded-lg focus:ring-2 focus:ring-indigo-500 outline-none"
+                    value={formData.title}
+                    onChange={(e) => setFormData({ ...formData, title: e.target.value })}
+                  />
+                </div>
+                <div className="w-24">
+                  <label className="text-xs font-bold text-gray-500 uppercase">Priority</label>
+                  <input
+                    type="number"
+                    min="0"
+                    placeholder="0"
+                    className="w-full mt-1 p-2 border rounded-lg focus:ring-2 focus:ring-indigo-500 outline-none"
+                    value={formData.priority}
+                    onChange={(e) => setFormData({ ...formData, priority: parseInt(e.target.value) || 0 })}
+                  />
+                </div>
               </div>
 
               {/* Badge */}
