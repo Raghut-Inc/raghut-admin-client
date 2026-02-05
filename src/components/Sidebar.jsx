@@ -9,7 +9,7 @@ import {
     FaDollarSign,
     FaTicketSimple,
 } from "react-icons/fa6";
-import { FaTimes } from "react-icons/fa";
+import { FaAd, FaTimes } from "react-icons/fa";
 import { MdFileUpload } from "react-icons/md";
 import { IoIosImage } from "react-icons/io";
 import { IoChatbubbleSharp } from "react-icons/io5";
@@ -145,6 +145,15 @@ const SideMenu = ({ user, setUser }) => {
                                 to="/admin/grant"
                                 icon={<FaTicketSimple className="w-4 h-4" />}
                                 label="한달권 증정"
+                            />
+                            {/* Ads Tools */}
+                            <div className="text-xs uppercase font-semibold text-gray-400 px-4 mt-8 mb-1">
+                                Ads Tools
+                            </div>
+                            <MenuItem
+                                to="/admin/ads"
+                                icon={<FaAd className="w-4 h-4" />}
+                                label="Ads"
                             />
                             {/* Dev Tools */}
                             <div className="text-xs uppercase font-semibold text-gray-400 px-4 mt-8 mb-1">
