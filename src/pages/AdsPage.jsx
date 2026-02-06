@@ -1,5 +1,5 @@
 import { useEffect, useState, useRef } from "react";
-import { FaPlus, FaTrash, FaPen, FaLink, FaImage, FaSort } from "react-icons/fa6";
+import { FaPlus, FaTrash, FaPen, FaLink, FaImage, FaSort, FaMoneyBill } from "react-icons/fa6";
 import { BiLoader, BiX } from "react-icons/bi";
 import { FaCheckCircle } from "react-icons/fa";
 
@@ -35,7 +35,8 @@ const AdsPage = () => {
     badgeText: "",
     redirectUrl: "",
     priority: 0,
-    isOfficial: false, // 🆕 Added isOfficial
+    isOfficial: false,
+    isPaywall: false,
     isActive: true,
   });
   const [selectedFile, setSelectedFile] = useState(null);
@@ -113,7 +114,8 @@ const AdsPage = () => {
         payload.append("badgeText", formData.badgeText);
         payload.append("redirectUrl", formData.redirectUrl);
         payload.append("priority", formData.priority);
-        payload.append("isOfficial", formData.isOfficial); // 🆕 Append isOfficial
+        payload.append("isOfficial", formData.isOfficial);
+        payload.append("isPaywall", formData.isPaywall);
 
         const res = await fetch(`${process.env.REACT_APP_API_URL}/ads/promotions`, {
           method: "POST",
@@ -145,7 +147,7 @@ const AdsPage = () => {
 
   const openCreateModal = () => {
     setEditingAd(null);
-    setFormData({ title: "", badgeText: "", redirectUrl: "", priority: 0, isOfficial: false, isActive: true });
+    setFormData({ title: "", badgeText: "", redirectUrl: "", priority: 0, isOfficial: true, isActive: true, isPaywall: false });
     setSelectedFile(null);
     setPreviewUrl(null);
     setIsModalOpen(true);
@@ -158,7 +160,8 @@ const AdsPage = () => {
       badgeText: ad.badgeText,
       redirectUrl: ad.redirectUrl,
       priority: ad.priority || 0,
-      isOfficial: ad.isOfficial || false, // 🆕 Load existing
+      isOfficial: ad.isOfficial || false,
+      isPaywall: ad.isPaywall || false,
       isActive: ad.isActive,
     });
     setSelectedFile(null);
@@ -228,6 +231,11 @@ const AdsPage = () => {
                   {ad.isOfficial && (
                     <span className="bg-blue-600 text-white px-2 py-0.5 rounded text-[10px] font-bold shadow-sm flex items-center gap-1">
                       <FaCheckCircle size={10} /> OFFICIAL
+                    </span>
+                  )}
+                  {ad.isPaywall && (
+                    <span className="bg-blue-600 text-white px-2 py-0.5 rounded text-[10px] font-bold shadow-sm flex items-center gap-1">
+                      <FaMoneyBill size={10} /> PAYWALL
                     </span>
                   )}
                 </div>
@@ -400,6 +408,18 @@ const AdsPage = () => {
                 <Switch
                   checked={formData.isOfficial}
                   onChange={() => setFormData(prev => ({ ...prev, isOfficial: !prev.isOfficial }))}
+                />
+              </div>
+
+              {/* 🆕 Paywall Toggle */}
+              <div className="flex items-center justify-between bg-blue-50 p-3 rounded-lg border border-blue-100">
+                <div className="flex items-center gap-2">
+                  <FaCheckCircle className="text-blue-600" />
+                  <span className="text-sm font-medium text-blue-900">Is Paywall</span>
+                </div>
+                <Switch
+                  checked={formData.isPaywall}
+                  onChange={() => setFormData(prev => ({ ...prev, isPaywall: !prev.isPaywall }))}
                 />
               </div>
 
