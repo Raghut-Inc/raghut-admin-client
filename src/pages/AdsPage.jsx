@@ -1,7 +1,6 @@
 import { useEffect, useState, useRef } from "react";
-import { FaPlus, FaTrash, FaPen, FaLink, FaImage, FaSort, FaMoneyBill } from "react-icons/fa6";
+import { FaPlus, FaTrash, FaPen, FaLink, FaImage, FaSort, FaMoneyBill, FaGlobe, FaCheckCircle } from "react-icons/fa";
 import { BiLoader, BiX } from "react-icons/bi";
-import { FaCheckCircle } from "react-icons/fa";
 
 // Reusable Switch Component
 const Switch = ({ checked, onChange }) => (
@@ -38,6 +37,7 @@ const AdsPage = () => {
     isOfficial: false,
     isPaywall: false,
     isActive: true,
+    targetLanguage: "all", // 🆕 Added Default
   });
   const [selectedFile, setSelectedFile] = useState(null);
   const [previewUrl, setPreviewUrl] = useState(null);
@@ -49,6 +49,8 @@ const AdsPage = () => {
   const loadAds = async () => {
     try {
       setLoading(true);
+      // Admin sees ALL ads regardless of language, so we don't pass ?lang= here usually,
+      // unless your API filters admin view too. Assuming admin sees everything.
       const res = await fetch(`${process.env.REACT_APP_API_URL}/ads/promotions`, {
         credentials: "include",
       });
@@ -116,6 +118,7 @@ const AdsPage = () => {
         payload.append("priority", formData.priority);
         payload.append("isOfficial", formData.isOfficial);
         payload.append("isPaywall", formData.isPaywall);
+        payload.append("targetLanguage", formData.targetLanguage); // 🆕 Append Language
 
         const res = await fetch(`${process.env.REACT_APP_API_URL}/ads/promotions`, {
           method: "POST",
@@ -147,7 +150,16 @@ const AdsPage = () => {
 
   const openCreateModal = () => {
     setEditingAd(null);
-    setFormData({ title: "", badgeText: "", redirectUrl: "", priority: 0, isOfficial: true, isActive: true, isPaywall: false });
+    setFormData({
+      title: "",
+      badgeText: "",
+      redirectUrl: "",
+      priority: 0,
+      isOfficial: false,
+      isActive: true,
+      isPaywall: false,
+      targetLanguage: "all" // 🆕 Reset to All
+    });
     setSelectedFile(null);
     setPreviewUrl(null);
     setIsModalOpen(true);
@@ -163,6 +175,7 @@ const AdsPage = () => {
       isOfficial: ad.isOfficial || false,
       isPaywall: ad.isPaywall || false,
       isActive: ad.isActive,
+      targetLanguage: ad.targetLanguage || "all", // 🆕 Load existing or default
     });
     setSelectedFile(null);
     setPreviewUrl(ad.imageUrl);
@@ -179,6 +192,15 @@ const AdsPage = () => {
     if (file) {
       setSelectedFile(file);
       setPreviewUrl(URL.createObjectURL(file));
+    }
+  };
+
+  // Helper for Language Badge Color/Text
+  const getLangBadge = (lang) => {
+    switch (lang) {
+      case 'ko': return { bg: 'bg-red-100', text: 'text-red-700', label: '🇰🇷 KO' };
+      case 'en': return { bg: 'bg-blue-100', text: 'text-blue-700', label: '🇺🇸 EN' };
+      default: return { bg: 'bg-purple-100', text: 'text-purple-700', label: '🌐 ALL' };
     }
   };
 
@@ -206,84 +228,92 @@ const AdsPage = () => {
         </div>
       ) : (
         <div className="w-full max-w-6xl p-4 grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
-          {ads.map((ad) => (
-            <div
-              key={ad.id || ad._id}
-              className={`bg-white rounded-xl shadow-sm border overflow-hidden flex flex-col relative group transition-all hover:shadow-md ${!ad.isActive ? "opacity-60 grayscale" : ""
-                }`}
-            >
-              {/* IMAGE AREA */}
-              <div className="relative w-full aspect-[6/7] bg-gray-100">
-                <img
-                  src={ad.imageUrl}
-                  alt={ad.title}
-                  className="w-full h-full object-cover"
-                />
-                <div className="absolute inset-0 bg-gradient-to-t from-black/60 to-transparent opacity-60" />
+          {ads.map((ad) => {
+            const langStyle = getLangBadge(ad.targetLanguage);
+            return (
+              <div
+                key={ad.id || ad._id}
+                className={`bg-white rounded-xl shadow-sm border overflow-hidden flex flex-col relative group transition-all hover:shadow-md ${!ad.isActive ? "opacity-60 grayscale" : ""
+                  }`}
+              >
+                {/* IMAGE AREA */}
+                <div className="relative w-full aspect-[6/7] bg-gray-100">
+                  <img
+                    src={ad.imageUrl}
+                    alt={ad.title}
+                    className="w-full h-full object-cover"
+                  />
+                  <div className="absolute inset-0 bg-gradient-to-t from-black/60 to-transparent opacity-60" />
 
-                {/* Left Badges Stack: Priority & Official */}
-                <div className="absolute top-2 left-2 flex flex-col gap-1 items-start">
-                  {/* Priority */}
-                  <span className="bg-black/50 backdrop-blur text-white px-2 py-0.5 rounded text-[10px] font-mono flex items-center gap-1">
-                    <FaSort /> {ad.priority || 0}
-                  </span>
-                  {/* 🆕 Official Badge */}
-                  {ad.isOfficial && (
-                    <span className="bg-blue-600 text-white px-2 py-0.5 rounded text-[10px] font-bold shadow-sm flex items-center gap-1">
-                      <FaCheckCircle size={10} /> OFFICIAL
+                  {/* Left Badges Stack: Priority & Official */}
+                  <div className="absolute top-2 left-2 flex flex-col gap-1 items-start">
+                    {/* Priority */}
+                    <span className="bg-black/50 backdrop-blur text-white px-2 py-0.5 rounded text-[10px] font-mono flex items-center gap-1">
+                      <FaSort /> {ad.priority || 0}
                     </span>
-                  )}
-                  {ad.isPaywall && (
-                    <span className="bg-blue-600 text-white px-2 py-0.5 rounded text-[10px] font-bold shadow-sm flex items-center gap-1">
-                      <FaMoneyBill size={10} /> PAYWALL
-                    </span>
-                  )}
-                </div>
+                    {/* Official Badge */}
+                    {ad.isOfficial && (
+                      <span className="bg-blue-600 text-white px-2 py-0.5 rounded text-[10px] font-bold shadow-sm flex items-center gap-1">
+                        <FaCheckCircle size={10} /> OFFICIAL
+                      </span>
+                    )}
+                    {/* Paywall Badge */}
+                    {ad.isPaywall && (
+                      <span className="bg-amber-500 text-white px-2 py-0.5 rounded text-[10px] font-bold shadow-sm flex items-center gap-1">
+                        <FaMoneyBill size={10} /> PAYWALL
+                      </span>
+                    )}
+                  </div>
 
-                {/* Overlay Text Preview */}
-                <div className="absolute bottom-0 left-0 p-4 w-full">
-                  <div className="flex items-center space-x-2 mb-1">
-                    <span className="bg-indigo-600 text-white text-[10px] font-bold px-1.5 py-0.5 rounded">
-                      {ad.badgeText}
+                  {/* Overlay Text Preview */}
+                  <div className="absolute bottom-0 left-0 p-4 w-full">
+                    <div className="flex items-center space-x-2 mb-1">
+                      <span className="bg-indigo-600 text-white text-[10px] font-bold px-1.5 py-0.5 rounded">
+                        {ad.badgeText}
+                      </span>
+                    </div>
+                    <h3 className="text-white font-semibold text-sm truncate">{ad.title}</h3>
+                  </div>
+
+                  {/* Status Badge */}
+                  <div className="absolute top-2 right-2 flex flex-col gap-1 items-end">
+                    <span className={`px-2 py-1 text-xs font-bold rounded-full border ${ad.isActive ? 'bg-green-100 text-green-700 border-green-200' : 'bg-gray-100 text-gray-600'}`}>
+                      {ad.isActive ? 'ACTIVE' : 'INACTIVE'}
+                    </span>
+                    {/* 🆕 Language Badge */}
+                    <span className={`px-2 py-1 text-xs font-bold rounded-full border ${langStyle.bg} ${langStyle.text} border-transparent`}>
+                      {langStyle.label}
                     </span>
                   </div>
-                  <h3 className="text-white font-semibold text-sm truncate">{ad.title}</h3>
                 </div>
 
-                {/* Status Badge */}
-                <div className="absolute top-2 right-2">
-                  <span className={`px-2 py-1 text-xs font-bold rounded-full border ${ad.isActive ? 'bg-green-100 text-green-700 border-green-200' : 'bg-gray-100 text-gray-600'}`}>
-                    {ad.isActive ? 'ACTIVE' : 'INACTIVE'}
-                  </span>
+                {/* DETAILS & ACTIONS */}
+                <div className="p-4 flex flex-col gap-2 flex-1">
+                  <div className="flex items-center text-xs text-gray-500 truncate">
+                    <FaLink className="mr-1 flex-shrink-0" />
+                    <a href={ad.redirectUrl} target="_blank" rel="noreferrer" className="truncate hover:text-indigo-600 hover:underline">
+                      {ad.redirectUrl}
+                    </a>
+                  </div>
+
+                  <div className="mt-auto pt-4 flex items-center justify-end space-x-2 border-t border-gray-100">
+                    <button
+                      onClick={() => openEditModal(ad)}
+                      className="p-2 text-gray-600 hover:text-indigo-600 hover:bg-indigo-50 rounded-full transition-colors"
+                    >
+                      <FaPen size={14} />
+                    </button>
+                    <button
+                      onClick={() => handleDelete(ad.id || ad._id)}
+                      className="p-2 text-gray-400 hover:text-red-600 hover:bg-red-50 rounded-full transition-colors"
+                    >
+                      <FaTrash size={14} />
+                    </button>
+                  </div>
                 </div>
               </div>
-
-              {/* DETAILS & ACTIONS */}
-              <div className="p-4 flex flex-col gap-2 flex-1">
-                <div className="flex items-center text-xs text-gray-500 truncate">
-                  <FaLink className="mr-1 flex-shrink-0" />
-                  <a href={ad.redirectUrl} target="_blank" rel="noreferrer" className="truncate hover:text-indigo-600 hover:underline">
-                    {ad.redirectUrl}
-                  </a>
-                </div>
-
-                <div className="mt-auto pt-4 flex items-center justify-end space-x-2 border-t border-gray-100">
-                  <button
-                    onClick={() => openEditModal(ad)}
-                    className="p-2 text-gray-600 hover:text-indigo-600 hover:bg-indigo-50 rounded-full transition-colors"
-                  >
-                    <FaPen size={14} />
-                  </button>
-                  <button
-                    onClick={() => handleDelete(ad.id || ad._id)}
-                    className="p-2 text-gray-400 hover:text-red-600 hover:bg-red-50 rounded-full transition-colors"
-                  >
-                    <FaTrash size={14} />
-                  </button>
-                </div>
-              </div>
-            </div>
-          ))}
+            )
+          })}
 
           {ads.length === 0 && (
             <div className="col-span-full py-20 text-center text-gray-400">
@@ -296,9 +326,10 @@ const AdsPage = () => {
       {/* MODAL */}
       {isModalOpen && (
         <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/50 backdrop-blur-sm p-4">
-          <div className="bg-white rounded-2xl shadow-2xl w-full max-w-md overflow-hidden flex flex-col max-h-[90vh]">
+          <div className="bg-white rounded-2xl shadow-2xl w-full max-w-md max-h-[90vh] flex flex-col">
 
-            <div className="p-4 border-b flex justify-between items-center bg-gray-50">
+            {/* Modal Header */}
+            <div className="p-4 border-b flex justify-between items-center bg-gray-50 rounded-t-2xl">
               <h2 className="font-bold text-lg text-gray-800">
                 {editingAd ? "Edit Promotion" : "New Promotion"}
               </h2>
@@ -307,6 +338,7 @@ const AdsPage = () => {
               </button>
             </div>
 
+            {/* Modal Body (Scrollable) */}
             <form onSubmit={handleSubmit} className="p-6 overflow-y-auto flex flex-col gap-4">
 
               {/* Image Upload */}
@@ -372,18 +404,39 @@ const AdsPage = () => {
                 </div>
               </div>
 
-              {/* Badge */}
-              <div>
-                <label className="text-xs font-bold text-gray-500 uppercase">Badge Text</label>
-                <input
-                  type="text"
-                  required
-                  placeholder="e.g. PROMO"
-                  maxLength={10}
-                  className="w-full mt-1 p-2 border rounded-lg focus:ring-2 focus:ring-indigo-500 outline-none"
-                  value={formData.badgeText}
-                  onChange={(e) => setFormData({ ...formData, badgeText: e.target.value })}
-                />
+              {/* Badge & Language Row */}
+              <div className="flex space-x-4">
+                <div className="flex-1">
+                  <label className="text-xs font-bold text-gray-500 uppercase">Badge Text</label>
+                  <input
+                    type="text"
+                    required
+                    placeholder="e.g. PROMO"
+                    maxLength={10}
+                    className="w-full mt-1 p-2 border rounded-lg focus:ring-2 focus:ring-indigo-500 outline-none"
+                    value={formData.badgeText}
+                    onChange={(e) => setFormData({ ...formData, badgeText: e.target.value })}
+                  />
+                </div>
+                {/* 🆕 Language Selector */}
+                <div className="w-1/3">
+                  <label className="text-xs font-bold text-gray-500 uppercase">Language</label>
+                  <div className="relative mt-1">
+                    <select
+                      className="w-full p-2 border rounded-lg focus:ring-2 focus:ring-indigo-500 outline-none appearance-none bg-white"
+                      value={formData.targetLanguage}
+                      onChange={(e) => setFormData({ ...formData, targetLanguage: e.target.value })}
+                    >
+                      <option value="all">🌐 All</option>
+                      <option value="en">🇺🇸 EN</option>
+                      <option value="ko">🇰🇷 KO</option>
+                    </select>
+                    {/* Custom Arrow */}
+                    <div className="pointer-events-none absolute inset-y-0 right-0 flex items-center px-2 text-gray-700">
+                      <FaGlobe className="text-gray-400 text-xs" />
+                    </div>
+                  </div>
+                </div>
               </div>
 
               {/* URL */}
@@ -399,40 +452,43 @@ const AdsPage = () => {
                 />
               </div>
 
-              {/* 🆕 Official Toggle */}
-              <div className="flex items-center justify-between bg-blue-50 p-3 rounded-lg border border-blue-100">
-                <div className="flex items-center gap-2">
-                  <FaCheckCircle className="text-blue-600" />
-                  <span className="text-sm font-medium text-blue-900">Official Ad</span>
-                </div>
-                <Switch
-                  checked={formData.isOfficial}
-                  onChange={() => setFormData(prev => ({ ...prev, isOfficial: !prev.isOfficial }))}
-                />
-              </div>
-
-              {/* 🆕 Paywall Toggle */}
-              <div className="flex items-center justify-between bg-blue-50 p-3 rounded-lg border border-blue-100">
-                <div className="flex items-center gap-2">
-                  <FaCheckCircle className="text-blue-600" />
-                  <span className="text-sm font-medium text-blue-900">Is Paywall</span>
-                </div>
-                <Switch
-                  checked={formData.isPaywall}
-                  onChange={() => setFormData(prev => ({ ...prev, isPaywall: !prev.isPaywall }))}
-                />
-              </div>
-
-              {/* Status Toggle (Only in Edit) */}
-              {editingAd && (
-                <div className="flex items-center justify-between bg-gray-50 p-3 rounded-lg border">
-                  <span className="text-sm font-medium text-gray-700">Active Status</span>
+              {/* Toggles Container */}
+              <div className="space-y-3 pt-2">
+                {/* Official Toggle */}
+                <div className="flex items-center justify-between bg-blue-50 p-3 rounded-lg border border-blue-100">
+                  <div className="flex items-center gap-2">
+                    <FaCheckCircle className="text-blue-600" />
+                    <span className="text-sm font-medium text-blue-900">Official Ad</span>
+                  </div>
                   <Switch
-                    checked={formData.isActive}
-                    onChange={() => setFormData(prev => ({ ...prev, isActive: !prev.isActive }))}
+                    checked={formData.isOfficial}
+                    onChange={() => setFormData(prev => ({ ...prev, isOfficial: !prev.isOfficial }))}
                   />
                 </div>
-              )}
+
+                {/* Paywall Toggle */}
+                <div className="flex items-center justify-between bg-amber-50 p-3 rounded-lg border border-amber-100">
+                  <div className="flex items-center gap-2">
+                    <FaMoneyBill className="text-amber-600" />
+                    <span className="text-sm font-medium text-amber-900">Is Paywall</span>
+                  </div>
+                  <Switch
+                    checked={formData.isPaywall}
+                    onChange={() => setFormData(prev => ({ ...prev, isPaywall: !prev.isPaywall }))}
+                  />
+                </div>
+
+                {/* Status Toggle (Only in Edit) */}
+                {editingAd && (
+                  <div className="flex items-center justify-between bg-gray-50 p-3 rounded-lg border">
+                    <span className="text-sm font-medium text-gray-700">Active Status</span>
+                    <Switch
+                      checked={formData.isActive}
+                      onChange={() => setFormData(prev => ({ ...prev, isActive: !prev.isActive }))}
+                    />
+                  </div>
+                )}
+              </div>
 
               {/* Submit */}
               <button
