@@ -136,13 +136,16 @@ const UserDetail = ({ userId, onClose }) => {
                                 <hr className="border-white/5 my-2" />
                                 <Field label="User ID" value={data._id} copy />
                                 <Field label="Email" value={data.email} copy />
-                                <Field label="Role" value={data.role} highlight={data.role === 'admin'} />
-                                <Field label="Provider" value={data.provider} />
+                                <Field label="School" value={data.schoolName || "—"} />
 
+                                <div className="grid grid-cols-2 gap-2 pt-2">
+                                    <Field label="Role" value={data.role} highlight={data.role === 'admin'} />
+                                    <Field label="Provider" value={data.provider} />
+                                </div>
                                 {/* New Profile Fields */}
                                 <div className="grid grid-cols-2 gap-2 pt-2">
-                                    <Field label="School" value={data.schoolName || "—"} />
-                                    <Field label="Language" value={data.preferredLanguage === 'ko' ? "🇰🇷 Korean" : "🇺🇸 English"} />
+                                    <Field label="Device Lang" value={data.preferredLanguage === 'ko' ? "🇰🇷 Korean" : "🇺🇸 English"} />
+                                    <Field label="AI Lang" value={data.aiLanguagePref === 'ko' ? "🇰🇷 Korean" : "🇺🇸 English"} />
                                 </div>
                                 {/* Birthday with Korean Grade */}
                                 <Field label="Birthday" value={formatBirthday(data.birthday)} />
