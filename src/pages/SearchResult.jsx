@@ -63,6 +63,29 @@ export default function SearchResult() {
         [rawQuery]
     );
 
+    const handleDelete = async (id) => {
+        if (!window.confirm("정말 이 문제를 삭제하시겠습니까?")) return;
+        try {
+            const res = await fetch(
+                `${process.env.REACT_APP_API_URL}/solved-questions/${id}`,
+                {
+                    method: "DELETE",
+                    credentials: "include",
+                }
+            );
+            const data = await res.json();
+            if (data.success) {
+                setUploads((prev) => prev.filter((q) => q._id !== id));
+            } else {
+                alert("삭제에 실패했습니다.");
+                console.error("Delete failed:", data.error);
+            }
+        } catch (err) {
+            alert("삭제 중 오류가 발생했습니다.");
+            console.error("Delete error:", err);
+        }
+    };
+
     // ✅ Initial load when query changes
     useEffect(() => {
         setPage(1);
@@ -139,7 +162,7 @@ export default function SearchResult() {
                 </h2>
                 <div className="divide-y divide-gray-300 bg-white w-full">
                     {uploads.map((q) => (
-                        <UploadCard key={q._id} q={q} />
+                        <UploadCard key={q._id} q={q} onDelete={handleDelete} />
                     ))}
                 </div>
 
