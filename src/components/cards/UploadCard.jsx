@@ -266,7 +266,7 @@ const UploadCard = ({ q, qIndex, onDelete }) => {
                             {q.gptAnalyzed?.map((item, i) => {
                                 const key = `${qIndex}-${i}`;
                                 return (
-                                    <div key={key} className={clsx("gap-2 mb-2 opacity-50 grayscale")}>
+                                    <div key={key} className={clsx("gap-2 mb-2 opacity-100")}>
                                         {renderQuestionCard(item, key)}
                                     </div>
                                 );
