@@ -175,16 +175,11 @@ const UserDetail = ({ userId, onClose }) => {
 
                             {/* 3. Custom Prompts (Added Fields) */}
                             <Section title="Custom AI Prompts" icon={<FiFileText />}>
-                                {(!data.explanation && !data.followUp) && <div className="text-xs text-gray-500 italic">No custom prompts set.</div>}
+                                {!data.explanation && <div className="text-xs text-gray-500 italic">No custom prompts set.</div>}
 
                                 <Field
                                     label="Explanation Prompt"
                                     value={data.explanation}
-                                    className="whitespace-pre-wrap font-mono text-[11px] bg-black/30 p-2 rounded border border-white/5 text-gray-300"
-                                />
-                                <Field
-                                    label="Follow Up Prompt"
-                                    value={data.followUp}
                                     className="whitespace-pre-wrap font-mono text-[11px] bg-black/30 p-2 rounded border border-white/5 text-gray-300"
                                 />
                             </Section>

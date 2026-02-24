@@ -14,7 +14,6 @@ const UserInputsPage = () => {
         school: false,
         birthday: false,
         explanation: false,
-        followUp: false
     });
 
     // --- Fetch Logic ---
@@ -87,7 +86,6 @@ const UserInputsPage = () => {
                     <FilterButton label="School" isActive={activeFilters.school} onClick={() => toggleFilter('school')} color="blue" />
                     <FilterButton label="Birthday" isActive={activeFilters.birthday} onClick={() => toggleFilter('birthday')} color="purple" />
                     <FilterButton label="Explain" isActive={activeFilters.explanation} onClick={() => toggleFilter('explanation')} color="emerald" />
-                    <FilterButton label="FollowUp" isActive={activeFilters.followUp} onClick={() => toggleFilter('followUp')} color="orange" />
                 </div>
             </div>
 
@@ -126,7 +124,6 @@ const UserInputsPage = () => {
                                             <td className="px-6 py-4 text-sm text-gray-900">
                                                 <div className="max-w-xs truncate" title={user.explanation}>{user.explanation || <Empty />}</div>
                                             </td>
-                                            <td className="px-6 py-4 text-sm text-gray-900">{user.followUp || <Empty />}</td>
                                         </tr>
                                     ))}
                                 </tbody>
@@ -154,8 +151,6 @@ const UserInputsPage = () => {
                                                 {user.explanation || <span className="text-gray-300 italic">Empty</span>}
                                             </p>
                                         </div>
-
-                                        <MobileRow label="Follow Up" value={user.followUp} />
                                     </div>
                                 </div>
                             ))}
