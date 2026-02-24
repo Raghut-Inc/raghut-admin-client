@@ -6,15 +6,20 @@ import CardMathMCQ from "./CardMathMCQ";
 import CardMathShortAnswer from "./CardMathShortAnswer";
 
 import { FaAngleDown, FaCircleCheck, FaTrashCan } from "react-icons/fa6";
-import { MdError, MdWarning } from "react-icons/md";
+import { MdError, MdWarning, MdArchive } from "react-icons/md"; // Added MdArchive
 import { FiCopy } from "react-icons/fi";
 import { BiLoader } from "react-icons/bi";
 import UserCell from "../UserCell";
 import clsx from "clsx";
 
 const UploadCard = ({ q, qIndex, onDelete }) => {
+    console.log(q)
     const [showDetails, setShowDetails] = useState(false);
     const [copied, setCopied] = useState(false);
+
+    // ✅ Soft Delete Check
+    const isDeleted = !!q.deletedAt;
+
     const isQuotaLimit = !!q.errorCode?.includes("DAILY_LIMIT_EXCEEDED");
     const hasError = !!q.errorCode
     const isProcessing = q.status === "processing"
@@ -60,13 +65,16 @@ const UploadCard = ({ q, qIndex, onDelete }) => {
     };
 
     return (
-        <div key={qIndex} className="max-w-xl overflow-hidden shadow w-full rounded-lg">
-            <div className={`${isProcessing ? "bg-opacity-80" : isQuotaLimit ? "border-[6px] border-orange-500" : hasError && "border-[6px] border-red-500"} bg-gray-700 flex flex-col w-full text-white text-xs`}>
+        <div key={qIndex} className={clsx("max-w-xl overflow-hidden shadow w-full rounded-lg transition-all")}>
+            <div className={clsx(
+                "flex flex-col w-full text-white text-xs bg-gray-700",
+                isProcessing ? "bg-opacity-80" : isQuotaLimit ? "border-[6px] border-orange-500" : hasError && "border-[6px] border-red-500",
+            )}>
                 <div className="flex w-full h-full">
                     {/* Image Preview */}
                     <div
                         className={clsx(
-                            "flex-shrink-0 flex justify-start items-center bg-black transition-all duration-200",
+                            "flex-shrink-0 flex justify-start items-center bg-black transition-all duration-200 relative",
                             isSmallCard
                                 ? "w-28 h-28 items-center justify-center"
                                 : "max-w-48 max-h-64"
@@ -99,6 +107,7 @@ const UploadCard = ({ q, qIndex, onDelete }) => {
                             <div className="w-full flex justify-between items-center">
                                 <div className="flex space-x-2 items-center">
                                     {/* Status Icon */}
+                                    {isDeleted && <MdArchive className="w-7 h-7 text-gray-400 p-px" />}
                                     {isProcessing ? (
                                         <BiLoader className="w-5 h-5 text-gray-500 animate-spin dark:text-gray-600 fill-white" />
                                     ) : isQuotaLimit ? (
@@ -108,7 +117,9 @@ const UploadCard = ({ q, qIndex, onDelete }) => {
                                     ) : (
                                         <FaCircleCheck className="w-7 h-7 text-indigo-500 p-px bg-white rounded-full" />
                                     )}
-                                    <span>{timeAgo(q.createdAt)}</span>
+                                    <span className={clsx(isDeleted && "text-red-400 font-bold")}>
+                                        {isDeleted ? `ARCHIVED (${timeAgo(q.deletedAt)})` : timeAgo(q.createdAt)}
+                                    </span>
                                 </div>
 
                                 {/* Copy/Delete Buttons */}
@@ -176,7 +187,7 @@ const UploadCard = ({ q, qIndex, onDelete }) => {
                                 </div>
                                 <div className="flex items-center space-x-2">
                                     <span className="font-semibold text-gray-400">ID:</span>
-                                    <span className="truncate max-w-[160px] text-gray-300">{q._id}</span>
+                                    <span className={clsx("truncate max-w-[160px]", isDeleted ? "text-gray-500 line-through" : "text-gray-300")}>{q._id}</span>
                                 </div>
                                 {!isSmallCard && (
                                     <>
@@ -205,11 +216,11 @@ const UploadCard = ({ q, qIndex, onDelete }) => {
                 </div>
 
                 {q.source === "app" ? (
-                    <div className="bg-gray-800">
+                    <div className={"bg-gray-800"}>
                         <UserCell user={q.userId} />
                     </div>
                 ) : (
-                    <div className="flex items-center text-xs h-8 bg-white/5 px-3 space-x-2">
+                    <div className={clsx("flex items-center text-xs h-8 px-3 space-x-2")}>
                         <div className="font-semibold text-gray-400">챗봇유저</div>
                         <div className="font-semibold text-white">{q.uploader?.kakaoIdentity} ({q.uploader?.kakaoDailyUploads}개, {prettyDate})</div>
                     </div>
@@ -217,7 +228,7 @@ const UploadCard = ({ q, qIndex, onDelete }) => {
 
                 {/* SUMMARY ROW */}
                 {!isProcessing && !showDetails && (
-                    <div className="text-gray-800 h-10 px-1 flex w-full justify-between items-center bg-gray-700">
+                    <div className={clsx("h-10 px-1 flex w-full justify-between items-center bg-gray-700 text-gray-800")}>
                         {isQuotaLimit ? (
                             <div className="px-2 text-orange-500 bg-white py-1 rounded-lg font-bold">{q.errorCode}</div>
                         ) : hasError ? (
@@ -227,12 +238,12 @@ const UploadCard = ({ q, qIndex, onDelete }) => {
                                 <div className="flex flex-wrap gap-1">
                                     <div className="flex gap-1 items-center">
                                         {validCount > 0 && (
-                                            <span className="px-2 h-6 flex items-center rounded-lg text-xs font-medium bg-green-100 text-green-700">
+                                            <span className={clsx("px-2 h-6 flex items-center rounded-lg text-xs font-medium bg-green-100 text-green-700")}>
                                                 풀이완료: {validCount}개
                                             </span>
                                         )}
                                         {invalidCount > 0 && (
-                                            <span className="px-2 h-6 flex items-center rounded-lg text-xs font-medium bg-red-100 text-red-700 border-red-300">
+                                            <span className={clsx("px-2 h-6 flex items-center rounded-lg text-xs font-medium bg-red-100 text-red-700 border-red-300")}>
                                                 풀이오류: {invalidCount}개
                                             </span>
                                         )}
@@ -251,11 +262,11 @@ const UploadCard = ({ q, qIndex, onDelete }) => {
                 {/* FULL DETAILS (only when toggled) */}
                 {!isProcessing && showDetails && (
                     <div onClick={() => setShowDetails((v) => !v)} className="flex-1 text-xs text-black overflow-hidden cursor-pointer">
-                        <div className="bg-gray-400 p-2 gap-2">
+                        <div className={clsx("p-2 gap-2 bg-gray-400")}>
                             {q.gptAnalyzed?.map((item, i) => {
                                 const key = `${qIndex}-${i}`;
                                 return (
-                                    <div key={key} className="gap-2 mb-2">
+                                    <div key={key} className={clsx("gap-2 mb-2 opacity-50 grayscale")}>
                                         {renderQuestionCard(item, key)}
                                     </div>
                                 );

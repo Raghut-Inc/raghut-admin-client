@@ -64,10 +64,12 @@ export default function SearchResult() {
     );
 
     const handleDelete = async (id) => {
-        if (!window.confirm("정말 이 문제를 삭제하시겠습니까?")) return;
+        // ⚠️ Make the warning stronger for Admin Hard Deletes
+        if (!window.confirm("⚠️ 경고: 이 데이터와 S3 이미지를 '영구' 삭제하시겠습니까? 복구가 불가능합니다.")) return;
+
         try {
             const res = await fetch(
-                `${process.env.REACT_APP_API_URL}/solved-questions/${id}`,
+                `${process.env.REACT_APP_API_URL}/solved-questions/${id}/hard-delete`, // ✅ Path change
                 {
                     method: "DELETE",
                     credentials: "include",
@@ -78,11 +80,9 @@ export default function SearchResult() {
                 setUploads((prev) => prev.filter((q) => q._id !== id));
             } else {
                 alert("삭제에 실패했습니다.");
-                console.error("Delete failed:", data.error);
             }
         } catch (err) {
             alert("삭제 중 오류가 발생했습니다.");
-            console.error("Delete error:", err);
         }
     };
 
