@@ -1,7 +1,7 @@
 import { useEffect, useState, useCallback, useMemo } from "react";
 import UploadCard from "../components/cards/UploadCard";
 import { useSearchParams } from "react-router";
-import { FaCheck, FaLock, FaX } from "react-icons/fa6";
+import { FaCheck, FaLock, FaX, FaTrashCan } from "react-icons/fa6"; // Added FaTrashCan
 import { BiLoader } from "react-icons/bi";
 
 const PAGE_SIZE = 25;
@@ -41,7 +41,8 @@ const Uploads = () => {
   const statusFilterRaw = searchParams.get("status") || "";
   const subjectFilterRaw = searchParams.get("subject") || "";
   const onlyWithErrorCode = searchParams.get("onlyWithErrorCode") === "true";
-  const errorCodeFilter = searchParams.get("errorCodeFilter") || ""; // "" | "daily_limit"
+  const errorCodeFilter = searchParams.get("errorCodeFilter") || "";
+  const onlyDeletedFilter = searchParams.get("onlyDeleted") === "true"; // ✅ Added filter
 
   const statusFilter = useMemo(() => {
     const allowed = new Set(STATUS_OPTIONS.map((o) => o.value));
@@ -64,6 +65,17 @@ const Uploads = () => {
         params.set("page", pageToLoad);
         params.set("pageSize", PAGE_SIZE);
         params.set("source", "app")
+
+        // --- ✅ NEW: Handle Soft Delete Logic ---
+        if (onlyDeletedFilter) {
+          params.set("onlyDeleted", "true");
+          params.set("includeCount", "false");
+        } else {
+          // If we aren't looking at "Trash", we usually want to see active only
+          // OR you can set includeDeleted=true if you want a mixed view.
+          params.set("includeDeleted", "true");
+        }
+
         if (userIdFilter) params.set("userId", userIdFilter);
         if (statusFilter) params.set("status", statusFilter);
         if (subjectFilter) params.set("subject", subjectFilter);
@@ -75,7 +87,7 @@ const Uploads = () => {
           { credentials: "include" }
         );
         const data = await res.json();
-        console.log(data.questions);
+
         if (data.success) {
           if (pageToLoad === 1) setQuestions(data.questions);
           else setQuestions((prev) => [...prev, ...data.questions]);
@@ -91,7 +103,7 @@ const Uploads = () => {
         else setLoadingMore(false);
       }
     },
-    [userIdFilter, statusFilter, subjectFilter, onlyWithErrorCode, errorCodeFilter]
+    [userIdFilter, statusFilter, subjectFilter, onlyWithErrorCode, errorCodeFilter, onlyDeletedFilter]
   );
 
   const updateParams = useCallback(
@@ -107,12 +119,11 @@ const Uploads = () => {
 
   // Delete handler (Hard Delete)
   const handleDelete = async (id) => {
-    // Make the warning more explicit since this is irreversible and hits S3
     if (!window.confirm("⚠️ 경고: 이 문제는 영구 삭제됩니다. S3 이미지가 삭제되며 복구가 불가능합니다. 계속하시겠습니까?")) return;
 
     try {
       const res = await fetch(
-        `${process.env.REACT_APP_API_URL}/solved-questions/${id}/hard-delete`, // ✅ Point to the new hard-delete path
+        `${process.env.REACT_APP_API_URL}/solved-questions/${id}/hard-delete`,
         {
           method: "DELETE",
           credentials: "include",
@@ -122,40 +133,38 @@ const Uploads = () => {
       const data = await res.json();
 
       if (data.success) {
-        // Remove from local state immediately
         setQuestions((prev) => prev.filter((q) => q._id !== id));
       } else {
         alert(`삭제에 실패했습니다: ${data.error || "알 수 없는 오류"}`);
-        console.error("Hard delete failed:", data.error);
       }
     } catch (err) {
       alert("서버 통신 중 오류가 발생했습니다.");
-      console.error("Hard delete error:", err);
     }
   };
 
-  // Apply status filter (also handles errorCode modes)
   const applyStatus = useCallback(
     (v) => {
       updateParams((np) => {
+        // Reset special filters first
+        np.delete("onlyDeleted");
+        np.delete("onlyWithErrorCode");
+        np.delete("errorCodeFilter");
+        np.delete("status");
+
         if (v === "__errorCode") {
-          // any errorCode != null / ""
           np.set("onlyWithErrorCode", "true");
-          np.set("errorCodeFilter", "OTHER");      // ✅ matches backend
-          np.delete("status");
+          np.set("errorCodeFilter", "OTHER");
         } else if (v === "__dailyLimit") {
-          // ONLY DAILY_LIMIT_EXCEEDED
           np.set("onlyWithErrorCode", "true");
-          np.set("errorCodeFilter", "DAILY_LIMIT_EXCEEDED");  // ✅ exact match
-          np.delete("status");
-        } else {
-          // normal status logic
-          if (v) np.set("status", v);
-          else np.delete("status");
-          // turning off error filters when going back to normal status
-          np.delete("onlyWithErrorCode");
-          np.delete("errorCodeFilter");
+          np.set("errorCodeFilter", "DAILY_LIMIT_EXCEEDED");
+        } else if (v === "__deleted") {
+          // ✅ New Deleted Filter Case
+          np.set("onlyDeleted", "true");
+          np.set("includeCount", "false"); // <-- Bypasses the slow counting!
+        } else if (v) {
+          np.set("status", v);
         }
+
         np.set("page", "1");
         np.set("pageSize", String(PAGE_SIZE));
       });
@@ -169,7 +178,7 @@ const Uploads = () => {
     setPage(1);
     setHasMore(true);
     loadQuestions(1);
-  }, [loadQuestions, applyStatus]);
+  }, [loadQuestions]);
 
   // Infinite scroll
   useEffect(() => {
@@ -198,7 +207,7 @@ const Uploads = () => {
     setSearchParams(np);
   };
 
-  const isAllActive = statusFilter === "" && !onlyWithErrorCode;
+  const isAllActive = statusFilter === "" && !onlyWithErrorCode && !onlyDeletedFilter;
   const isErrorAnyActive = onlyWithErrorCode && errorCodeFilter === "OTHER";
   const isDailyLimitActive = onlyWithErrorCode && errorCodeFilter === "DAILY_LIMIT_EXCEEDED";
 
@@ -209,94 +218,89 @@ const Uploads = () => {
         <p className="font-semibold w-full text-gray-500">최근 업로드 {totalCount}</p>
       </div>
 
-      {/* Status + errorCode toggles */}
-      <div className="flex-shrink-0 flex justify-center z-30 items-center overflow-hidden fixed bottom-0 space-x-1 p-4">
+      {/* Status + errorCode + deleted toggles */}
+      <div className="flex-shrink-0 flex justify-center z-40 items-center overflow-hidden fixed bottom-6 space-x-1 p-2 bg-white/20 backdrop-blur-md rounded-full border border-white/30 shadow-2xl">
         <button
           onClick={() => applyStatus("")}
-          className={`px-3 h-10 w-10 flex items-center justify-center text-xs rounded-full shadow-xl border-t ${isAllActive
+          className={`px-3 h-10 w-10 flex items-center justify-center text-xs rounded-full shadow-lg ${isAllActive
             ? "bg-indigo-600 text-white"
-            : " bg-white/60 backdrop-blur-xl"
+            : "bg-white/80 text-gray-700 hover:bg-white"
             }`}
         >
           ALL
         </button>
         <button
           onClick={() => applyStatus("done")}
-          className={`px-3 h-10 w-10 flex items-center justify-center text-xs rounded-full shadow-xl border-t ${statusFilter === "done"
+          className={`px-3 h-10 w-10 flex items-center justify-center text-xs rounded-full shadow-lg ${statusFilter === "done"
             ? "bg-indigo-600 text-white"
-            : " bg-white/60 backdrop-blur-xl"
+            : "bg-white/80 text-gray-700 hover:bg-white"
             }`}
         >
           <FaCheck />
         </button>
         <button
           onClick={() => applyStatus("processing")}
-          className={`px-3 h-10 w-10 flex items-center justify-center rounded-full shadow-xl border-t ${statusFilter === "processing"
+          className={`px-3 h-10 w-10 flex items-center justify-center rounded-full shadow-lg ${statusFilter === "processing"
             ? "bg-indigo-600 text-white"
-            : "bg-white/60 backdrop-blur-xl"
+            : "bg-white/80 text-gray-700 hover:bg-white"
             }`}
         >
-          <BiLoader className="w-10 h-10" />
+          <BiLoader className="w-5 h-5" />
         </button>
 
-        {/* ❌ any errorCode */}
         <button
           onClick={() => applyStatus("__errorCode")}
-          className={`px-3 h-10 w-10 flex items-center justify-center text-xs rounded-full shadow-xl border-t ${isErrorAnyActive
+          className={`px-3 h-10 w-10 flex items-center justify-center text-xs rounded-full shadow-lg ${isErrorAnyActive
             ? "bg-indigo-600 text-white"
-            : "bg-white/60 backdrop-blur-xl"
+            : "bg-white/80 text-gray-700 hover:bg-white"
             }`}
         >
           <FaX />
         </button>
 
-        {/* DL = DAILY_LIMIT_EXCEEDED */}
         <button
           onClick={() => applyStatus("__dailyLimit")}
-          className={`px-3 h-10 w-10 flex items-center justify-center text-xs rounded-full shadow-xl border-t ${isDailyLimitActive
+          className={`px-3 h-10 w-10 flex items-center justify-center text-xs rounded-full shadow-lg ${isDailyLimitActive
             ? "bg-indigo-600 text-white"
-            : "bg-white/60 backdrop-blur-xl"
+            : "bg-white/80 text-gray-700 hover:bg-white"
             }`}
         >
           <FaLock />
+        </button>
+
+        {/* ✅ NEW: Trash Filter Button */}
+        <button
+          onClick={() => applyStatus("__deleted")}
+          className={`px-3 h-10 w-10 flex items-center justify-center text-xs rounded-full shadow-lg ${onlyDeletedFilter
+            ? "bg-red-600 text-white"
+            : "bg-white/80 text-red-500 hover:bg-white"
+            }`}
+          title="Show Deleted Only"
+        >
+          <FaTrashCan />
         </button>
       </div>
 
       {/* Filters */}
       {userIdFilter && (
-        <div className="flex h-12 items-center justifycenter px-2 fixed top-0 z-30">
+        <div className="flex h-12 items-center justify-center px-2 fixed top-4 z-30">
           <button
             onClick={clearUserIdFilter}
-            className="text-white bg-indigo-500 px-3 py-1 rounded-full flex items-center text-xs space-x-2 shadow-xl border-t w-40"
+            className="text-white bg-indigo-500 px-4 py-1.5 rounded-full flex items-center text-xs space-x-2 shadow-xl border-t border-indigo-400"
           >
-            <span className="truncate">{userIdFilter}</span>
-            <div className="font-bold text-indigo-800">×</div>
+            <span className="truncate max-w-[120px]">{userIdFilter}</span>
+            <div className="font-bold">×</div>
           </button>
         </div>
       )}
 
       {loading ? (
-        <div className="flex items-center justify-center h-48 w-full bg-white">
-          <svg
-            aria-hidden="true"
-            className="w-5 h-5 text-gray-500 animate-spin dark:text-gray-600 fill-white"
-            viewBox="0 0 100 101"
-            fill="none"
-            xmlns="http://www.w3.org/2000/svg"
-          >
-            <path
-              d="M100 50.5908C100 78.2051 77.6142 100.591 50 100.591C22.3858 100.591 0 78.2051 0 50.5908C0 22.9766 22.3858 0.59082 50 0.59082C77.6142 0.59082 100 22.9766 100 50.5908ZM9.08144 50.5908C9.08144 73.1895 27.4013 91.5094 50 91.5094C72.5987 91.5094 90.9186 73.1895 90.9186 50.5908C90.9186 27.9921 72.5987 9.67226 50 9.67226C27.4013 9.67226 9.08144 27.9921 9.08144 50.5908Z"
-              fill="currentColor"
-            />
-            <path
-              d="M93.9676 39.0409C96.393 38.4038 97.8624 35.9116 97.0079 33.5539C95.2932 28.8227 92.871 24.3692 89.8167 20.348C85.8452 15.1192 80.8826 10.7238 75.2124 7.41289C69.5422 4.10194 63.2754 1.94025 56.7698 1.05124C51.7666 0.367541 46.6976 0.446843 41.7345 1.27873C39.2613 1.69328 37.813 4.19778 38.4501 6.62326C39.0873 9.04874 41.5694 10.4717 44.0505 10.1071C47.8511 9.54855 51.7191 9.52689 55.5402 10.0491C60.8642 10.7766 65.9928 12.5457 70.6331 15.2552C75.2735 17.9648 79.3347 21.5619 82.5849 25.841C84.9175 28.9121 86.7997 32.2913 88.1811 35.8758C89.083 38.2158 91.5421 39.6781 93.9676 39.0409Z"
-              fill="currentFill"
-            />
-          </svg>
+        <div className="flex items-center justify-center h-64 w-full">
+          <BiLoader className="w-10 h-10 text-indigo-500 animate-spin" />
         </div>
       ) : (
-        <div className="w-full max-w-4xl flex flex-col items-center">
-          <div className="divide-y w-full flex flex-col items-center gap-2">
+        <div className="w-full max-w-4xl flex flex-col items-center pt-2 pb-24">
+          <div className="divide-y w-full flex flex-col items-center gap-4">
             {questions.map((q, qIndex) => (
               <UploadCard
                 key={q._id || qIndex}
@@ -307,12 +311,19 @@ const Uploads = () => {
             ))}
           </div>
           {loadingMore && (
-            <p className="text-center py-4 text-gray-600">Loading more...</p>
+            <div className="py-8">
+              <BiLoader className="w-8 h-8 text-indigo-500 animate-spin" />
+            </div>
           )}
-          {!hasMore && (
-            <p className="text-center text-sm py-4 text-gray-600">
-              🔚🔚🔚 No more results 🔚🔚🔚
+          {!hasMore && questions.length > 0 && (
+            <p className="text-center text-sm py-8 text-gray-400 font-medium">
+              🔚 No more results
             </p>
+          )}
+          {questions.length === 0 && !loading && (
+            <div className="flex flex-col items-center justify-center h-64 text-gray-400">
+              <p className="text-lg">검색 결과가 없습니다.</p>
+            </div>
           )}
         </div>
       )}

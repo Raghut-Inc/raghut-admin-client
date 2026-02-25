@@ -106,27 +106,32 @@ const KakaoUploads = () => {
         [setSearchParams]
     );
 
-    // Delete handler
+    // Delete handler (Hard Delete)
     const handleDelete = async (id) => {
-        if (!window.confirm("정말 이 문제를 삭제하시겠습니까?")) return;
+        // Make the warning more explicit since this is irreversible and hits S3
+        if (!window.confirm("⚠️ 경고: 이 문제는 영구 삭제됩니다. S3 이미지가 삭제되며 복구가 불가능합니다. 계속하시겠습니까?")) return;
+
         try {
             const res = await fetch(
-                `${process.env.REACT_APP_API_URL}/solved-questions/${id}`,
+                `${process.env.REACT_APP_API_URL}/solved-questions/${id}/hard-delete`, // ✅ Point to the new hard-delete path
                 {
                     method: "DELETE",
                     credentials: "include",
                 }
             );
+
             const data = await res.json();
+
             if (data.success) {
+                // Remove from local state immediately
                 setQuestions((prev) => prev.filter((q) => q._id !== id));
             } else {
-                alert("삭제에 실패했습니다.");
-                console.error("Delete failed:", data.error);
+                alert(`삭제에 실패했습니다: ${data.error || "알 수 없는 오류"}`);
+                console.error("Hard delete failed:", data.error);
             }
         } catch (err) {
-            alert("삭제 중 오류가 발생했습니다.");
-            console.error("Delete error:", err);
+            alert("서버 통신 중 오류가 발생했습니다.");
+            console.error("Hard delete error:", err);
         }
     };
 
@@ -206,7 +211,7 @@ const KakaoUploads = () => {
             </div>
 
             {/* Status + errorCode toggles */}
-            <div className="flex-shrink-0 flex justify-center z-30 items-center overflow-hidden fixed bottom-0 space-x-1 p-4">
+            <div className="flex-shrink-0 flex justify-center z-40 items-center overflow-hidden fixed bottom-6 space-x-1 p-2 bg-white/20 backdrop-blur-md rounded-full border border-white/30 shadow-2xl">
                 <button
                     onClick={() => applyStatus("")}
                     className={`px-3 h-10 w-10 flex items-center justify-center text-xs rounded-full shadow-xl border-t ${isAllActive
