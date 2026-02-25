@@ -18,15 +18,20 @@ const TotalUsers = () => {
     // Users must be at least N days old (createdAt <= now - N days)
     const [minAccountAgeDays, setMinAccountAgeDays] = useState("0");
 
-    // Upload buckets
+    // Active Upload buckets
     const [uploadBucket, setUploadBucket] = useState("all");
     const [uploadsMin, setUploadsMin] = useState("");
     const [uploadsMax, setUploadsMax] = useState("");
 
+    // ✅ NEW: Lifetime Upload buckets
+    const [lifetimeUploadBucket, setLifetimeUploadBucket] = useState("all");
+    const [lifetimeUploadsMin, setLifetimeUploadsMin] = useState("");
+    const [lifetimeUploadsMax, setLifetimeUploadsMax] = useState("");
+
     // Optional createdFrom
     const [createdFrom, setCreatedFrom] = useState("");
 
-    // ✅ NEW: age filters
+    // Age filters
     const [ageMin, setAgeMin] = useState(""); // e.g. "13"
     const [ageMax, setAgeMax] = useState(""); // e.g. "18"
 
@@ -45,6 +50,23 @@ const TotalUsers = () => {
 
         return { min: null, max: null };
     }, [uploadBucket, uploadsMin, uploadsMax]);
+
+    // ✅ NEW: Computed Lifetime Upload Range
+    const computedLifetimeUploadRange = useMemo(() => {
+        if (lifetimeUploadBucket === "custom") {
+            const min = lifetimeUploadsMin === "" ? null : String(Math.max(0, parseInt(lifetimeUploadsMin, 10)));
+            const max = lifetimeUploadsMax === "" ? null : String(Math.max(0, parseInt(lifetimeUploadsMax, 10)));
+            return { min, max };
+        }
+
+        if (lifetimeUploadBucket === "all") return { min: null, max: null };
+        if (lifetimeUploadBucket === "0") return { min: "0", max: "0" };
+        if (lifetimeUploadBucket === "1") return { min: "1", max: "1" };
+        if (lifetimeUploadBucket === "2") return { min: "2", max: "2" };
+        if (lifetimeUploadBucket === "3plus") return { min: "3", max: null };
+
+        return { min: null, max: null };
+    }, [lifetimeUploadBucket, lifetimeUploadsMin, lifetimeUploadsMax]);
 
     // createdTo = now - minAccountAgeDays
     const computedCreatedTo = useMemo(() => {
@@ -72,11 +94,15 @@ const TotalUsers = () => {
                 if (createdFrom) params.set("createdFrom", createdFrom);
                 if (computedCreatedTo) params.set("createdTo", computedCreatedTo);
 
-                // uploads
+                // active uploads
                 if (computedUploadRange.min !== null) params.set("uploadsMin", computedUploadRange.min);
                 if (computedUploadRange.max !== null) params.set("uploadsMax", computedUploadRange.max);
 
-                // ✅ age range
+                // ✅ lifetime uploads
+                if (computedLifetimeUploadRange.min !== null) params.set("lifetimeUploadsMin", computedLifetimeUploadRange.min);
+                if (computedLifetimeUploadRange.max !== null) params.set("lifetimeUploadsMax", computedLifetimeUploadRange.max);
+
+                // age range
                 if (ageMin !== "" && !Number.isNaN(parseInt(ageMin, 10))) params.set("ageMin", String(parseInt(ageMin, 10)));
                 if (ageMax !== "" && !Number.isNaN(parseInt(ageMax, 10))) params.set("ageMax", String(parseInt(ageMax, 10)));
 
@@ -109,14 +135,35 @@ const TotalUsers = () => {
                 setLoadingMore(false);
             }
         },
-        [userType, createdFrom, computedCreatedTo, computedUploadRange, ageMin, ageMax]
+        [
+            userType,
+            createdFrom,
+            computedCreatedTo,
+            computedUploadRange,
+            computedLifetimeUploadRange, // ✅ Added to dependencies
+            ageMin,
+            ageMax
+        ]
     );
 
     // Reload when filters change
     useEffect(() => {
         setPage(1);
         fetchUsers(1, true);
-    }, [userType, minAccountAgeDays, createdFrom, uploadBucket, uploadsMin, uploadsMax, ageMin, ageMax, fetchUsers]);
+    }, [
+        userType,
+        minAccountAgeDays,
+        createdFrom,
+        uploadBucket,
+        uploadsMin,
+        uploadsMax,
+        lifetimeUploadBucket, // ✅ Added to dependencies
+        lifetimeUploadsMin,   // ✅ Added to dependencies
+        lifetimeUploadsMax,   // ✅ Added to dependencies
+        ageMin,
+        ageMax,
+        fetchUsers
+    ]);
 
     // Load more when page changes
     useEffect(() => {
@@ -222,7 +269,7 @@ const TotalUsers = () => {
                     </div>
                 </div>
 
-                {/* ✅ Age filter */}
+                {/* Age filter */}
                 <div className="flex flex-wrap items-center gap-2">
                     <span className="text-xs text-gray-500">Age</span>
 
@@ -261,9 +308,9 @@ const TotalUsers = () => {
                     </span>
                 </div>
 
-                {/* Upload buckets */}
-                <div className="flex flex-wrap gap-1 items-center">
-                    <p className="text-xs text-gray-500 mr-1">Uploads</p>
+                {/* Active Upload buckets */}
+                <div className="flex flex-wrap gap-1 items-center border-t border-gray-300 pt-2">
+                    <p className="text-xs text-gray-500 mr-1 font-semibold w-24">Active Uploads</p>
                     {uploadButtons.map((btn) => (
                         <button
                             key={btn.value}
@@ -271,7 +318,7 @@ const TotalUsers = () => {
                                 setUploadBucket(btn.value);
                                 setPage(1);
                             }}
-                            className={`px-2.5 h-9 flex items-center justify-center text-xs rounded-full shadow border
+                            className={`px-2.5 h-8 flex items-center justify-center text-xs rounded-full shadow border
                 ${uploadBucket === btn.value ? "bg-indigo-600 text-white" : "bg-white/80"}`}
                         >
                             {btn.label}
@@ -294,6 +341,45 @@ const TotalUsers = () => {
                                 placeholder="max"
                                 value={uploadsMax}
                                 onChange={(e) => setUploadsMax(e.target.value)}
+                                className="text-xs w-20 px-2 py-1 rounded border"
+                            />
+                        </div>
+                    )}
+                </div>
+
+                {/* ✅ NEW: Lifetime Upload buckets */}
+                <div className="flex flex-wrap gap-1 items-center pb-2">
+                    <p className="text-xs text-gray-500 mr-1 font-semibold w-24">Lifetime Uploads</p>
+                    {uploadButtons.map((btn) => (
+                        <button
+                            key={`lifetime-${btn.value}`}
+                            onClick={() => {
+                                setLifetimeUploadBucket(btn.value);
+                                setPage(1);
+                            }}
+                            className={`px-2.5 h-8 flex items-center justify-center text-xs rounded-full shadow border
+                ${lifetimeUploadBucket === btn.value ? "bg-indigo-600 text-white" : "bg-white/80"}`}
+                        >
+                            {btn.label}
+                        </button>
+                    ))}
+
+                    {lifetimeUploadBucket === "custom" && (
+                        <div className="flex items-center gap-2 ml-2">
+                            <input
+                                type="number"
+                                min="0"
+                                placeholder="min"
+                                value={lifetimeUploadsMin}
+                                onChange={(e) => setLifetimeUploadsMin(e.target.value)}
+                                className="text-xs w-20 px-2 py-1 rounded border"
+                            />
+                            <input
+                                type="number"
+                                min="0"
+                                placeholder="max"
+                                value={lifetimeUploadsMax}
+                                onChange={(e) => setLifetimeUploadsMax(e.target.value)}
                                 className="text-xs w-20 px-2 py-1 rounded border"
                             />
                         </div>
