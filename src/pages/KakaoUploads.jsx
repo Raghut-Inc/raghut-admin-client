@@ -79,7 +79,6 @@ const KakaoUploads = () => {
                 const data = await res.json();
 
                 if (data.success) {
-                    console.log(data.questions)
                     if (pageToLoad === 1) setQuestions(data.questions);
                     else setQuestions((prev) => [...prev, ...data.questions]);
                     setHasMore(data.questions.length === PAGE_SIZE);

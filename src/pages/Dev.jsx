@@ -36,7 +36,6 @@ const Dev = ({ user, setUser }) => {
                 const res = await fetch(apiUrl, { credentials: "include" });
                 const data = await res.json();
 
-                console.log(data)
                 if (!data.success) {
                     console.error("Failed to load uploads:", data.error);
                     return;

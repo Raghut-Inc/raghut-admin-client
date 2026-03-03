@@ -47,7 +47,6 @@ const DailyActiveUsers = () => {
                     { credentials: "include" }
                 );
                 const data = await res.json();
-                console.log(data)
                 if (!data.success) {
                     console.error("⚠️ Failed to load daily uploaders:", data.error);
                     return;

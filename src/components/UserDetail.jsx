@@ -136,7 +136,7 @@ const UserDetail = ({ userId, onClose }) => {
                                 <hr className="border-white/5 my-2" />
                                 <Field label="User ID" value={data._id} copy />
                                 <Field label="Email" value={data.email} copy />
-                                <Field label="School" value={data.schoolName || "—"} />
+                                <Field label="School" value={`${data.school.name} (${data.school.location})` || "—"} />
 
                                 <div className="grid grid-cols-2 gap-2 pt-2">
                                     <Field label="Role" value={data.role} highlight={data.role === 'admin'} />

@@ -13,7 +13,6 @@ import UserCell from "../UserCell";
 import clsx from "clsx";
 
 const UploadCard = ({ q, qIndex, onDelete }) => {
-    console.log(q)
     const [showDetails, setShowDetails] = useState(false);
     const [copied, setCopied] = useState(false);
 
