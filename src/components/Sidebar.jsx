@@ -137,12 +137,12 @@ const SideMenu = ({ user, setUser }) => {
                                 label="최근 업로드 유저"
                             />
                             <MenuItem
-                                to="/admin/users/dashboard"
+                                to="/admin/users/school"
                                 icon={<IoSchool className="w-4 h-4" />}
                                 label="유저 학교"
                             />
                             <MenuItem
-                                to="/admin/users/school"
+                                to="/admin/users/dashboard"
                                 icon={<LucideTextCursorInput className="w-4 h-4" />}
                                 label="유저 기입 상태"
                             />
