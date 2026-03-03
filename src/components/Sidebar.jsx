@@ -12,7 +12,7 @@ import {
 import { FaAd, FaTimes } from "react-icons/fa";
 import { MdFileUpload } from "react-icons/md";
 import { IoIosImage } from "react-icons/io";
-import { IoChatbubbleSharp } from "react-icons/io5";
+import { IoChatbubbleSharp, IoSchool } from "react-icons/io5";
 import { RiKakaoTalkFill } from "react-icons/ri";
 import { SiPosthog } from "react-icons/si"; // ✅ add
 import clsx from "clsx";
@@ -138,6 +138,11 @@ const SideMenu = ({ user, setUser }) => {
                             />
                             <MenuItem
                                 to="/admin/users/dashboard"
+                                icon={<IoSchool className="w-4 h-4" />}
+                                label="유저 학교"
+                            />
+                            <MenuItem
+                                to="/admin/users/school"
                                 icon={<LucideTextCursorInput className="w-4 h-4" />}
                                 label="유저 기입 상태"
                             />

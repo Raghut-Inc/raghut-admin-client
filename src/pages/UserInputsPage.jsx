@@ -9,9 +9,8 @@ const UserInputsPage = () => {
     const [totalPages, setTotalPages] = useState(1);
     const [searchTerm, setSearchTerm] = useState('');
 
-    // Filter State
+    // Filter State (School Removed)
     const [activeFilters, setActiveFilters] = useState({
-        school: false,
         birthday: false,
         explanation: false,
     });
@@ -66,7 +65,6 @@ const UserInputsPage = () => {
 
             {/* --- CONTROLS SECTION --- */}
             <div className="bg-white p-4 rounded-lg shadow-sm border border-gray-200 mb-6 space-y-4">
-                {/* Search Bar */}
                 <form onSubmit={handleSearch} className="flex gap-2">
                     <input
                         type="text"
@@ -80,10 +78,8 @@ const UserInputsPage = () => {
                     </button>
                 </form>
 
-                {/* Filter Toggles */}
                 <div className="flex flex-wrap gap-2 items-center">
                     <span className="text-xs font-medium text-gray-500 uppercase tracking-wide w-full md:w-auto mb-1 md:mb-0">Filters:</span>
-                    <FilterButton label="School" isActive={activeFilters.school} onClick={() => toggleFilter('school')} color="blue" />
                     <FilterButton label="Birthday" isActive={activeFilters.birthday} onClick={() => toggleFilter('birthday')} color="purple" />
                     <FilterButton label="Explain" isActive={activeFilters.explanation} onClick={() => toggleFilter('explanation')} color="emerald" />
                 </div>
@@ -91,23 +87,20 @@ const UserInputsPage = () => {
 
             {/* --- DATA DISPLAY SECTION --- */}
             <div className="bg-white border border-gray-200 shadow rounded-lg overflow-hidden">
-
                 {loading ? (
                     <div className="p-8 text-center text-gray-500">Loading data...</div>
                 ) : users.length === 0 ? (
                     <div className="p-8 text-center text-gray-500">No users found.</div>
                 ) : (
                     <>
-                        {/* VIEW 1: DESKTOP TABLE (Hidden on Mobile) */}
+                        {/* VIEW 1: DESKTOP TABLE */}
                         <div className="hidden md:block overflow-x-auto">
                             <table className="min-w-full divide-y divide-gray-200">
                                 <thead className="bg-gray-50">
                                     <tr>
                                         <th className="px-6 py-3 text-left text-xs font-bold text-gray-500 uppercase">User</th>
-                                        <th className="px-6 py-3 text-left text-xs font-bold text-gray-500 uppercase">School</th>
                                         <th className="px-6 py-3 text-left text-xs font-bold text-gray-500 uppercase">Birthday</th>
-                                        <th className="px-6 py-3 text-left text-xs font-bold text-gray-500 uppercase w-1/3">Explanation</th>
-                                        <th className="px-6 py-3 text-left text-xs font-bold text-gray-500 uppercase">Follow Up</th>
+                                        <th className="px-6 py-3 text-left text-xs font-bold text-gray-500 uppercase w-1/2">Explanation</th>
                                     </tr>
                                 </thead>
                                 <tbody className="bg-white divide-y divide-gray-200">
@@ -119,10 +112,13 @@ const UserInputsPage = () => {
                                                     <span className="text-xs font-mono text-gray-500">{user._id.slice(-6)}...</span>
                                                 </div>
                                             </td>
-                                            <td className="px-6 py-4 text-sm text-gray-900">{user.schoolName || <Empty />}</td>
-                                            <td className="px-6 py-4 text-sm text-gray-900">{user.birthday ? new Date(user.birthday).toLocaleDateString() : <Empty />}</td>
                                             <td className="px-6 py-4 text-sm text-gray-900">
-                                                <div className="max-w-xs truncate" title={user.explanation}>{user.explanation || <Empty />}</div>
+                                                {user.birthday ? new Date(user.birthday).toLocaleDateString() : <Empty />}
+                                            </td>
+                                            <td className="px-6 py-4 text-sm text-gray-900">
+                                                <div className="max-w-md truncate" title={user.explanation}>
+                                                    {user.explanation || <Empty />}
+                                                </div>
                                             </td>
                                         </tr>
                                     ))}
@@ -130,21 +126,17 @@ const UserInputsPage = () => {
                             </table>
                         </div>
 
-                        {/* VIEW 2: MOBILE CARDS (Hidden on Desktop) */}
+                        {/* VIEW 2: MOBILE CARDS */}
                         <div className="md:hidden divide-y divide-gray-100">
                             {users.map(user => (
                                 <div key={user._id} className="p-4 space-y-3">
-                                    {/* Card Header: ID & Button */}
                                     <div className="flex justify-between items-center">
                                         <span className="text-xs font-mono font-bold text-gray-500">#{user._id.slice(-6)}</span>
                                         <InspectButton userId={user._id} mobile />
                                     </div>
 
-                                    {/* Card Body: Data Grid */}
                                     <div className="grid grid-cols-1 gap-2 text-sm">
-                                        <MobileRow label="School" value={user.schoolName} />
                                         <MobileRow label="B-Day" value={user.birthday ? new Date(user.birthday).toLocaleDateString() : null} />
-
                                         <div className="pt-1">
                                             <span className="text-xs font-bold text-gray-400 uppercase">Explanation:</span>
                                             <p className="text-gray-900 mt-1 bg-gray-50 p-2 rounded text-sm">
@@ -158,7 +150,7 @@ const UserInputsPage = () => {
                     </>
                 )}
 
-                {/* Pagination Controls */}
+                {/* Pagination */}
                 <div className="bg-gray-50 px-4 py-3 border-t border-gray-200 flex justify-between items-center">
                     <span className="text-xs text-gray-500">Page {page} of {totalPages}</span>
                     <div className="flex gap-2">
@@ -184,6 +176,7 @@ const UserInputsPage = () => {
 };
 
 // --- Helper Components ---
+// (InspectButton and FilterButton logic remain the same but use updated props)
 
 const InspectButton = ({ userId, mobile }) => (
     <a
@@ -214,11 +207,12 @@ const Empty = () => <span className="text-gray-300 italic">Empty</span>;
 
 const FilterButton = ({ label, isActive, onClick, color }) => {
     const baseClass = "px-3 py-1 rounded-full text-xs font-medium border transition-colors";
-    const activeClass = `bg-${color}-100 text-${color}-800 border-${color}-200`;
-    const inactiveClass = "bg-white text-gray-600 border-gray-300 hover:bg-gray-50";
+    const activeClass = isActive
+        ? `bg-${color}-100 text-${color}-800 border-${color}-200`
+        : "bg-white text-gray-600 border-gray-300 hover:bg-gray-50";
 
     return (
-        <button onClick={onClick} className={`${baseClass} ${isActive ? activeClass : inactiveClass}`}>
+        <button onClick={onClick} className={`${baseClass} ${activeClass}`}>
             {label} {isActive && "✓"}
         </button>
     );
