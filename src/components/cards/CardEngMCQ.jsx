@@ -21,10 +21,6 @@ const CardEngMCQ = ({ questionItem }) => {
             .join("\n");
     }
 
-    const correctSet = new Set(
-        (questionItem?.correctAnswers ?? []).map((x) => x?.answerOption).filter(Boolean)
-    );
-
     return (
         <div className="w-full rounded-xl border border-gray-200 bg-white shadow-sm overflow-hidden">
             {/* Header */}
@@ -68,17 +64,13 @@ const CardEngMCQ = ({ questionItem }) => {
             {/* Choices */}
             <div className="px-2 py-3">
                 <ul className="space-y-1.5">
-                    {(questionItem?.answers ?? []).map((a, idx) => {
+                    {(questionItem?.correctAnswers ?? []).map((a, idx) => {
                         const opt = a?.answerOption ?? "?";
-                        const isCorrect = correctSet.has(opt);
 
                         return (
                             <li
                                 key={idx}
-                                className={`rounded-lg border px-3 py-2 text-[11px] leading-relaxed ${isCorrect
-                                    ? "border-green-200 bg-green-50 text-green-800 font-semibold"
-                                    : "border-gray-200 bg-white text-gray-700"
-                                    }`}
+                                className={`rounded-lg border px-3 py-2 text-[11px] leading-relaxed border-green-200 bg-green-50 text-green-800 font-semibold`}
                             >
                                 <span className="mr-1 font-semibold">{opt}.</span>{" "}
                                 {renderMixedMath(a?.answerText)}

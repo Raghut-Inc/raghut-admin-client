@@ -7,12 +7,6 @@ const CardMathMCQ = ({ questionItem }) => {
     const hasError = !!questionItem?.error;
     const invalidReason = questionItem?.invalidReason
 
-    const correctSet = new Set(
-        (questionItem?.correctChoices ?? [])
-            .map((c) => c?.choiceLabel)
-            .filter(Boolean)
-    );
-
     return (
         <div className="w-full rounded-xl border border-gray-200 bg-white shadow-sm overflow-hidden">
             {/* Header */}
@@ -56,26 +50,19 @@ const CardMathMCQ = ({ questionItem }) => {
             {/* Choices */}
             <div className="px-4 py-3">
                 <ul className="space-y-1">
-                    {(questionItem?.choices ?? []).map((choice, i) => {
+                    {(questionItem?.correctChoices ?? []).map((choice, i) => {
                         const label = choice?.choiceLabel ?? "";
-                        const isCorrect = correctSet.has(label);
 
                         return (
                             <li
                                 key={i}
-                                className={`flex gap-2 rounded-lg px-2 py-1.5 text-[11px] leading-relaxed border ${isCorrect
-                                    ? "bg-green-50 border-green-200"
-                                    : "bg-white border-gray-200"
-                                    }`}
+                                className={`flex gap-2 rounded-lg px-2 py-1.5 text-[11px] leading-relaxed border bg-green-50 border-green-200`}
                             >
-                                <span
-                                    className={`shrink-0 font-semibold ${isCorrect ? "text-green-700" : "text-gray-500"
-                                        }`}
-                                >
+                                <span className={`shrink-0 font-semibold text-green-700`}>
                                     {label}.
                                 </span>
 
-                                <span className={isCorrect ? "text-green-800 font-semibold" : "text-gray-700"}>
+                                <span className="text-green-800 font-semibold">
                                     {renderMixedMath(choice?.choiceText)}
                                 </span>
                             </li>

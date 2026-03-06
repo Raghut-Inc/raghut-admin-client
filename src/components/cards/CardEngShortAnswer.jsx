@@ -73,17 +73,6 @@ const CardEngShortAnswer = ({ questionItem }) => {
                                             {renderMixedMath(ans.reason)}
                                         </p>
                                     )}
-
-                                    {ans?.sourceText && (
-                                        <p className="mt-1 text-[11px] text-gray-600 leading-relaxed">
-                                            <span className="font-semibold text-gray-800">출처:</span>{" "}
-                                            {renderMixedMath(ans.sourceText)}
-                                        </p>
-                                    )}
-
-                                    {!ans?.reason && !ans?.sourceText && (
-                                        <p className="text-[11px] text-gray-500">추가 설명 없음</p>
-                                    )}
                                 </div>
                             ))}
                         </div>
