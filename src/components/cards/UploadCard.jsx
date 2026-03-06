@@ -126,7 +126,7 @@ const UploadCard = ({ q, qIndex, onDelete }) => {
                                     <button
                                         onClick={(e) => {
                                             e.stopPropagation();
-                                            window.open(`https://www.chalcack.com/ko/solved/${q._id}`, "_blank");
+                                            window.open(`https://www.chalcack.com/solved?id=${q._id}`, "_blank");
                                         }}
                                         className="bg-gray-600 hover:bg-gray-500 text-white font-semibold w-7 h-7 rounded-full flex items-center justify-center text-md"
                                         title="문제 풀이 페이지 열기"
