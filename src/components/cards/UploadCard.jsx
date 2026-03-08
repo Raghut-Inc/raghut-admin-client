@@ -6,23 +6,25 @@ import CardMathMCQ from "./CardMathMCQ";
 import CardMathShortAnswer from "./CardMathShortAnswer";
 
 import { FaAngleDown, FaCircleCheck, FaTrashCan } from "react-icons/fa6";
-import { MdError, MdWarning, MdArchive } from "react-icons/md"; // Added MdArchive
+import { MdError, MdWarning, MdArchive } from "react-icons/md";
 import { FiCopy } from "react-icons/fi";
 import { BiLoader } from "react-icons/bi";
+import { LuCode } from "react-icons/lu"; // New icon for JSON view
 import UserCell from "../UserCell";
 import clsx from "clsx";
 
 const UploadCard = ({ q, qIndex, onDelete }) => {
     const [showDetails, setShowDetails] = useState(false);
+    const [showJson, setShowJson] = useState(false); // State for JSON toggle
     const [copied, setCopied] = useState(false);
 
     // ✅ Soft Delete Check
     const isDeleted = !!q.deletedAt;
 
     const isQuotaLimit = !!q.errorCode?.includes("DAILY_LIMIT_EXCEEDED");
-    const hasError = !!q.errorCode
-    const isProcessing = q.status === "processing"
-    const isSmallCard = isProcessing || hasError
+    const hasError = !!q.errorCode;
+    const isProcessing = q.status === "processing";
+    const isSmallCard = isProcessing || hasError;
 
     const handleCopy = () => {
         navigator.clipboard.writeText(q._id);
@@ -34,7 +36,6 @@ const UploadCard = ({ q, qIndex, onDelete }) => {
     const validCount = analyzed.filter(i => i.isQuestionValid === true).length;
     const invalidCount = analyzed.length - validCount;
 
-
     const prettyDate = q.uploader?.kakaoLastUploadDate
         ? new Date(q.uploader.kakaoLastUploadDate).toLocaleString("ko-KR", {
             month: "2-digit",
@@ -44,8 +45,6 @@ const UploadCard = ({ q, qIndex, onDelete }) => {
         })
         : "—";
 
-
-    // existing renderQuestionCard stays as-is for the detail view
     const renderQuestionCard = (item, key) => {
         const isStem = q.subject === "math" || q.subject === "physics" || q.subject === "biology" || q.subject === "earth_science" || q.subject === "chemistry";
         if (isStem) {
@@ -99,13 +98,11 @@ const UploadCard = ({ q, qIndex, onDelete }) => {
                         )}
                     </div>
 
-
-                    {/* Quota limit check */}
+                    {/* Content Section */}
                     <div className={`${isSmallCard ? "h-28" : "h-full"} w-full flex flex-col justify-start p-3`}>
                         <div className="flex flex-col">
                             <div className="w-full flex justify-between items-center">
                                 <div className="flex space-x-2 items-center">
-                                    {/* Status Icon */}
                                     {isDeleted && <MdArchive className="w-7 h-7 text-gray-400 p-px" />}
                                     {isProcessing ? (
                                         <BiLoader className="w-5 h-5 text-gray-500 animate-spin dark:text-gray-600 fill-white" />
@@ -121,8 +118,21 @@ const UploadCard = ({ q, qIndex, onDelete }) => {
                                     </span>
                                 </div>
 
-                                {/* Copy/Delete Buttons */}
+                                {/* Action Buttons */}
                                 <div className="flex justify-end space-x-1 items-center">
+                                    <button
+                                        onClick={(e) => {
+                                            e.stopPropagation();
+                                            setShowJson(!showJson);
+                                        }}
+                                        className={clsx(
+                                            "font-semibold w-7 h-7 rounded-full flex items-center justify-center text-md transition-colors",
+                                            showJson ? "bg-indigo-500 text-white" : "bg-gray-600 hover:bg-gray-500 text-white"
+                                        )}
+                                        title="Raw JSON 보기"
+                                    >
+                                        <LuCode className="w-4 h-4" />
+                                    </button>
                                     <button
                                         onClick={(e) => {
                                             e.stopPropagation();
@@ -214,6 +224,24 @@ const UploadCard = ({ q, qIndex, onDelete }) => {
                     </div>
                 </div>
 
+                {/* JSON View Panel */}
+                {showJson && (
+                    <div className="bg-gray-900 p-4 border-t border-gray-600 overflow-x-auto max-h-[400px] custom-scrollbar">
+                        <div className="flex justify-between items-center mb-2">
+                            <span className="text-indigo-400 font-mono text-[10px] uppercase tracking-wider font-bold">Raw Response Data</span>
+                            <button
+                                onClick={() => setShowJson(false)}
+                                className="text-gray-500 hover:text-white text-[10px]"
+                            >
+                                CLOSE
+                            </button>
+                        </div>
+                        <pre className="text-[10px] leading-tight text-green-400 font-mono">
+                            {JSON.stringify(q, null, 2)}
+                        </pre>
+                    </div>
+                )}
+
                 {q.source === "app" ? (
                     <div className={"bg-gray-800"}>
                         <UserCell user={q.userId} />
@@ -246,7 +274,6 @@ const UploadCard = ({ q, qIndex, onDelete }) => {
                                                 풀이오류: {invalidCount}개
                                             </span>
                                         )}
-
                                     </div>
                                 </div>
 
@@ -258,7 +285,7 @@ const UploadCard = ({ q, qIndex, onDelete }) => {
                     </div>
                 )}
 
-                {/* FULL DETAILS (only when toggled) */}
+                {/* FULL DETAILS */}
                 {!isProcessing && showDetails && (
                     <div onClick={() => setShowDetails((v) => !v)} className="flex-1 text-xs text-black overflow-hidden cursor-pointer">
                         <div className={clsx("p-2 gap-2 bg-gray-400")}>
