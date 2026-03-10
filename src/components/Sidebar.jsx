@@ -13,7 +13,7 @@ import { FaAd, FaTimes } from "react-icons/fa";
 import { MdFileUpload } from "react-icons/md";
 import { IoIosImage } from "react-icons/io";
 import { IoChatbubbleSharp, IoSchool } from "react-icons/io5";
-import { RiKakaoTalkFill } from "react-icons/ri";
+import { RiAdvertisementFill, RiKakaoTalkFill } from "react-icons/ri";
 import { SiPosthog } from "react-icons/si"; // ✅ add
 import clsx from "clsx";
 import UserSettingsButton from "./UserSettingsButton";
@@ -116,6 +116,11 @@ const SideMenu = ({ user, setUser }) => {
                                 to="/admin/followup"
                                 icon={<IoChatbubbleSharp className="w-4 h-4" />}
                                 label="추가 질문"
+                            />
+                            <MenuItem
+                                to="/admin/referral"
+                                icon={<RiAdvertisementFill className="w-4 h-4" />}
+                                label="유입 분석"
                             />
                             {/* Users */}
                             <div className="text-xs uppercase font-semibold text-gray-400 px-4 mt-8 mb-1">

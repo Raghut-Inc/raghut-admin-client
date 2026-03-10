@@ -15,6 +15,7 @@ import GrantEntitlement from "./GrantEntitlement";
 import UserInputsPage from "./UserInputsPage";
 import AdsPage from "./AdsPage";
 import SchoolRankingPage from "./SchoolRankingPage";
+import ReferralAnalyticsPage from "./ReferralAnalyticsPage";
 
 
 export default function Admin({ user, setUser }) {
@@ -38,6 +39,7 @@ export default function Admin({ user, setUser }) {
           <Route path="/search" element={<SearchResult user={user} setUser={setUser} />} />
           <Route path="/grant" element={<GrantEntitlement user={user} setUser={setUser} />} />
           <Route path="/ads" element={<AdsPage user={user} setUser={setUser} />} />
+          <Route path="/referral" element={<ReferralAnalyticsPage user={user} setUser={setUser} />} />
         </Routes>
       </div>
     </>
