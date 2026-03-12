@@ -18,6 +18,7 @@ const UserDetail = ({ userId, onClose }) => {
                 const json = await res.json();
                 if (json.success) {
                     setData(json.user);
+                    console.log(json.user)
                 } else {
                     setError(json.error || "Failed to load");
                 }
@@ -141,6 +142,7 @@ const UserDetail = ({ userId, onClose }) => {
                                 <div className="grid grid-cols-2 gap-2 pt-2">
                                     <Field label="Role" value={data.role} highlight={data.role === 'admin'} />
                                     <Field label="Provider" value={data.provider} />
+                                    <Field label="유입경로" value={data.referralSource} />
                                 </div>
                                 {/* New Profile Fields */}
                                 <div className="grid grid-cols-2 gap-2 pt-2">
