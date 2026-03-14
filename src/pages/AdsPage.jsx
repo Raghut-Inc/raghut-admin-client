@@ -1,5 +1,5 @@
 import { useEffect, useState, useRef } from "react";
-import { FaPlus, FaTrash, FaPen, FaLink, FaImage, FaSort, FaMoneyBill, FaGlobe, FaCheckCircle } from "react-icons/fa";
+import { FaPlus, FaTrash, FaPen, FaLink, FaImage, FaSort, FaMoneyBill, FaGlobe, FaCheckCircle, FaEnvelope } from "react-icons/fa";
 import { BiLoader, BiX } from "react-icons/bi";
 
 // Reusable Switch Component
@@ -36,6 +36,7 @@ const AdsPage = () => {
     priority: 0,
     isOfficial: false,
     isPaywall: false,
+    isEvent: false,
     isActive: true,
     targetLanguage: "all", // 🆕 Added Default
   });
@@ -118,6 +119,7 @@ const AdsPage = () => {
         payload.append("priority", formData.priority);
         payload.append("isOfficial", formData.isOfficial);
         payload.append("isPaywall", formData.isPaywall);
+        payload.append("isEvent", formData.isEvent);
         payload.append("targetLanguage", formData.targetLanguage); // 🆕 Append Language
 
         const res = await fetch(`${process.env.REACT_APP_API_URL}/ads/promotions`, {
@@ -158,6 +160,7 @@ const AdsPage = () => {
       isOfficial: false,
       isActive: true,
       isPaywall: false,
+      isEvent: false,
       targetLanguage: "all" // 🆕 Reset to All
     });
     setSelectedFile(null);
@@ -174,6 +177,7 @@ const AdsPage = () => {
       priority: ad.priority || 0,
       isOfficial: ad.isOfficial || false,
       isPaywall: ad.isPaywall || false,
+      isEvent: ad.isEvent || false,
       isActive: ad.isActive,
       targetLanguage: ad.targetLanguage || "all", // 🆕 Load existing or default
     });
@@ -261,6 +265,12 @@ const AdsPage = () => {
                     {ad.isPaywall && (
                       <span className="bg-amber-500 text-white px-2 py-0.5 rounded text-[10px] font-bold shadow-sm flex items-center gap-1">
                         <FaMoneyBill size={10} /> PAYWALL
+                      </span>
+                    )}
+
+                    {ad.isEvent && (
+                      <span className="bg-amber-500 text-white px-2 py-0.5 rounded text-[10px] font-bold shadow-sm flex items-center gap-1">
+                        <FaEnvelope size={10} /> EVENT
                       </span>
                     )}
                   </div>
@@ -475,6 +485,18 @@ const AdsPage = () => {
                   <Switch
                     checked={formData.isPaywall}
                     onChange={() => setFormData(prev => ({ ...prev, isPaywall: !prev.isPaywall }))}
+                  />
+                </div>
+
+                {/* Paywall Toggle */}
+                <div className="flex items-center justify-between bg-amber-50 p-3 rounded-lg border border-amber-100">
+                  <div className="flex items-center gap-2">
+                    <FaEnvelope className="text-amber-600" />
+                    <span className="text-sm font-medium text-amber-900">Is Event</span>
+                  </div>
+                  <Switch
+                    checked={formData.isEvent}
+                    onChange={() => setFormData(prev => ({ ...prev, isEvent: !prev.isEvent }))}
                   />
                 </div>
 
